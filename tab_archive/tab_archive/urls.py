@@ -8,6 +8,7 @@ urlpatterns = patterns('',
     # Examples:
     # url(r'^$', 'tab_archive.views.home', name='home'),
     # url(r'^tab_archive/', include('tab_archive.foo.urls')),
+    # url(r'^tab_archive/users)
 
     # Uncomment the admin/doc line below to enable admin documentation:
     # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
