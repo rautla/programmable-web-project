@@ -22,12 +22,13 @@ class UserModel(object):
         user.email = row['email']
         user.description = row['description']
         user.picture = row['picture']
+        return user
         
     def serialize(self):
     
         return {'user_nickname':self.user_nickname, 'email':self.email, 'description':self.description, 'picture':self.picture }
         
-class CommentModel(object)
+class CommentModel(object):
     
     
     def  __init__(self, comment_id, reply_to=None, raw_data=None, tablature_id=None):

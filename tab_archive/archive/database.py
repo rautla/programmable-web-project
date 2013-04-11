@@ -17,6 +17,46 @@ class ArchiveDatabaseInterface(object):
     def __init__(self):
         super(ArchiveDatabaseInterface, self).__init__()
         
+    #USERS
+    def add_user(self, user_nickname, info):
+        '''
+        returns user.
+        Return "not found" error if user not found.
+        '''
+        
+        raise NotImplementedError("")
+    
+    def get_user(self, user_nickname):
+        '''
+        returns user.
+        Return "not found" error if user not found.
+        '''
+        
+        raise NotImplementedError("")
+        
+    def edit_user(self, user_nickname, changes):
+        '''
+        Edit user information.
+        Return "not found" error if user not found
+        '''
+        
+        raise NotImplementedError("")
+        
+    def delete_user(self, user_nickname):
+        '''
+        Deletes user.
+        Return "not found" error if user not found.
+        '''
+        
+        raise NotImplementedError("")
+        
+    def get_users(self):
+        '''
+        Get list of users.
+        '''
+        
+        raise NotImplementedError("")
+    
     #TABLATURES
     def get_songs(self, artist):
         '''
@@ -27,7 +67,7 @@ class ArchiveDatabaseInterface(object):
         
         raise NotImplementedError("")
         
-    def get_artists():
+    def get_artists(self):
         '''
         Return list of unique artists.
         '''
@@ -116,16 +156,72 @@ class ArchiveDatabaseInterface(object):
         
         raise NotImplementedError("")
         
+
+        
+class ArchiveDatabase(ArchiveDatabaseInterface):
     #USERS
-    def get_user(self, user_id):
+    def add_user(self, user):
+        '''
+        Adds new user.
+        '''
+        keys_on = 'PRAGMA foreign_keys = ON'
+        #Get the user_nickname of a user given the Nickname
+        query = 'SELECT * from users WHERE user_nickname = ?'
+        pvalue = (user.user_nickname,)
+        
+        #user_nickname = None
+        
+        #connects (and creates if necessary) to the database. gets a connection object
+        con = sqlite3.connect('archive.db')
+        with con:
+            con.row_factory = sqlite3.Row
+            cur = con.cursor()
+            cur.execute(keys_on)        
+            #execute the statement
+            cur.execute(query, pvalue)
+            #just one result possible
+            row = cur.fetchone()
+            if row is None:
+                stmnt = 'INSERT INTO users(user_nickname,email,picture,description) VALUES(?,?,?,?)'
+                pvalue = (user.user_nickname,user.email,user.picture,user.description)
+                cur.execute(stmnt, pvalue)
+                return user.user_nickname
+            else:
+                return None
+        
+
+    
+    def get_user(self, user_nickname):
         '''
         returns user.
         Return "not found" error if user not found.
         '''
         
-        raise NotImplementedError("")
+        keys_on = 'PRAGMA foreign_keys = ON'
+        #Get the user_nickname of a user given the Nickname
+        query = 'SELECT * from users WHERE user_nickname = ?'
+        pvalue = (user_nickname,)
         
-    def edit_user(self, user_id, changes):
+        #user_nickname = None
+        
+        #connects (and creates if necessary) to the database. gets a connection object
+        con = sqlite3.connect('archive.db')
+        with con:
+            con.row_factory = sqlite3.Row
+            cur = con.cursor()
+            cur.execute(keys_on)        
+            #execute the statement
+            cur.execute(query, pvalue)
+            #just one result possible
+            row = cur.fetchone()
+            if row is None:
+                return None
+            else:    
+                print row.keys()
+                
+                return UserModel.create(row)        
+    
+    def edit_user(self, user_nickname, changes):
         '''
         Edit user information.
         Return "not found" error if user not found
@@ -133,7 +229,7 @@ class ArchiveDatabaseInterface(object):
         
         raise NotImplementedError("")
         
-    def delete_user(self, user_id):
+    def delete_user(self, user_nickname):
         '''
         Deletes user.
         Return "not found" error if user not found.
@@ -147,8 +243,7 @@ class ArchiveDatabaseInterface(object):
         '''
         
         raise NotImplementedError("")
-        
-class ArchiveDatabase(ArchiveDatabaseInterface):
+    
     #TABLATURE
     def get_songs(self, artist):
         '''
@@ -157,7 +252,8 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
         Return "not found" error if artist or songs not found.
         '''
         
-        return
+        raise NotImplementedError("")
+
         
     def get_artists():
         '''
@@ -248,34 +344,116 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
         
         raise NotImplementedError("")
         
-    #USERS
-    def get_user(self, user_id):
-        '''
-        returns user.
-        Return "not found" error if user not found.
-        '''
+
         
-        raise NotImplementedError("")
+def check_foreign_keys_status():
+    '''
+    Checks the status of foreign keys
+    '''
+    con = None
+    try:
+        #connects (and creates if necessary) to the database. gets a connection object
+        con = sqlite3.connect('archive.db')
+        #get the cursor object. It allows to execute SQL code and traverse the result set
+        cur = con.cursor()    
+        #execute the pragma command
+        cur.execute('PRAGMA foreign_keys = ON')
+        #we know we retrieve just one record: use ftchone()
+        data = cur.fetchone()
         
-    def edit_user(self, user_id, changes):
-        '''
-        Edit user information.
-        Return "not found" error if user not found
-        '''
+        print "Foreign Keys status: %s" % data                
         
-        raise NotImplementedError("")
+    except sqlite3.Error, e:
         
-    def delete_user(self, user_id):
-        '''
-        Deletes user.
-        Return "not found" error if user not found.
-        '''
+        print "Error %s:" % e.args[0]
+        sys.exit(1)
         
-        raise NotImplementedError("")
+    finally:
         
-    def get_users(self):
-        '''
-        Get list of users.
-        '''
+        if con:
+            con.close()
+    return data
+def set_and_check_foreign_keys_status():
+    '''
+    Sets and checks the status of foreign keys
+    '''
+    keys_on = 'PRAGMA foreign_keys = ON'
+    con = None
+    try:
+        #connects (and creates if necessary) to the database. gets a connection object
+        con = sqlite3.connect('archive.db')
+        #get the cursor object. It allows to execute SQL code and traverse the result set
+        cur = con.cursor()
+        #execute the pragma command, ON 
+        cur.execute(keys_on)
+        #execute the pragma check command
+        cur.execute('PRAGMA foreign_keys = ON')
+        #we know we retrieve just one record: use ftchone()
+        data = cur.fetchone()
         
-        raise NotImplementedError("")
+        print "Foreign Keys status: %s" % data                
+        
+    except sqlite3.Error, e:
+        print "Error %s:" % e.args[0]
+        sys.exit(1)
+        
+    finally:
+        if con:
+            con.close()
+    return data
+    
+def create_users_table():
+    keys_on = 'PRAGMA foreign_keys = ON'
+
+    stmnt = 'CREATE TABLE "users" ("user_nickname" TEXT PRIMARY KEY  NOT NULL  UNIQUE , "email" TEXT, "picture" TEXT, "description" TEXT)'
+
+    #connects (and creates if necessary) to the database. gets a connection object
+    con = sqlite3.connect('archive.db')
+    with con:
+        #get the cursor object. It allows to execute SQL code and traverse the result set
+        cur = con.cursor() 
+        try:
+            cur.execute(keys_on)        
+            #execute the statement
+            cur.execute(stmnt)
+        except sqlite3.Error,e:
+            print "Error %s:" % e.args[0]
+    return None
+
+def create_tablatures_table():
+    keys_on = 'PRAGMA foreign_keys = ON'
+
+    stmnt = 'CREATE TABLE "tablatures" ("body" TEXT, "tablature_id" INTEGER PRIMARY KEY  AUTOINCREMENT  NOT NULL  UNIQUE , "rating" INTEGER, "artist_id" TEXT, "song_id" TEXT, "user_nickname" TEXT, "rating_count" INTEGER, FOREIGN KEY(user_nickname) REFERENCES users(user_nickname))'
+
+    #connects (and creates if necessary) to the database. gets a connection object
+    con = sqlite3.connect('archive.db')
+    with con:
+        #get the cursor object. It allows to execute SQL code and traverse the result set
+        cur = con.cursor() 
+        try:
+            cur.execute(keys_on)        
+            #execute the statement
+            cur.execute(stmnt)
+        except sqlite3.Error,e:
+            print "Error %s:" % e.args[0]
+    return None
+
+def create_comments_table():
+    keys_on = 'PRAGMA foreign_keys = ON'
+
+    stmnt = 'CREATE TABLE "comments" ("comment_id" INTEGER PRIMARY KEY  AUTOINCREMENT  NOT NULL  UNIQUE , "body" TEXT, "tablature_id" INTEGER REFERENCES tablatures, "user_nickname" TEXT REFERENCES users, "reply_to" INTEGER REFERENCES comments)'
+    
+    #connects (and creates if necessary) to the database. gets a connection object
+    con = sqlite3.connect('archive.db')
+    with con:
+        #get the cursor object. It allows to execute SQL code and traverse the result set
+        cur = con.cursor() 
+        try:
+            cur.execute(keys_on)        
+            #execute the statement
+            cur.execute(stmnt)
+        except sqlite3.Error,e:
+            print "Error %s:" % e.args[0]
+    return None
+    
+database = ArchiveDatabase()
