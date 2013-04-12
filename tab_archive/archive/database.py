@@ -297,7 +297,6 @@ class ArchiveDatabase(ArchiveDatabaseInterface, database_name = 'archive.db'):
         keys_on = 'PRAGMA foreign_keys = ON'
         #Get the user_nickname of a user given the Nickname
         query = 'SELECT * FROM users'
-        pvalue = (user.user_nickname,)
         
         #user_nickname = None
         
@@ -308,7 +307,7 @@ class ArchiveDatabase(ArchiveDatabaseInterface, database_name = 'archive.db'):
             cur = con.cursor()
             cur.execute(keys_on)        
             #execute the statement
-            cur.execute(query, pvalue)
+            cur.execute(query)
             #get results
             rows = cur.fetchall()
             if rows is None:
@@ -329,9 +328,9 @@ class ArchiveDatabase(ArchiveDatabaseInterface, database_name = 'archive.db'):
         
         keys_on = 'PRAGMA foreign_keys = ON'
         if artist == '':
-            query = 'SELECT * FROM tablatures'
+            query = 'SELECT DISTINCT artist_id, song_id FROM tablatures'
         else:
-            query = 'SELECT * FROM tablatures WHERE artist_id = ?'
+            query = 'SELECT DISTINCT artist_id, song_id FROM tablatures WHERE artist_id = ?'
             pvalue = (artist,)
         
         #song_id = None
@@ -358,12 +357,33 @@ class ArchiveDatabase(ArchiveDatabaseInterface, database_name = 'archive.db'):
             return songs
 
         
-    def get_artists():
+    def get_artists(self):
         '''
         Return list of unique artists.
         '''
         
-        raise NotImplementedError("")
+        keys_on = 'PRAGMA foreign_keys = ON'
+        query = 'SELECT DISTINCT artist_id FROM tablatures'
+        
+        #artist_id = None
+        
+        #connects (and creates if necessary) to the database. gets a connection object
+        con = sqlite3.connect(self.database_name)
+        with con:
+            con.row_factory = sqlite3.Row
+            cur = con.cursor()
+            cur.execute(keys_on)        
+            #execute the statement
+            cur.execute(query)
+            #get results
+            rows = cur.fetchall()
+            if rows is None:
+                return None
+                
+            artists = []
+            for row in rows:
+                artists.append(row)
+            return artists
         
     def get_tablatures(self, artist, song):
         '''
@@ -373,7 +393,42 @@ class ArchiveDatabase(ArchiveDatabaseInterface, database_name = 'archive.db'):
         Return "not found error if song, artist or tablatures are not found.
         '''
         
-        raise NotImplementedError("")
+        keys_on = 'PRAGMA foreign_keys = ON'
+        
+        if song_id == '' and artist_id == '':
+            query = 'SELECT DISTINCT artist_id, song_id, tablature_id FROM tablatures'
+        elif song_id == '':
+            query = 'SELECT DISTINCT artist_id, song_id, tablature_id FROM tablatures WHERE artist_id = ?'
+            pvalue = (artist,)
+        elif artist_id == '':
+            query = 'SELECT DISTINCT artist_id, song_id, tablature_id FROM tablatures WHERE song_id = ?'
+            pvalue = (song,)
+        else:
+            query = 'SELECT DISTINCT artist_id, song_id, tablature_id FROM tablatures WHERE artist_id = ?, song_id = ?'
+            pvalue = (artist,song,)
+            
+        #artist_id = None
+        
+        #connects (and creates if necessary) to the database. gets a connection object
+        con = sqlite3.connect(self.database_name)
+        with con:
+            con.row_factory = sqlite3.Row
+            cur = con.cursor()
+            cur.execute(keys_on)        
+            #execute the statement
+            if song_id == '' and artist_id == '':
+                cur.execute(query)
+            else:
+                cur.execute(query, pvalue)
+            #get results
+            rows = cur.fetchall()
+            if rows is None:
+                return None
+                
+            tablatures = []
+            for row in rows:
+                tablatures.append(row)
+            return tablatures
         
     def edit_tablature(self, tablature_id):
         '''
