@@ -34,7 +34,7 @@ class ArchiveDatabaseInterface(object):
         
         raise NotImplementedError("")
         
-    def edit_user(self, user_nickname, changes):
+    def edit_user(self, user):
         '''
         Edit user information.
         Return "not found" error if user not found
@@ -84,7 +84,7 @@ class ArchiveDatabaseInterface(object):
         
         raise NotImplementedError("")
         
-    def edit_tablature(self, tablature_id):
+    def edit_tablature(self, tablature):
         '''
         Return tablature.
         '''
@@ -98,7 +98,7 @@ class ArchiveDatabaseInterface(object):
     
         raise NotImplementedError("")
         
-    def add_tablature(self, artist, song, tablature):
+    def add_tablature(self, tablature):
         '''
         Add tablature to database.
         '''
@@ -107,7 +107,7 @@ class ArchiveDatabaseInterface(object):
         
     def get_rating(self, tablature_id):
         '''
-        Returns current rating fir the tablature.
+        Returns current rating for the tablature.
         '''
         
         raise NotImplementedError("")
@@ -170,7 +170,6 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
         Adds new user.
         '''
         keys_on = 'PRAGMA foreign_keys = ON'
-        #Get the user_nickname of a user given the Nickname
         query = 'SELECT * FROM users WHERE user_nickname = ?'
         pvalue = (user.user_nickname,)
         
@@ -201,7 +200,6 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
         '''
         
         keys_on = 'PRAGMA foreign_keys = ON'
-        #Get the user_nickname of a user given the Nickname
         query = 'SELECT * FROM users WHERE user_nickname = ?'
         pvalue = (user_nickname,)
         
@@ -224,14 +222,13 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
                 
                 return UserModel.create(row)        
     
-    def edit_user(self, user_nickname, changes):
+    def edit_user(self, user):
         '''
         Edit user information.
         Return "not found" error if user not found
         '''
        
         keys_on = 'PRAGMA foreign_keys = ON'
-        #Get the user_nickname of a user given the Nickname
         query = 'SELECT * FROM users WHERE user_nickname = ?'
         pvalue = (user.user_nickname,)
         
@@ -263,9 +260,8 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
         Return "not found" error if user not found.
         '''
         keys_on = 'PRAGMA foreign_keys = ON'
-        #Get the user_nickname of a user given the Nickname
         query = 'SELECT * FROM users WHERE user_nickname = ?'
-        pvalue = (user.user_nickname,)
+        pvalue = (user_nickname,)
         
         #user_nickname = None
         
@@ -282,8 +278,8 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
             if row is None:
                 return None
             else:
-                stmnt = 'DELETE FROM users WHERE user_id = ?'
-                pvalue = (user_id,)
+                stmnt = 'DELETE FROM users WHERE user_nickname = ?'
+                pvalue = (user_nickname,)
                 #execute the statement
                 cur.execute(stmnt, pvalue)
                 
@@ -295,7 +291,6 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
         '''
         
         keys_on = 'PRAGMA foreign_keys = ON'
-        #Get the user_nickname of a user given the Nickname
         query = 'SELECT * FROM users'
         
         #user_nickname = None
@@ -430,41 +425,143 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
                 tablatures.append(row)
             return tablatures
         
-    def edit_tablature(self, tablature_id):
+    def edit_tablature(self, tablature):
         '''
         Return tablature.
         '''
         
-        raise NotImplementedError("")
+        keys_on = 'PRAGMA foreign_keys = ON'
+        query = 'SELECT * FROM tablatures WHERE tablature_id = ?'
+        pvalue = (tablature.tablature_id,)
+        
+        #tablature_id = None
+        
+        #connects (and creates if necessary) to the database. gets a connection object
+        con = sqlite3.connect(self.database_name)
+        with con:
+            con.row_factory = sqlite3.Row
+            cur = con.cursor()
+            cur.execute(keys_on)        
+            #execute the statement
+            cur.execute(query, pvalue)
+            #just one result possible
+            row = cur.fetchone()
+            if row is None:
+                return None
+            else:
+                stmnt = 'UPDATE users SET body = ?, artist_id = ?, song_id = ? WHERE tablature_id = ?'
+                pvalue = (tablature.body or row["body"],tablature.artist_id or row["artist_id"],tablature.song_id or row["song_id"])
+                cur.execute(stmnt,pvalue)
+                
+                return tablature.tablature_id
         
     def delete_tablature(self, tablature_id):
         '''
         Delete tablature.
         '''
     
-        raise NotImplementedError("")
+        keys_on = 'PRAGMA foreign_keys = ON'
+        query = 'SELECT * FROM tablatures WHERE tablature_id = ?'
+        pvalue = (tablature_id,)
         
-    def add_tablature(self, artist, song, tablature):
+        #tablature_id = None
+        
+        #connects (and creates if necessary) to the database. gets a connection object
+        con = sqlite3.connect(self.database_name)
+        with con:
+            con.row_factory = sqlite3.Row
+            cur = con.cursor()
+            cur.execute(keys_on)        
+            #execute the statement
+            cur.execute(query, pvalue)
+            #just one result possible
+            row = cur.fetchone()
+            if row is None:
+                return None
+            else:
+                stmnt = 'DELETE FROM tablatures WHERE tablature_id = ?'
+                pvalue = (tablature_id,)
+                #execute the statement
+                cur.execute(stmnt, pvalue)
+                
+                return tablature_id
+        
+    def add_tablature(self, tablature):
         '''
         Add tablature to database.
         '''
         
-        raise NotImplementedError("")
+        keys_on = 'PRAGMA foreign_keys = ON'
+        query = 'INSERT INTO tablatures(body,tablature_id,rating,artist_id,song_id,user_nickname,rating_count) VALUES(?,?,?,?,?,?)'
+        pvalue = (tablature.body,Null,0,tablature.artist_id,tablature.song_id,tablature.user_nickname,0)
+        
+        #tablature_id = None
+        
+        #connects (and creates if necessary) to the database. gets a connection object
+        con = sqlite3.connect(self.database_name)
+        with con:
+            con.row_factory = sqlite3.Row
+            cur = con.cursor()
+            cur.execute(keys_on)        
+            #execute the statement
+            cur.execute(query, pvalue)
+            return tablature.tablature_id
         
     def get_rating(self, tablature_id):
         '''
-        Returns current rating fir the tablature.
+        Returns current rating for the tablature.
         '''
         
-        raise NotImplementedError("")
+        keys_on = 'PRAGMA foreign_keys = ON'
+        query = 'SELECT rating, rating_count FROM tablatures WHERE tablature_id = ?'
+        pvalue = (tablature_id,)
         
-    def add_rating(self, tablature_id, rating):
+        #tablature_id = None
+        
+        #connects (and creates if necessary) to the database. gets a connection object
+        con = sqlite3.connect(self.database_name)
+        with con:
+            con.row_factory = sqlite3.Row
+            cur = con.cursor()
+            cur.execute(keys_on)        
+            #execute the statement
+            cur.execute(query, pvalue)
+            #just one result possible
+            rows = cur.fetchall()
+            if rows is None:
+                return None           
+            return rating,rating_count
+        
+    def add_rating(self, tablature_id, rating, rating_count):
         '''
         Calculate new rating.
         Returns "not found" error if tablature doesn't exist.
         '''
             
-        raise NotImplementedError("")
+        keys_on = 'PRAGMA foreign_keys = ON'
+        query = 'SELECT rating, rating_count FROM tablatures WHERE tablature_id = ?'
+        pvalue = (tablature_id,)        
+        
+        #tablature_id = None
+        
+        #connects (and creates if necessary) to the database. gets a connection object
+        con = sqlite3.connect(self.database_name)
+        with con:
+            con.row_factory = sqlite3.Row
+            cur = con.cursor()
+            cur.execute(keys_on)        
+            #execute the statement
+            cur.execute(query, pvalue)
+            #just one result possible
+            row = cur.fetchone()
+            if row is None:
+                return None
+            else:
+                stmnt = 'UPDATE tablatures SET rating = ?, rating_count = ? WHERE tablature_id = ?'
+                pvalue = (rating + row[rating],row[rating_count] + 1,)
+                cur.execute(stmnt,pvalue)
+                
+                return rating, rating_count
         
    
     #COMMENT
@@ -563,7 +660,7 @@ def set_and_check_foreign_keys_status(database_name = 'archive.db'):
 def create_users_table(database_name = 'archive.db'):
     keys_on = 'PRAGMA foreign_keys = ON'
 
-    stmnt = 'CREATE TABLE "users" ("user_nickname" TEXT PRIMARY KEY  NOT NULL  UNIQUE , "email" TEXT, "picture" TEXT, "description" TEXT)'
+    stmnt = 'CREATE TABLE "users" ("user_nickname" TEXT PRIMARY KEY  NOT NULL  UNIQUE , "email" TEXT, "picture" TEXT, "description" TEXT  ON DELETE CASCADE )'
 
     #connects (and creates if necessary) to the database. gets a connection object
     con = sqlite3.connect(database_name)
@@ -581,7 +678,7 @@ def create_users_table(database_name = 'archive.db'):
 def create_tablatures_table(database_name = 'archive.db'):
     keys_on = 'PRAGMA foreign_keys = ON'
 
-    stmnt = 'CREATE TABLE "tablatures" ("body" TEXT, "tablature_id" INTEGER PRIMARY KEY  AUTOINCREMENT  NOT NULL  UNIQUE , "rating" INTEGER, "artist_id" TEXT, "song_id" TEXT, "user_nickname" TEXT, "rating_count" INTEGER, FOREIGN KEY(user_nickname) REFERENCES users(user_nickname) ON DELETE CASCADE )'
+    stmnt = 'CREATE TABLE "tablatures" ("body" TEXT, "tablature_id" INTEGER PRIMARY KEY  AUTOINCREMENT  NOT NULL  UNIQUE , "rating" INTEGER, "artist_id" TEXT, "song_id" TEXT, "user_nickname" TEXT, "rating_count" INTEGER, FOREIGN KEY(user_nickname) REFERENCES users(user_nickname))'
 
     #connects (and creates if necessary) to the database. gets a connection object
     con = sqlite3.connect(database_name)
