@@ -1,3 +1,4 @@
+# Fix problem with assertEqual
 #import random
 import database as db
 import unittest
@@ -18,7 +19,7 @@ class TestSequenceFunctions(unittest.TestCase):
         '''
         Try to create user.
         '''
-        user = UserModel.create({"user_nickname":"erkki" , "email":"erkki@sposti.org", "description":,"Hodor"})
+        user = UserModel.create({"user_nickname":"erkki" , "email":"erkki@sposti.org", "description":"Hodor", "picture":"hodor.png"})
         name = db.database.add_user(user)
         self.assertEqual(name, "erkki")
         
@@ -26,7 +27,7 @@ class TestSequenceFunctions(unittest.TestCase):
         '''
         Try to create user with nickname that already exists.
         '''
-        user = UserModel.create({"user_nickname":"erkki", "email":"erkki@ekspertti.info", "description":""})
+        user = UserModel.create({"user_nickname":"erkki", "email":"erkki@ekspertti.info", "description":"", "picture":"lahna.png"})
        
             
         

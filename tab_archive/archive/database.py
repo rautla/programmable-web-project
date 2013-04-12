@@ -14,7 +14,7 @@ class ArchiveDatabaseInterface(object):
     The methods of this class work with archive models...
     '''
     
-    def __init__(self):
+    def __init__(self, database_name = 'archive.db'):
         super(ArchiveDatabaseInterface, self).__init__()
         
     #USERS
@@ -158,7 +158,7 @@ class ArchiveDatabaseInterface(object):
         
 
         
-class ArchiveDatabase(ArchiveDatabaseInterface):
+class ArchiveDatabase(ArchiveDatabaseInterface, database_name = 'archive.db'):
     #USERS
     def add_user(self, user):
         '''
@@ -172,7 +172,7 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
         #user_nickname = None
         
         #connects (and creates if necessary) to the database. gets a connection object
-        con = sqlite3.connect('archive.db')
+        con = sqlite3.connect(database_name)
         with con:
             con.row_factory = sqlite3.Row
             cur = con.cursor()
@@ -205,7 +205,7 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
         #user_nickname = None
         
         #connects (and creates if necessary) to the database. gets a connection object
-        con = sqlite3.connect('archive.db')
+        con = sqlite3.connect(database_name)
         with con:
             con.row_factory = sqlite3.Row
             cur = con.cursor()
@@ -346,14 +346,14 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
         
 
         
-def check_foreign_keys_status():
+def check_foreign_keys_status(database_name = 'archive.db'):
     '''
     Checks the status of foreign keys
     '''
     con = None
     try:
         #connects (and creates if necessary) to the database. gets a connection object
-        con = sqlite3.connect('archive.db')
+        con = sqlite3.connect(database_name)
         #get the cursor object. It allows to execute SQL code and traverse the result set
         cur = con.cursor()    
         #execute the pragma command
@@ -373,7 +373,7 @@ def check_foreign_keys_status():
         if con:
             con.close()
     return data
-def set_and_check_foreign_keys_status():
+def set_and_check_foreign_keys_status(database_name = 'archive.db'):
     '''
     Sets and checks the status of foreign keys
     '''
@@ -381,7 +381,7 @@ def set_and_check_foreign_keys_status():
     con = None
     try:
         #connects (and creates if necessary) to the database. gets a connection object
-        con = sqlite3.connect('archive.db')
+        con = sqlite3.connect(database_name)
         #get the cursor object. It allows to execute SQL code and traverse the result set
         cur = con.cursor()
         #execute the pragma command, ON 
@@ -402,13 +402,13 @@ def set_and_check_foreign_keys_status():
             con.close()
     return data
     
-def create_users_table():
+def create_users_table(database_name = 'archive.db'):
     keys_on = 'PRAGMA foreign_keys = ON'
 
     stmnt = 'CREATE TABLE "users" ("user_nickname" TEXT PRIMARY KEY  NOT NULL  UNIQUE , "email" TEXT, "picture" TEXT, "description" TEXT)'
 
     #connects (and creates if necessary) to the database. gets a connection object
-    con = sqlite3.connect('archive.db')
+    con = sqlite3.connect(database_name)
     with con:
         #get the cursor object. It allows to execute SQL code and traverse the result set
         cur = con.cursor() 
@@ -420,13 +420,13 @@ def create_users_table():
             print "Error %s:" % e.args[0]
     return None
 
-def create_tablatures_table():
+def create_tablatures_table(database_name = 'archive.db'):
     keys_on = 'PRAGMA foreign_keys = ON'
 
     stmnt = 'CREATE TABLE "tablatures" ("body" TEXT, "tablature_id" INTEGER PRIMARY KEY  AUTOINCREMENT  NOT NULL  UNIQUE , "rating" INTEGER, "artist_id" TEXT, "song_id" TEXT, "user_nickname" TEXT, "rating_count" INTEGER, FOREIGN KEY(user_nickname) REFERENCES users(user_nickname))'
 
     #connects (and creates if necessary) to the database. gets a connection object
-    con = sqlite3.connect('archive.db')
+    con = sqlite3.connect(database_name)
     with con:
         #get the cursor object. It allows to execute SQL code and traverse the result set
         cur = con.cursor() 
@@ -438,13 +438,14 @@ def create_tablatures_table():
             print "Error %s:" % e.args[0]
     return None
 
-def create_comments_table():
+def create_comments_table(database_name = 'archive.db'):
+
     keys_on = 'PRAGMA foreign_keys = ON'
 
     stmnt = 'CREATE TABLE "comments" ("comment_id" INTEGER PRIMARY KEY  AUTOINCREMENT  NOT NULL  UNIQUE , "body" TEXT, "tablature_id" INTEGER REFERENCES tablatures, "user_nickname" TEXT REFERENCES users, "reply_to" INTEGER REFERENCES comments)'
     
     #connects (and creates if necessary) to the database. gets a connection object
-    con = sqlite3.connect('archive.db')
+    con = sqlite3.connect(database_name)
     with con:
         #get the cursor object. It allows to execute SQL code and traverse the result set
         cur = con.cursor() 
@@ -455,5 +456,7 @@ def create_comments_table():
         except sqlite3.Error,e:
             print "Error %s:" % e.args[0]
     return None
+
+def get_database(database_name = 'archive.db'):    
+    return ArchiveDatabase(database_name)
     
-database = ArchiveDatabase()
