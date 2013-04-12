@@ -189,8 +189,6 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
             else:
                 return None
         
-
-    
     def get_user(self, user_nickname):
         '''
         returns user.
@@ -226,8 +224,33 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
         Edit user information.
         Return "not found" error if user not found
         '''
+       
+        keys_on = 'PRAGMA foreign_keys = ON'
+        #Get the user_nickname of a user given the Nickname
+        query = 'SELECT * from users WHERE user_nickname = ?'
+        pvalue = (user.user_nickname,)
         
-        raise NotImplementedError("")
+        #user_nickname = None
+        
+        #connects (and creates if necessary) to the database. gets a connection object
+        con = sqlite3.connect('archive.db')
+        with con:
+            con.row_factory = sqlite3.Row
+            cur = con.cursor()
+            cur.execute(keys_on)        
+            #execute the statement
+            cur.execute(query, pvalue)
+            #just one result possible
+            row = cur.fetchone()
+            if row is None:
+                return None
+            else:
+                stmnt = 'UPDATE users SET description = ?, picture= ?,email= ? WHERE user_nickname = ?'
+                pvalue = (user.description or row["description"],user.picture or row["picture"],user.email or row["email"])
+                cur.execute(stmnt,pvalue)
+                
+                return user.user_nickname
+ 
         
     def delete_user(self, user_nickname):
         '''
