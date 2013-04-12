@@ -614,6 +614,21 @@ def create_comments_table(database_name = 'archive.db'):
         except sqlite3.Error,e:
             print "Error: %s" % e.args[0]
     return None
+    
+def drop_tables(database_name = 'debug.db'):
+
+    keys_on = 'PRAGMA foreign_keys = ON'
+    
+    #connects (and creates if necessary) to the database. gets a connection object
+    con = sqlite3.connect(database_name)
+    with con:
+        cur = con.cursor() 
+        cur.execute(keys_on)
+        cur.execute('DROP TABLE users')
+        cur.execute('DROP TABLE tablatures')
+        cur.execute('DROP TABLE comments')
+        
+        
 
 def get_database(database_name = 'archive.db'):    
     return ArchiveDatabase(database_name)

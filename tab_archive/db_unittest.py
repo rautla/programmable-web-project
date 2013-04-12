@@ -15,6 +15,7 @@ class TestSequenceFunctions(unittest.TestCase):
         db.create_users_table("debug.db")
         db.create_tablatures_table("debug.db")
         db.create_comments_table("debug.db")
+        
 
     def test_add_user(self):
         '''
@@ -31,10 +32,20 @@ class TestSequenceFunctions(unittest.TestCase):
         '''
         Try to create user with nickname that already exists.
         '''
-        user = UserModel.create({"user_nickname":"erkki", "email":"erkki@ekspertti.info", "description":"", "picture":"lahna.png"})
-       
-            
+        user1 = UserModel.create({"user_nickname":"erkki", "email":"erkki@ekspertti.info", "description":"", "picture":"lahna.png"})
+        self.handle.add_user(user1)
+        user2 = UserModel.create({"user_nickname":"erkki" , "email":"erkki@sposti.org", "description":"Hodor", "picture":"hodor.png"})
+        name = self.handle.add_user(user2)
+        
+        self.assertEqual(name, None)
+        
+        
+    
+    def tearDown(self):
+        db.drop_tables()
+        
         
 if __name__ == '__main__':
+    
     unittest.main()
     
