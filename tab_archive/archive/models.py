@@ -1,5 +1,3 @@
-from django.db import models # may need to be removed
-
 from datetime import datetime, date
 import re
 
