@@ -158,7 +158,7 @@ class ArchiveDatabaseInterface(object):
         
 
         
-class ArchiveDatabase(ArchiveDatabaseInterface, database_name = 'archive.db'):
+class ArchiveDatabase(ArchiveDatabaseInterface):
     
     def __init__(self, database_name = 'archive.db'):
         super(ArchiveDatabaseInterface, self).__init__()
