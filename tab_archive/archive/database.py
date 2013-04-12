@@ -14,7 +14,7 @@ class ArchiveDatabaseInterface(object):
     The methods of this class work with archive models...
     '''
     
-    def __init__(self, database_name = 'archive.db'):
+    def __init__(self):
         super(ArchiveDatabaseInterface, self).__init__()
         
     #USERS
@@ -159,6 +159,11 @@ class ArchiveDatabaseInterface(object):
 
         
 class ArchiveDatabase(ArchiveDatabaseInterface, database_name = 'archive.db'):
+    
+    def __init__(self, database_name = 'archive.db'):
+        super(ArchiveDatabaseInterface, self).__init__()
+        self.database_name = database_name
+
     #USERS
     def add_user(self, user):
         '''
@@ -172,7 +177,7 @@ class ArchiveDatabase(ArchiveDatabaseInterface, database_name = 'archive.db'):
         #user_nickname = None
         
         #connects (and creates if necessary) to the database. gets a connection object
-        con = sqlite3.connect(database_name)
+        con = sqlite3.connect(self.database_name)
         with con:
             con.row_factory = sqlite3.Row
             cur = con.cursor()
@@ -203,7 +208,7 @@ class ArchiveDatabase(ArchiveDatabaseInterface, database_name = 'archive.db'):
         #user_nickname = None
         
         #connects (and creates if necessary) to the database. gets a connection object
-        con = sqlite3.connect(database_name)
+        con = sqlite3.connect(self.database_name)
         with con:
             con.row_factory = sqlite3.Row
             cur = con.cursor()
@@ -233,7 +238,7 @@ class ArchiveDatabase(ArchiveDatabaseInterface, database_name = 'archive.db'):
         #user_nickname = None
         
         #connects (and creates if necessary) to the database. gets a connection object
-        con = sqlite3.connect('archive.db')
+        con = sqlite3.connect(self.database_name)
         with con:
             con.row_factory = sqlite3.Row
             cur = con.cursor()
@@ -265,7 +270,7 @@ class ArchiveDatabase(ArchiveDatabaseInterface, database_name = 'archive.db'):
         #user_nickname = None
         
         #connects (and creates if necessary) to the database. gets a connection object
-        con = sqlite3.connect('archive.db')
+        con = sqlite3.connect(self.database_name)
         with con:
             con.row_factory = sqlite3.Row
             cur = con.cursor()
@@ -297,7 +302,7 @@ class ArchiveDatabase(ArchiveDatabaseInterface, database_name = 'archive.db'):
         #user_nickname = None
         
         #connects (and creates if necessary) to the database. gets a connection object
-        con = sqlite3.connect('archive.db')
+        con = sqlite3.connect(self.database_name)
         with con:
             con.row_factory = sqlite3.Row
             cur = con.cursor()
@@ -309,8 +314,8 @@ class ArchiveDatabase(ArchiveDatabaseInterface, database_name = 'archive.db'):
             if rows is None:
                 return None
                 
-            users[]
-            for row in rows
+            users = []
+            for row in rows:
                 users.append(UserModel.create(row))
             return users
     
@@ -332,7 +337,7 @@ class ArchiveDatabase(ArchiveDatabaseInterface, database_name = 'archive.db'):
         #song_id = None
         
         #connects (and creates if necessary) to the database. gets a connection object
-        con = sqlite3.connect('archive.db')
+        con = sqlite3.connect(self.database_name)
         with con:
             con.row_factory = sqlite3.Row
             cur = con.cursor()
@@ -347,8 +352,8 @@ class ArchiveDatabase(ArchiveDatabaseInterface, database_name = 'archive.db'):
             if rows is None:
                 return None
                 
-            songs[]
-            for row in rows
+            songs = []
+            for row in rows:
                 songs.append(row)
             return songs
 
@@ -463,7 +468,7 @@ def check_foreign_keys_status(database_name = 'archive.db'):
         
     except sqlite3.Error, e:
         
-        print "Error %s:" % e.args[0]
+        print "Error: %s" % e.args[0]
         sys.exit(1)
         
     finally:
@@ -492,7 +497,7 @@ def set_and_check_foreign_keys_status(database_name = 'archive.db'):
         print "Foreign Keys status: %s" % data                
         
     except sqlite3.Error, e:
-        print "Error %s:" % e.args[0]
+        print "Error: %s" % e.args[0]
         sys.exit(1)
         
     finally:
@@ -515,7 +520,7 @@ def create_users_table(database_name = 'archive.db'):
             #execute the statement
             cur.execute(stmnt)
         except sqlite3.Error,e:
-            print "Error %s:" % e.args[0]
+            print "Error: %s" % e.args[0]
     return None
 
 def create_tablatures_table(database_name = 'archive.db'):
@@ -533,7 +538,7 @@ def create_tablatures_table(database_name = 'archive.db'):
             #execute the statement
             cur.execute(stmnt)
         except sqlite3.Error,e:
-            print "Error %s:" % e.args[0]
+            print "Error: %s" % e.args[0]
     return None
 
 def create_comments_table(database_name = 'archive.db'):
@@ -552,7 +557,7 @@ def create_comments_table(database_name = 'archive.db'):
             #execute the statement
             cur.execute(stmnt)
         except sqlite3.Error,e:
-            print "Error %s:" % e.args[0]
+            print "Error: %s" % e.args[0]
     return None
 
 def get_database(database_name = 'archive.db'):    
