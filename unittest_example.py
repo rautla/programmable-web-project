@@ -10,7 +10,8 @@ class TestSequenceFunctions(unittest.TestCase):
         # make sure the shuffled sequence does not lose any elements
         random.shuffle(self.seq)
         self.seq.sort()
-        self.assertEqual(self.seq, range(10))
+        self.seq = None
+        self.assertIsNotNone(self.seq)
 
         # should raise an exception for an immutable sequence
         self.assertRaises(TypeError, random.shuffle, (1,2,3))
