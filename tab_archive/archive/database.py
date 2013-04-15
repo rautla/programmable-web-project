@@ -248,7 +248,7 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
                 return None
             else:
                 stmnt = 'UPDATE users SET description = ?, picture= ?,email= ? WHERE user_nickname = ?'
-                pvalue = (user.description or row["description"],user.picture or row["picture"],user.email or row["email"])
+                pvalue = (user.description or row["description"],user.picture or row["picture"],user.email or row["email"],user.user_nickname)
                 cur.execute(stmnt,pvalue)
                 
                 return user.user_nickname
@@ -423,7 +423,7 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
             tablatures = []
             for row in rows:
                 tablatures.append(row)
-            return tablatures
+            return TablatureModel.create(row)
         
     def edit_tablature(self, tablature):
         '''
@@ -752,7 +752,7 @@ def create_users_table(database_name = 'archive.db'):
 def create_tablatures_table(database_name = 'archive.db'):
     keys_on = 'PRAGMA foreign_keys = ON'
 
-    stmnt = 'CREATE TABLE "tablatures" ("body" TEXT, "tablature_id" INTEGER PRIMARY KEY  AUTOINCREMENT  NOT NULL  UNIQUE , "rating" INTEGER, "artist_id" TEXT, "song_id" TEXT, "user_nickname" TEXT, "rating_count" INTEGER, FOREIGN KEY(user_nickname) REFERENCES users(user_nickname) TEXT ON DELETE CASCADE )'
+    stmnt = 'CREATE TABLE "tablatures" ("body" TEXT, "tablature_id" INTEGER PRIMARY KEY  AUTOINCREMENT  NOT NULL  UNIQUE , "rating" INTEGER, "artist_id" TEXT, "song_id" TEXT, "user_nickname" TEXT, "rating_count" INTEGER, FOREIGN KEY(user_nickname) REFERENCES users(user_nickname) ON DELETE CASCADE )'
 
     #connects (and creates if necessary) to the database. gets a connection object
     con = sqlite3.connect(database_name)
@@ -771,7 +771,7 @@ def create_comments_table(database_name = 'archive.db'):
 
     keys_on = 'PRAGMA foreign_keys = ON'
 
-    stmnt = 'CREATE TABLE "comments" ("comment_id" INTEGER PRIMARY KEY  AUTOINCREMENT  NOT NULL  UNIQUE , "body" TEXT, "tablature_id" INTEGER REFERENCES tablatures, "user_nickname" TEXT REFERENCES users, "reply_to" INTEGER REFERENCES comments TEXT ON DELETE CASCADE )'
+    stmnt = 'CREATE TABLE "comments" ("comment_id" INTEGER PRIMARY KEY  AUTOINCREMENT  NOT NULL  UNIQUE , "body" TEXT, "tablature_id" INTEGER REFERENCES tablatures ON DELETE CASCADE, "user_nickname" TEXT REFERENCES users ON DELETE CASCADE, "reply_to" INTEGER REFERENCES comments ON DELETE CASCADE )'
     
     #connects (and creates if necessary) to the database. gets a connection object
     con = sqlite3.connect(database_name)

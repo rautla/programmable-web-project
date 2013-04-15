@@ -69,11 +69,13 @@ class TablatureModel(object):
         self.rating = None
         self.artist_id = None
         user_nickname = None
+        self.rating_count = None
         if raw_data is not None:
             self.body = raw_data.get('body', None) 
             self.rating = raw_data.get('rating', None) 
             self.artist_id = raw_data.get('artist_id', None) 
             self.user_nickname = raw_data.get('user_nickname', None)
+            self.rating_count = raw_data.get('rating_count', None)
             
         super(TablatureModel, self).__init__()
             
@@ -85,6 +87,7 @@ class TablatureModel(object):
         tablature.rating = row['rating']
         tablature.artist_id = row['artist_id']
         tablature.user_nickname = row['user_nickname']
+        tablature.rating_count = row['rating_count']
         return tablature
         
     def serialize(object):
@@ -94,6 +97,7 @@ class TablatureModel(object):
         _entity['rating'] = self.rating_id
         _entity['artist_id'] = row['artist_id']
         _entity['user_nickname'] = row['user_nickname']
+        _entity['rating_count'] = row['rating_count']
         return _entity
         
         
