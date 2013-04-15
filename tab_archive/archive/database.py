@@ -21,7 +21,7 @@ class ArchiveDatabaseInterface(object):
     def add_user(self, user_nickname, info):
         '''
         returns user.
-        Return "not found" error if user not found.
+        Return "None" if user not found.
         '''
         
         raise NotImplementedError("")
@@ -29,7 +29,7 @@ class ArchiveDatabaseInterface(object):
     def get_user(self, user_nickname):
         '''
         returns user.
-        Return "not found" error if user not found.
+        Return "None" if user not found.
         '''
         
         raise NotImplementedError("")
@@ -37,7 +37,7 @@ class ArchiveDatabaseInterface(object):
     def edit_user(self, user):
         '''
         Edit user information.
-        Return "not found" error if user not found
+        Return "None" if user not found
         '''
         
         raise NotImplementedError("")
@@ -45,7 +45,7 @@ class ArchiveDatabaseInterface(object):
     def delete_user(self, user_nickname):
         '''
         Deletes user.
-        Return "not found" error if user not found.
+        Return "None" if user not found.
         '''
         
         raise NotImplementedError("")
@@ -62,7 +62,7 @@ class ArchiveDatabaseInterface(object):
         '''
         Return list of songs by artist.
         If artist parameter is left empty return all songs.
-        Return "not found" error if artist or songs not found.
+        Return "None" if artist or songs not found.
         '''
         
         raise NotImplementedError("")
@@ -115,7 +115,7 @@ class ArchiveDatabaseInterface(object):
     def add_rating(self, tablature_id, rating):
         '''
         Calculate new rating.
-        Returns "not found" error if tablature doesn't exist.
+        Returns "None" if tablature doesn't exist.
         '''
             
         raise NotImplementedError("")
@@ -125,15 +125,15 @@ class ArchiveDatabaseInterface(object):
     def get_comment(self, comment_id):
         '''
         Returns the comment.
-        If comment doesn't exist return "not found" error.
+        If comment doesn't exist return "None".
         '''
         
         raise NotImplementedError("")
         
-    def modify_comment(self, comment_id):
+    def modify_comment(self, comment):
         '''
         Changes the comment in database to modified version.
-        If comment doesn't exist return "not found" error.
+        If comment doesn't exist return "None".
         If user is not the original poster, return "unauthorized" error.
         '''
         
@@ -142,7 +142,7 @@ class ArchiveDatabaseInterface(object):
     def delete_comment(self, comment_id):
         '''
         Deletes comment.
-        If comment doesn't exist return "not found" error.
+        If comment doesn't exist return "None".
         If user is not the original poster, return "unauthorized" error.
         '''
         
@@ -196,7 +196,7 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
     def get_user(self, user_nickname):
         '''
         returns user.
-        Return "not found" error if user not found.
+        Return "None" if user not found.
         '''
         
         keys_on = 'PRAGMA foreign_keys = ON'
@@ -225,7 +225,7 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
     def edit_user(self, user):
         '''
         Edit user information.
-        Return "not found" error if user not found
+        Return "None" if user not found
         '''
        
         keys_on = 'PRAGMA foreign_keys = ON'
@@ -257,7 +257,7 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
     def delete_user(self, user_nickname):
         '''
         Deletes user.
-        Return "not found" error if user not found.
+        Return "None" if user not found.
         '''
         keys_on = 'PRAGMA foreign_keys = ON'
         query = 'SELECT * FROM users WHERE user_nickname = ?'
@@ -318,7 +318,7 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
         '''
         Return list of songs by artist.
         If artist parameter is left empty return all songs.
-        Return "not found" error if artist or songs not found.
+        Return "None" if artist or songs not found.
         '''
         
         keys_on = 'PRAGMA foreign_keys = ON'
@@ -385,7 +385,7 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
         Return list of tablatures to specified song.
         If parameters are left empty return all tablatures.
         If song parameter is left empty return all tablatures by artist.
-        Return "not found error if song, artist or tablatures are not found.
+        Return "None" if song, artist or tablatures are not found.
         '''
         
         keys_on = 'PRAGMA foreign_keys = ON'
@@ -449,7 +449,7 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
             if row is None:
                 return None
             else:
-                stmnt = 'UPDATE users SET body = ?, artist_id = ?, song_id = ? WHERE tablature_id = ?'
+                stmnt = 'UPDATE tablatures SET body = ?, artist_id = ?, song_id = ? WHERE tablature_id = ?'
                 pvalue = (tablature.body or row["body"],tablature.artist_id or row["artist_id"],tablature.song_id or row["song_id"])
                 cur.execute(stmnt,pvalue)
                 
@@ -492,7 +492,7 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
         '''
         
         keys_on = 'PRAGMA foreign_keys = ON'
-        query = 'INSERT INTO tablatures(body,tablature_id,rating,artist_id,song_id,user_nickname,rating_count) VALUES(?,?,?,?,?,?)'
+        query = 'INSERT INTO tablatures(body,tablature_id,rating,artist_id,song_id,user_nickname,rating_count) VALUES(?,?,?,?,?,?,?)'
         pvalue = (tablature.body,Null,0,tablature.artist_id,tablature.song_id,tablature.user_nickname,0)
         
         #tablature_id = None
@@ -535,7 +535,7 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
     def add_rating(self, tablature_id, rating, rating_count):
         '''
         Calculate new rating.
-        Returns "not found" error if tablature doesn't exist.
+        Returns "None" if tablature doesn't exist.
         '''
             
         keys_on = 'PRAGMA foreign_keys = ON'
@@ -568,28 +568,90 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
     def get_comment(self, comment_id):
         '''
         Returns the comment.
-        If comment doesn't exist return "not found" error.
+        If comment doesn't exist return "None".
         '''
         
-        raise NotImplementedError("")
+        keys_on = 'PRAGMA foreign_keys = ON'
+        query = 'SELECT * FROM comments WHERE comment_id = ?'
+        pvalue = (comment_id,)
         
-    def modify_comment(self, comment_id):
+        #connects (and creates if necessary) to the database. gets a connection object
+        con = sqlite3.connect(self.database_name)
+        with con:
+            con.row_factory = sqlite3.Row
+            cur = con.cursor()
+            cur.execute(keys_on)        
+            #execute the statement
+            cur.execute(query, pvalue)
+            #just one result possible
+            row = cur.fetchone()
+            if row is None:
+                return None
+            else:    
+                print row.keys()
+                
+                return CommentModel.create(row)
+        
+    def modify_comment(self, comment):
         '''
         Changes the comment in database to modified version.
-        If comment doesn't exist return "not found" error.
+        If comment doesn't exist return "None".
         If user is not the original poster, return "unauthorized" error.
         '''
         
-        raise NotImplementedError("")
+        keys_on = 'PRAGMA foreign_keys = ON'
+        query = 'SELECT * FROM comments WHERE comment_id = ?'
+        pvalue = (comment.comment_id,)
+              
+        #connects (and creates if necessary) to the database. gets a connection object
+        con = sqlite3.connect(self.database_name)
+        with con:
+            con.row_factory = sqlite3.Row
+            cur = con.cursor()
+            cur.execute(keys_on)        
+            #execute the statement
+            cur.execute(query, pvalue)
+            #just one result possible
+            row = cur.fetchone()
+            if row is None:
+                return None
+            else:
+                stmnt = 'UPDATE comments SET body = ? WHERE comment_id = ?'
+                pvalue = (comment.body or row["body"])
+                cur.execute(stmnt,pvalue)
+                
+                return comment.comment_id
         
     def delete_comment(self, comment_id):
         '''
         Deletes comment.
-        If comment doesn't exist return "not found" error.
+        If comment doesn't exist return "None".
         If user is not the original poster, return "unauthorized" error.
         '''
         
-        raise NotImplementedError("")
+        keys_on = 'PRAGMA foreign_keys = ON'
+        query = 'SELECT * FROM comments WHERE comment_id = ?'
+        pvalue = (comment_id,)
+        
+        #connects (and creates if necessary) to the database. gets a connection object
+        con = sqlite3.connect(self.database_name)
+        with con:
+            con.row_factory = sqlite3.Row
+            cur = con.cursor()
+            cur.execute(keys_on)        
+            #execute the statement
+            cur.execute(query, pvalue)
+            #just one result possible
+            row = cur.fetchone()
+            if row is None:
+                return None
+            else:
+                stmnt = 'DELETE FROM comments WHERE comment_id = ?'
+                pvalue = (comment_id,)
+                #execute the statement
+                cur.execute(stmnt, pvalue)
+                
+                return comment_id
         
     def add_comment(self, comment):
         '''
@@ -597,7 +659,19 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
         Return "unauthorized" if user is not logged in.
         '''
         
-        raise NotImplementedError("")
+        keys_on = 'PRAGMA foreign_keys = ON'
+        query = 'INSERT INTO comments(comment_id,body,tablature_id,user_nickname,reply_to) VALUES(?,?,?,?,?)'
+        pvalue = (Null,comment.body,comment.tablature_id,comment.user_nickname,comment.reply_to)
+        
+        #connects (and creates if necessary) to the database. gets a connection object
+        con = sqlite3.connect(self.database_name)
+        with con:
+            con.row_factory = sqlite3.Row
+            cur = con.cursor()
+            cur.execute(keys_on)        
+            #execute the statement
+            cur.execute(query, pvalue)
+            return comment.comment_id
         
 
         
