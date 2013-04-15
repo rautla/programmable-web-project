@@ -1,6 +1,7 @@
 # Fix problem with assertEqual
 #import random
 import archive.database as db
+from operator import attrgetter
 import unittest
 
 from archive.models import UserModel, TablatureModel, CommentModel
@@ -50,7 +51,7 @@ class TestSequenceFunctions(unittest.TestCase):
         
         self.assertTrue(isinstance(ret_val, UserModel))
         
-        self.assertEqual(ret_val.name, erkki)
+        self.assertEqual(ret_val.user_nickname, "erkki")
         
     def test_get_user_fail(self):
         '''
@@ -78,7 +79,7 @@ class TestSequenceFunctions(unittest.TestCase):
         self.assertEqual(changed_user.description, "heeno mees")
         self.assertEqual(changed_user.picture, "tukiainen.png")
         
-    def test_edit_user_fail‎(self):
+    def test_edit_user_fail(self):
         '''
         Try to edit user that does not exist.
         '''
@@ -94,16 +95,16 @@ class TestSequenceFunctions(unittest.TestCase):
         '''
         user = UserModel.create({"user_nickname":"erkki", "email":"erkki@ekspertti.info", "description":"", "picture":"lahna.png"})
         self.handle.add_user(user)
-        name = self.handle.delete_user()
+        name = self.handle.delete_user("erkki")
         
-        self.assertEqual(name, None)
+        self.assertEqual(name, "erkki")
         
     def test_delete_user_fail(self):
         '''
         Try to delete user that does not exist.
         '''
         
-        name = self.handle.delete_user()
+        name = self.handle.delete_user("erkki")
         
         self.assertEqual(name, None)
         
@@ -117,12 +118,31 @@ class TestSequenceFunctions(unittest.TestCase):
         user2 = UserModel.create({"user_nickname":"jorkki" , "email":"erkki@sposti.org", "description":"Hodor", "picture":"hodor.png"})
         name = self.handle.add_user(user2)
         
+        userlist = [user1, user2]
+        userlist.sort(key=attrgetter("user_nickname"))
+        
         users = self.handle.get_users()
+        users.sort(key=attrgetter("user_nickname"))
         
-        self.assertEqual(type(name), type([]))
+        self.assertEqual(type(users), type([]))
         
-        self.assertEqual(user1, users[0])
-        self.assertEqual(user2, users[1])
+        self.assertEqual(userlist[0].user_nickname, users[0].user_nickname)
+        self.assertEqual(userlist[1].user_nickname, users[1].user_nickname)
+        
+    def test_get_users(self):
+        '''
+        Try to get empty userlist.
+        '''        
+        
+        ret_val = self.handle.get_users()
+        self.assertEqual(ret_val, None)
+        
+    def Test_get_songs():
+        '''
+        Try to get songs.
+        '''
+        
+        
     
     def tearDown(self):
         db.drop_tables()
