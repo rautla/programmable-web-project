@@ -75,8 +75,8 @@ class TestSequenceFunctions(unittest.TestCase):
         
         changed_user = self.handle.get_user("erkki")
         self.assertEqual(changed_user.email, "jorma@ekspertti.info")
-        self.assertEqual(changed_user.email, "description":"heeno mees")
-        self.assertEqual(changed_user.email, "picture":"tukiainen.png")
+        self.assertEqual(changed_user.description, "heeno mees")
+        self.assertEqual(changed_user.picture, "tukiainen.png")
         
     def test_edit_user_fail‎(self):
         '''
