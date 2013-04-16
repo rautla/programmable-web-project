@@ -795,9 +795,10 @@ def drop_tables(database_name = 'debug.db'):
     with con:
         cur = con.cursor() 
         cur.execute(keys_on)
-        cur.execute('DROP TABLE users')
-        cur.execute('DROP TABLE tablatures')
+        
         cur.execute('DROP TABLE comments')
+        cur.execute('DROP TABLE tablatures')
+        cur.execute('DROP TABLE users')
         
         
 
