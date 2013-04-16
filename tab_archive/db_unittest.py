@@ -129,7 +129,7 @@ class TestSequenceFunctions(unittest.TestCase):
         self.assertEqual(userlist[0].user_nickname, users[0].user_nickname)
         self.assertEqual(userlist[1].user_nickname, users[1].user_nickname)
         
-    def test_get_users(self):
+    def test_get_users_fail(self):
         '''
         Try to get empty userlist.
         '''        
@@ -137,11 +137,19 @@ class TestSequenceFunctions(unittest.TestCase):
         ret_val = self.handle.get_users()
         self.assertEqual(ret_val, None)
         
-    def Test_get_songs():
+    #def test_add_tablature(self):
+    #   user = UserModel.create({"user_nickname":"erkki", "email":"erkki@ekspertti.info", "description":"", "picture":"lahna.png"})
+    #    self.handle.add_user(user)
+    #
+    #    tab = TablatureModel.create({'tablature_id':"Null", 'body':"1010010", "rating":0, "artist_id":"tuttiritari", "song_id":"tutti viimeinen", "user_nickname":"erkki", "rating_count":0})
+    #    
+    #    self.assertEqual(tab, True)
+        
+    def test_get_songs():
         '''
         Try to get songs.
         '''
-        
+        TablatureModel
         
     
     def tearDown(self):
