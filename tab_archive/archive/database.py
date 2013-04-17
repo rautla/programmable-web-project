@@ -305,7 +305,7 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
             cur.execute(query)
             #get results
             rows = cur.fetchall()
-            if rows is None:
+            if len(rows) == 0:
                 return None
                 
             users = []
@@ -313,8 +313,14 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
                 users.append(UserModel.create(row))
             return users
     
+    def contains_user(self, user_nickname):
+        '''
+        Returns true if the user is in the database. False otherwise
+        '''
+        return self.get_user(user_nickname) is not None    
+    
     #TABLATURE
-    def get_songs(self, artist):
+    def get_songs(self, artist_id):
         '''
         Return list of songs by artist.
         If artist parameter is left empty return all songs.
@@ -322,13 +328,11 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
         '''
         
         keys_on = 'PRAGMA foreign_keys = ON'
-        if artist == '':
+        if artist_id == '':
             query = 'SELECT DISTINCT artist_id, song_id FROM tablatures'
         else:
             query = 'SELECT DISTINCT artist_id, song_id FROM tablatures WHERE artist_id = ?'
-            pvalue = (artist,)
-        
-        #song_id = None
+            pvalue = (artist_id,)
         
         #connects (and creates if necessary) to the database. gets a connection object
         con = sqlite3.connect(self.database_name)
@@ -337,7 +341,7 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
             cur = con.cursor()
             cur.execute(keys_on)        
             #execute the statement
-            if artist == '':
+            if artist_id == '':
                 cur.execute(query)
             else:
                 cur.execute(query, pvalue)
@@ -493,7 +497,7 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
         
         keys_on = 'PRAGMA foreign_keys = ON'
         query = 'INSERT INTO tablatures(body,tablature_id,rating,artist_id,song_id,user_nickname,rating_count) VALUES(?,?,?,?,?,?,?)'
-        pvalue = (tablature.body,Null,0,tablature.artist_id,tablature.song_id,tablature.user_nickname,0)
+        pvalue = (tablature.body,None,0,tablature.artist_id,tablature.song_id,tablature.user_nickname,0)
         
         #tablature_id = None
         
@@ -505,7 +509,8 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
             cur.execute(keys_on)        
             #execute the statement
             cur.execute(query, pvalue)
-            return tablature.tablature_id
+            lrowid = cur.lastrowid
+            return lrowid
         
     def get_rating(self, tablature_id):
         '''
@@ -562,7 +567,12 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
                 cur.execute(stmnt,pvalue)
                 
                 return rating, rating_count
-        
+    
+    def contains_tablature(self, tablature_id):
+        '''
+        Returns true if the tablature is in the database. False otherwise
+        '''
+        return self.get_tablature(tablature_id) is not None        
    
     #COMMENT
     def get_comment(self, comment_id):
@@ -673,7 +683,47 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
             cur.execute(query, pvalue)
             return comment.comment_id
         
+    def append_answer(self, comment_id, body, user_nickname):
+        '''
+        Writes an answer to the message with id=comment_id
+        raises ForumDatabaseError if the DB could not be modified.
+        raises ValueError if the message_id has a wrong format
+        returns the id of the new message
+        '''
+        if comment_id is not None: 
+            match = re.match(comment_id)
+            if match is None:
+                raise ValueError("The comment_id is malformed")
+            comment_id = int(match.group(1))
 
+        keys_on = 'PRAGMA foreign_keys = ON'
+        query = 'SELECT user_nickname from users WHERE user_nickname = ?'
+        pvalue = (user_nickname,)
+        #user_id = None
+        stmnt = 'INSERT INTO comments (body, user_nickname, reply_to) VALUES(?,?,?)'
+        #connects (and creates if necessary) to the database. gets a connection object
+        con = sqlite3.connect(self.database_name)
+        with con:
+            con.row_factory = sqlite3.Row
+            cur = con.cursor()
+            cur.execute(keys_on)        
+            #execute the statement
+            cur.execute(query,pvalue)
+            #just one result possible
+            row = cur.fetchone()
+            if row != None:
+                user_nickname = row["user_nickname"]
+            pvalue = (body,user_nickname, comment_id)
+            #execute the statement
+            cur.execute(stmnt,pvalue)
+            lid = cur.lastrowid
+            return lid if comment_id is not None else None    
+    
+    def contains_comment(self, comment_id):
+        '''
+        Returns true if the message is in the database. False otherwise.
+        '''
+        return self.get_comment(comment_id) is not None
         
 def check_foreign_keys_status(database_name = 'archive.db'):
     '''
