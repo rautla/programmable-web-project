@@ -261,7 +261,7 @@ class TestSequenceFunctions(unittest.TestCase):
         Try to get artists when now tablatures has been added.
         '''
         artists = self.handle.get_artists()
-        self.asserIsNone(artists)
+        self.assertIsNone(artists)
         
     def test_get_tablatures_all(self):
         '''
@@ -443,7 +443,7 @@ class TestSequenceFunctions(unittest.TestCase):
         Try to delete tablature that doesn't exist.
         '''
         deleted_id = self.handle.delete_tablature(3)
-        self.assertIsNone(deleted)
+        self.assertIsNone(deleted_id)
         
     def test_get_rating(self):
         '''
@@ -455,14 +455,14 @@ class TestSequenceFunctions(unittest.TestCase):
         tab = TablatureModel.create({'tablature_id':"Null", 'body':"1010010", "rating":0, "artist_id":"tuttiritari", "song_id":"tutti viimeinen", "user_nickname":"erkki", "rating_count":0})
         tab_id = self.handle.add_tablature(tab)
             
-        rating = self.get_rating(tab_id)
+        rating = self.handle.get_rating(tab_id)
         self.assertEqual(rating, [0,0])
     
     def test_get_rating_fail(self):
         '''
         Try to get rating that doesn't exist.
         '''
-        rating = self.get_rating(1)
+        rating = self.handle.get_rating(1)
         self.assertIsNone(rating)
         
     def test_add_rating(self):
@@ -643,7 +643,7 @@ class TestSequenceFunctions(unittest.TestCase):
     def test_contains_comment(self):
         contains = self.handle.contains_comment(1)
         
-        assertFalse(contains)
+        self.assertFalse(contains)
     
     def tearDown(self):
         db.drop_tables()
