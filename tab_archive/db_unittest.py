@@ -38,7 +38,7 @@ class TestSequenceFunctions(unittest.TestCase):
         user2 = UserModel.create({"user_nickname":"erkki" , "email":"erkki@sposti.org", "description":"Hodor", "picture":"hodor.png"})
         name = self.handle.add_user(user2)
         
-        self.assertEqual(name, None)
+        self.assertIsNone(name)
         
     def test_get_user(self):
         '''
@@ -59,7 +59,7 @@ class TestSequenceFunctions(unittest.TestCase):
         '''
         user = self.handle.get_user("erkki")
         
-        self.assertEqual(user, None)        
+        self.assertIsNone(user)        
         
     def test_edit_user(self):
         '''
@@ -87,7 +87,7 @@ class TestSequenceFunctions(unittest.TestCase):
         
         name = self.handle.edit_user(user)
         
-        self.assertEqual(name, None)
+        self.assertIsNone(name)
         
     def test_delete_user(self):
         '''
@@ -106,7 +106,7 @@ class TestSequenceFunctions(unittest.TestCase):
         
         name = self.handle.delete_user("erkki")
         
-        self.assertEqual(name, None)
+        self.assertIsNone(name)
         
     def test_get_users(self):
         '''
@@ -135,22 +135,515 @@ class TestSequenceFunctions(unittest.TestCase):
         '''        
         
         ret_val = self.handle.get_users()
-        self.assertEqual(ret_val, None)
+        self.assertIsNone(ret_val)
         
-    #def test_add_tablature(self):
-    #   user = UserModel.create({"user_nickname":"erkki", "email":"erkki@ekspertti.info", "description":"", "picture":"lahna.png"})
-    #    self.handle.add_user(user)
-    #
-    #    tab = TablatureModel.create({'tablature_id':"Null", 'body':"1010010", "rating":0, "artist_id":"tuttiritari", "song_id":"tutti viimeinen", "user_nickname":"erkki", "rating_count":0})
-    #    
-    #    self.assertEqual(tab, True)
+    def test_add_tablature(self):
+        user = UserModel.create({"user_nickname":"erkki", "email":"erkki@ekspertti.info", "description":"", "picture":"lahna.png"})
+        self.handle.add_user(user)
+    
+        tab = TablatureModel.create({'tablature_id':"Null", 'body':"1010010", "rating":0, "artist_id":"tuttiritari", "song_id":"tutti viimeinen", "user_nickname":"erkki", "rating_count":0})
+        tab_id = self.handle.add_tablature(tab)
         
-    def test_get_songs():
+        self.assertEqual(tab_id, 1)
+        
+    def test_add_tablature_fail(self):
+        '''
+        Try to add tablature by user that does not exist.
+        '''
+        user = UserModel.create({"user_nickname":"erkki", "email":"erkki@ekspertti.info", "description":"", "picture":"lahna.png"})
+        self.handle.add_user(user)
+    
+        tab = TablatureModel.create({'tablature_id':"Null", 'body':"1010010", "rating":0, "artist_id":"tuttiritari", "song_id":"tutti viimeinen", "user_nickname":"jorkki", "rating_count":0})
+        tab_id = self.handle.add_tablature(tab)
+        
+        self.assertEqual(tab_id, 1)
+        
+    def test_get_songs_by_artist(self):
+        '''
+        Try to get songs by artist.
+        '''
+        user = UserModel.create({"user_nickname":"erkki", "email":"erkki@ekspertti.info", "description":"", "picture":"lahna.png"})
+        self.handle.add_user(user)
+        
+        tab1 = TablatureModel.create({'tablature_id':"Null", 'body':"1010010", "rating":0, "artist_id":"tuttiritari", "song_id":"tutti viimeinen", "user_nickname":"erkki", "rating_count":0})
+        tab_id1 = self.handle.add_tablature(tab1)
+        
+        tab2 = TablatureModel.create({'tablature_id':"Null", 'body':"1011111", "rating":0, "artist_id":"paula koivuniemi", "song_id":"kuka pelkaa paulaa", "user_nickname":"erkki", "rating_count":0})
+        tab_id2 = self.handle.add_tablature(tab2)
+        
+        tab3 = TablatureModel.create({'tablature_id':"Null", 'body':"1010011", "rating":0, "artist_id":"tuttiritari", "song_id":"toinen tutti", "user_nickname":"erkki", "rating_count":0})
+        tab_id3 = self.handle.add_tablature(tab3)
+        
+        tab4 = TablatureModel.create({'tablature_id':"Null", 'body':"1010010", "rating":0, "artist_id":"tuttiritari", "song_id":"tutti viimeinen", "user_nickname":"erkki", "rating_count":0})
+        tab_id4 = self.handle.add_tablature(tab4)
+        
+        songs = self.handle.get_songs("tuttiritari")
+        songs.sort()
+        
+        expected = [["tuttiritari", "tutti viimeinen"],["tuttiritari", "toinen tutti"]]
+        expected.sort()
+
+        self.assertEqual(expected,songs)
+
+        songs = self.handle.get_songs("")
+        songs.sort()
+
+        expected = [["tuttiritari", "tutti viimeinen"], ["tuttiritari", "toinen tutti"], ["paula koivuniemi", "kuka pelaa paulaa"]]
+        expected.sort()
+
+        self.assertEqual(expected,songs)
+
+    def test_get_songs(self):
         '''
         Try to get songs.
         '''
-        TablatureModel
+        user = UserModel.create({"user_nickname":"erkki", "email":"erkki@ekspertti.info", "description":"", "picture":"lahna.png"})
+        self.handle.add_user(user)
         
+        tab1 = TablatureModel.create({'tablature_id':"Null", 'body':"1010010", "rating":0, "artist_id":"tuttiritari", "song_id":"tutti viimeinen", "user_nickname":"erkki", "rating_count":0})
+        tab_id1 = self.handle.add_tablature(tab1)
+        
+        tab2 = TablatureModel.create({'tablature_id':"Null", 'body':"1011111", "rating":0, "artist_id":"paula koivuniemi", "song_id":"kuka pelkaa paulaa", "user_nickname":"erkki", "rating_count":0})
+        tab_id2 = self.handle.add_tablature(tab2)
+        
+        tab3 = TablatureModel.create({'tablature_id':"Null", 'body':"1010011", "rating":0, "artist_id":"tuttiritari", "song_id":"toinen tutti", "user_nickname":"erkki", "rating_count":0})
+        tab_id3 = self.handle.add_tablature(tab3)
+        
+        tab4 = TablatureModel.create({'tablature_id':"Null", 'body':"1010010", "rating":0, "artist_id":"tuttiritari", "song_id":"tutti viimeinen", "user_nickname":"erkki", "rating_count":0})
+        tab_id4 = self.handle.add_tablature(tab4)
+        
+        
+
+        songs = self.handle.get_songs("")
+        songs.sort()
+
+        expected = [["tuttiritari", "tutti viimeinen"], ["tuttiritari", "toinen tutti"], ["paula koivuniemi", "kuka pelaa paulaa"]]
+        expected.sort()
+
+        self.assertEqual(expected,songs)
+    
+    def test_get_songs_fail(self):
+        '''
+        Try to get songs whene there is none.
+        '''
+        songs = self.handle.get_songs("paula koivuniemi")
+        self.assertIsNone(songs)
+
+    def test_get_artists(self):
+        '''
+        Try to get artists.        
+        '''
+        user = UserModel.create({"user_nickname":"erkki", "email":"erkki@ekspertti.info", "description":"", "picture":"lahna.png"})
+        self.handle.add_user(user)
+        
+        tab1 = TablatureModel.create({'tablature_id':"Null", 'body':"1010010", "rating":0, "artist_id":"tuttiritari", "song_id":"tutti viimeinen", "user_nickname":"erkki", "rating_count":0})
+        tab_id1 = self.handle.add_tablature(tab1)
+        
+        tab2 = TablatureModel.create({'tablature_id':"Null", 'body':"1011111", "rating":0, "artist_id":"paula koivuniemi", "song_id":"kuka pelkaa paulaa", "user_nickname":"erkki", "rating_count":0})
+        tab_id2 = self.handle.add_tablature(tab2)
+        
+        tab3 = TablatureModel.create({'tablature_id':"Null", 'body':"1010011", "rating":0, "artist_id":"tuttiritari", "song_id":"toinen tutti", "user_nickname":"erkki", "rating_count":0})
+        tab_id3 = self.handle.add_tablature(tab3)
+        
+        tab4 = TablatureModel.create({'tablature_id':"Null", 'body':"1010010", "rating":0, "artist_id":"tuttiritari", "song_id":"tutti viimeinen", "user_nickname":"erkki", "rating_count":0})
+        tab_id4 = self.handle.add_tablature(tab4)
+        
+        artists = self.handle.get_artists()
+        artists.sort()
+    
+        expected = ["tuttiritari","paula koivuniemi"]
+        expected.sort()
+
+        self.assertEqual(artists, expected)
+
+    def test_get_artists_fail(self):
+        '''
+        Try to get artists when now tablatures has been added.
+        '''
+        artists = self.handle.get_artists()
+        self.asserIsNone(artists)
+        
+    def test_get_tablatures_all(self):
+        '''
+        Try to get list of all tablatures.
+        '''
+        
+        user = UserModel.create({"user_nickname":"erkki", "email":"erkki@ekspertti.info", "description":"", "picture":"lahna.png"})
+        self.handle.add_user(user)
+        
+        tab1 = TablatureModel.create({'tablature_id':"Null", 'body':"1010010", "rating":0, "artist_id":"tuttiritari", "song_id":"tutti viimeinen", "user_nickname":"erkki", "rating_count":0})
+        tab_id1 = self.handle.add_tablature(tab1)
+        
+        tab2 = TablatureModel.create({'tablature_id':"Null", 'body':"1011111", "rating":0, "artist_id":"paula koivuniemi", "song_id":"kuka pelkaa paulaa", "user_nickname":"erkki", "rating_count":0})
+        tab_id2 = self.handle.add_tablature(tab2)
+        
+        tab3 = TablatureModel.create({'tablature_id':"Null", 'body':"1010011", "rating":0, "artist_id":"tuttiritari", "song_id":"toinen tutti", "user_nickname":"erkki", "rating_count":0})
+        tab_id3 = self.handle.add_tablature(tab3)
+        
+        tab4 = TablatureModel.create({'tablature_id':"Null", 'body':"1010010", "rating":0, "artist_id":"tuttiritari", "song_id":"tutti viimeinen", "user_nickname":"erkki", "rating_count":0})
+        tab_id4 = self.handle.add_tablature(tab4)
+        
+        tablatures = self.handle.get_tablatures('','')
+
+        self.assertTrue(isinstance(tablatures[0], TablatureModel))
+        self.assertEqual(tablatures[0].tablature_id, tab1.tablature_id)
+        self.assertEqual(tablatures[0].body, tab1.body)
+        self.assertEqual(tablatures[0].rating, tab1.rating)
+        self.assertEqual(tablatures[0].artist_id, tab1.artist_id)
+        self.assertEqual(tablatures[0].song_id, tab1.song_id)
+        self.assertEqual(tablatures[0].user_nickname, tab1.user_nickname)
+        self.assertEqual(tablatures[0].rating_count, tab1.rating_count)
+        self.assertEqual(len(tablatures), 1)
+        
+        
+        
+    def test_get_tablatures_by_artist(self):
+        '''
+        Try to get list of tablatures by artist.
+        '''
+        user = UserModel.create({"user_nickname":"erkki", "email":"erkki@ekspertti.info", "description":"", "picture":"lahna.png"})
+        self.handle.add_user(user)
+        
+        tab1 = TablatureModel.create({'tablature_id':"Null", 'body':"1010010", "rating":0, "artist_id":"tuttiritari", "song_id":"tutti viimeinen", "user_nickname":"erkki", "rating_count":0})
+        tab_id1 = self.handle.add_tablature(tab1)
+        
+        tab2 = TablatureModel.create({'tablature_id':"Null", 'body':"1011111", "rating":0, "artist_id":"paula koivuniemi", "song_id":"kuka pelkaa paulaa", "user_nickname":"erkki", "rating_count":0})
+        tab_id2 = self.handle.add_tablature(tab2)
+        
+        tab3 = TablatureModel.create({'tablature_id':"Null", 'body':"1010011", "rating":0, "artist_id":"tuttiritari", "song_id":"toinen tutti", "user_nickname":"erkki", "rating_count":0})
+        tab_id3 = self.handle.add_tablature(tab3)
+        
+        tab4 = TablatureModel.create({'tablature_id':"Null", 'body':"1010010", "rating":0, "artist_id":"tuttiritari", "song_id":"tutti viimeinen", "user_nickname":"erkki", "rating_count":0})
+        tab_id4 = self.handle.add_tablature(tab4)
+        
+        tablatures = self.handle.get_tablatures('paula koivuniemi','')
+
+        self.assertTrue(isinstance(tablatures[0], TablatureModel))
+        self.assertEqual(tablatures[0].tablature_id, tab2.tablature_id)
+        self.assertEqual(tablatures[0].body, tab2.body)
+        self.assertEqual(tablatures[0].rating, tab2.rating)
+        self.assertEqual(tablatures[0].artist_id, tab2.artist_id)
+        self.assertEqual(tablatures[0].song_id, tab2.song_id)
+        self.assertEqual(tablatures[0].user_nickname, tab2.user_nickname)
+        self.assertEqual(tablatures[0].rating_count, tab2.rating_count)
+        self.assertEqual(len(tablatures), 1)
+        
+    def test_get_tablatures_by_song(self):
+        '''
+        Try to get list of tablatures by song.
+        '''
+    
+        user = UserModel.create({"user_nickname":"erkki", "email":"erkki@ekspertti.info", "description":"", "picture":"lahna.png"})
+        self.handle.add_user(user)
+        
+        tab1 = TablatureModel.create({'tablature_id':"Null", 'body':"1010010", "rating":0, "artist_id":"tuttiritari", "song_id":"tutti viimeinen", "user_nickname":"erkki", "rating_count":0})
+        tab_id1 = self.handle.add_tablature(tab1)
+        
+        tab2 = TablatureModel.create({'tablature_id':"Null", 'body':"1011111", "rating":0, "artist_id":"paula koivuniemi", "song_id":"kuka pelkaa paulaa", "user_nickname":"erkki", "rating_count":0})
+        tab_id2 = self.handle.add_tablature(tab2)
+        
+        tab3 = TablatureModel.create({'tablature_id':"Null", 'body':"1010011", "rating":0, "artist_id":"tuttiritari", "song_id":"toinen tutti", "user_nickname":"erkki", "rating_count":0})
+        tab_id3 = self.handle.add_tablature(tab3)
+        
+        tab4 = TablatureModel.create({'tablature_id':"Null", 'body':"1010010", "rating":0, "artist_id":"tuttiritari", "song_id":"tutti viimeinen", "user_nickname":"erkki", "rating_count":0})
+        tab_id4 = self.handle.add_tablature(tab4)
+        
+        tablatures = self.handle.get_tablatures('','kuka pelkaa paulaa')
+
+        self.assertTrue(isinstance(tablatures[0], TablatureModel))
+        self.assertEqual(tablatures[0].tablature_id, tab2.tablature_id)
+        self.assertEqual(tablatures[0].body, tab2.body)
+        self.assertEqual(tablatures[0].rating, tab2.rating)
+        self.assertEqual(tablatures[0].artist_id, tab2.artist_id)
+        self.assertEqual(tablatures[0].song_id, tab2.song_id)
+        self.assertEqual(tablatures[0].user_nickname, tab2.user_nickname)
+        self.assertEqual(tablatures[0].rating_count, tab2.rating_count)
+        self.assertEqual(len(tablatures), 1)
+        
+    def test_get_tablatures_fail(self):
+        '''
+        Try to get list of tablatures when there is none.
+        '''
+        
+        tablatures = self.handle.get_tablatures('', '')
+        self.assertIsNone(tablatures)
+        
+    def test_get_tablature(self):
+        '''
+        Try to get tablature by id.
+        '''
+        user = UserModel.create({"user_nickname":"erkki", "email":"erkki@ekspertti.info", "description":"", "picture":"lahna.png"})
+        self.handle.add_user(user)
+    
+        tab = TablatureModel.create({'tablature_id':"Null", 'body':"1010010", "rating":0, "artist_id":"tuttiritari", "song_id":"tutti viimeinen", "user_nickname":"erkki", "rating_count":0})
+        tab_id = self.handle.add_tablature(tab)
+        
+        got = self.handle.get_tablature(tab_id)
+        self.assertTrue(isinstance(got, TablatureModel))
+        self.assertEqual(got.tablature_id, tab.tablature_id)
+        self.assertEqual(got.body, tab.body)
+        self.assertEqual(got.rating, tab.rating)
+        self.assertEqual(got.artist_id, tab.artist_id)
+        self.assertEqual(got.song_id, tab.song_id)
+        self.assertEqual(got.user_nickname, tab.user_nickname)
+        self.assertEqual(got.rating_count, tab.rating_count)
+        
+    def test_get_tablature_fail(self):
+        '''
+        Try to get tablature that does not exist
+        '''
+        tab = self.handle.get_tablature(10)
+        self.assertIsNone(tab)
+        
+    def test_edit_tablature(self)
+        '''
+        Try to edit tablature.
+        '''
+        user = UserModel.create({"user_nickname":"erkki", "email":"erkki@ekspertti.info", "description":"", "picture":"lahna.png"})
+        self.handle.add_user(user)
+    
+        tab = TablatureModel.create({'tablature_id':"Null", 'body':"1010010", "rating":0, "artist_id":"tuttiritari", "song_id":"tutti viimeinen", "user_nickname":"erkki", "rating_count":0})
+        tab_id = self.handle.add_tablature(tab)
+        
+        edit = TablatureModel.create({'tablature_id':"Null", 'body':"1111111", "rating":0, "artist_id":"tuttiritari", "song_id":"tutti viimeinen", "user_nickname":"erkki", "rating_count":0})
+        edit['tablature_id'] = tab_id
+        edit_id = self.handle.edit_tablature(edited)
+        edited = self.handle.get_tablature(edit_id)
+        
+        self.assertEqual(edit_id, tab_id)
+        self.assertEqual(edited.body, edit.body)
+        
+    def test_edit_tablature_fail(self):
+        '''
+        Try to edit tablature that does not exist.
+        '''
+        edit = TablatureModel.create({'tablature_id':1, 'body':"1111111", "rating":0, "artist_id":"tuttiritari", "song_id":"tutti viimeinen", "user_nickname":"erkki", "rating_count":0})
+        edit_id = self.handle.edit_tablature(edit)
+
+        self.assertIsNone(edit_id)
+        
+    def test_delete_tablature(self):
+        '''
+        Try to delete tablature.
+        '''
+        user = UserModel.create({"user_nickname":"erkki", "email":"erkki@ekspertti.info", "description":"", "picture":"lahna.png"})
+        self.handle.add_user(user)
+    
+        tab = TablatureModel.create({'tablature_id':"Null", 'body':"1010010", "rating":0, "artist_id":"tuttiritari", "song_id":"tutti viimeinen", "user_nickname":"erkki", "rating_count":0})
+        tab_id = self.handle.add_tablature(tab)
+        
+        delete_id = self.handle.delete_tablature(tab_id)
+        self.assertEqual(tab_id, delete_id)
+        
+        deleted = self.handle.get_tablature(tab_id)
+        self.assertIsNone(deleted)
+        
+    def test_delete_tablature_fail(self):
+        '''
+        Try to delete tablature that doesn't exist.
+        '''
+        deleted_id = self.handle.delete_tablature(3)
+        self.assertIsNone(deleted)
+        
+    def test_get_rating(self):
+        '''
+        Try to get rating.
+        '''
+        user = UserModel.create({"user_nickname":"erkki", "email":"erkki@ekspertti.info", "description":"", "picture":"lahna.png"})
+        self.handle.add_user(user)
+    
+        tab = TablatureModel.create({'tablature_id':"Null", 'body':"1010010", "rating":0, "artist_id":"tuttiritari", "song_id":"tutti viimeinen", "user_nickname":"erkki", "rating_count":0})
+        tab_id = self.handle.add_tablature(tab)
+            
+        rating = self.get_rating(tab_id)
+        self.assertEqual(rating, [0,0])
+    
+    def test_get_rating_fail(self)
+        '''
+        Try to get rating that doesn't exist.
+        '''
+        rating = self.get_rating(1)
+        self.assertIsNone(rating)
+        
+    def test_add_rating(self):
+        '''
+        Try to add rating.
+        '''
+        user = UserModel.create({"user_nickname":"erkki", "email":"erkki@ekspertti.info", "description":"", "picture":"lahna.png"})
+        self.handle.add_user(user)
+    
+        tab = TablatureModel.create({'tablature_id':"Null", 'body':"1010010", "rating":0, "artist_id":"tuttiritari", "song_id":"tutti viimeinen", "user_nickname":"erkki", "rating_count":0})
+        tab_id = self.handle.add_tablature(tab)
+        
+        rating = self.handle.add_rating(tab_id, 5)
+        self.assertEqual(rating, [5,1])
+        rating = self.handle.add_rating(tab_id, 5)
+        self.assertEqual(rating, [10,2])
+        
+    def test_add_rating_fail(self):
+        '''
+        Try to add rating to a tablature that does not exist.
+        '''
+        rating = self.handle.add_rating(1, 5)
+        self.assertIsNone(rating)
+        
+    def test_contains_tablature(self):
+        '''
+        Try if table contains tablature.
+        '''
+        user = UserModel.create({"user_nickname":"erkki", "email":"erkki@ekspertti.info", "description":"", "picture":"lahna.png"})
+        self.handle.add_user(user)
+    
+        tab = TablatureModel.create({'tablature_id':"Null", 'body':"1010010", "rating":0, "artist_id":"tuttiritari", "song_id":"tutti viimeinen", "user_nickname":"erkki", "rating_count":0})
+        tab_id = self.handle.add_tablature(tab)
+        
+        contains = self.handle.contains_tablature(tab_id)
+        self.assertTrue(contains)
+        
+    def test_contains_tablature_fail(self):
+        '''
+        Table doesn't contain tablature.
+        '''
+        contains = self.handle.contains_tablature(1)
+        self.assertFalse(contains)
+        
+    def test_add_comment(self):
+        '''
+        Try to add comment.
+        '''
+        user = UserModel.create({"user_nickname":"erkki", "email":"erkki@ekspertti.info", "description":"", "picture":"lahna.png"})
+        self.handle.add_user(user)
+        
+        tab = TablatureModel.create({'tablature_id':"Null", 'body':"1010010", "rating":0, "artist_id":"tuttiritari", "song_id":"tutti viimeinen", "user_nickname":"erkki", "rating_count":0})
+        tab_id = self.handle.add_tablature(tab)
+        
+        comment = CommentModel.create({"comment_id":None, "reply_to":None, "user_nickname":"erkki", "tablature_id":tab_id, "body":"ihan huono, ei jatkoon"})
+        comment_id = self.handle.add_comment(comment)
+        
+        self.assertEqual(comment_id, 1)
+        
+    def test_add_comment_fail(self):
+        '''
+        Try to add comment without existing user or tablature.
+        '''
+        comment = CommentModel.create({"comment_id":None, "reply_to":None, "user_nickname":"erkki", "tablature_id":tab_id, "body":"ihan huono, ei jatkoon"})
+        comment_id = self.handle.add_comment(comment)
+                
+        assertIsNone(comment_id)
+        
+        user = UserModel.create({"user_nickname":"erkki", "email":"erkki@ekspertti.info", "description":"", "picture":"lahna.png"})
+        self.handle.add_user(user)
+        
+        comment_id = self.handle.add_comment(comment)
+        assertIsNone(comment_id)
+        
+    def test_get_comment(self):
+        '''
+        Try to get comment.
+        '''
+        user = UserModel.create({"user_nickname":"erkki", "email":"erkki@ekspertti.info", "description":"", "picture":"lahna.png"})
+        self.handle.add_user(user)
+        
+        tab = TablatureModel.create({'tablature_id':"Null", 'body':"1010010", "rating":0, "artist_id":"tuttiritari", "song_id":"tutti viimeinen", "user_nickname":"erkki", "rating_count":0})
+        tab_id = self.handle.add_tablature(tab)
+        
+        comment = CommentModel.create({"comment_id":None, "reply_to":None, "user_nickname":"erkki", "tablature_id":tab_id, "body":"ihan huono, ei jatkoon"})
+        comment_id = self.handle.add_comment(comment)
+        
+        got = self.handle.get_comment(comment_id)
+        
+        self.assertTrue(isinstance(got, CommentModel))
+        self.assertEqual(tab.comment_id, got.comment_id)
+        self.assertEqual(tab.user_nickname, got.user_nickname)
+        self.assertEqual(tab.body, got.body)
+    
+    def test_get_comment_fail(self):
+        '''
+        Try to get comment that does not exist.
+        '''
+        
+        got = self.handle.get_comment(1)
+        
+        self.assertIsNone(got)
+        
+    def test_modify_comment(self):
+        '''
+        Try to modify comment.
+        '''
+        user = UserModel.create({"user_nickname":"erkki", "email":"erkki@ekspertti.info", "description":"", "picture":"lahna.png"})
+        self.handle.add_user(user)
+        
+        tab = TablatureModel.create({'tablature_id':"Null", 'body':"1010010", "rating":0, "artist_id":"tuttiritari", "song_id":"tutti viimeinen", "user_nickname":"erkki", "rating_count":0})
+        tab_id = self.handle.add_tablature(tab)
+        
+        comment = CommentModel.create({"comment_id":None, "reply_to":None, "user_nickname":"erkki", "tablature_id":tab_id, "body":"ihan huono, ei jatkoon"})
+        comment_id = self.handle.add_comment(comment)
+        
+        modify = CommentModel.create({"comment_id":comment_id, "reply_to":None, "user_nickname":"erkki", "body":"aivan super, mahtavaa"})
+        modified_id = self.handle.modify_comment(modify)
+        modified = self.handle.get_comment(modified_id)
+        
+        self.assertEqual(modified_id, comment_id)
+        self.assertEqual(modified.body, modify.body)
+        self.assertEqual(modified.user_nickname, comment.user_nickname)
+    
+    def test_modify_comment_fail(self):
+        '''
+        Try to modify comment that does not exist.
+        '''
+        modified_id = CommentModel.create({"comment_id":comment_id, "reply_to":None, "user_nickname":"erkki", "body":"aivan super, mahtavaa"})
+        self.assertIsNone(modified_id)
+        
+    def test_append_answer(self):
+        '''
+        Try to add reply to comment.
+        '''
+        user = UserModel.create({"user_nickname":"erkki", "email":"erkki@ekspertti.info", "description":"", "picture":"lahna.png"})
+        self.handle.add_user(user)
+        
+        tab = TablatureModel.create({'tablature_id':"Null", 'body':"1010010", "rating":0, "artist_id":"tuttiritari", "song_id":"tutti viimeinen", "user_nickname":"erkki", "rating_count":0})
+        tab_id = self.handle.add_tablature(tab)
+        
+        comment = CommentModel.create({"comment_id":None, "reply_to":None, "user_nickname":"erkki", "tablature_id":tab_id, "body":"ihan huono, ei jatkoon"})
+        comment_id = self.handle.add_comment(comment)
+        
+        response = CommentModel.create({"comment_id":None, "reply_to":comment_id, "user_nickname":"erkki", "tablature_id":tab_id, "body":"paraspas"})
+        response_id = self.handle.append_answer(response)
+            
+        self.assertEqual(response_id, 2)
+    
+    def test_append_answer(self):
+        '''
+        Try to add reply to comment that doesn't exist.
+        '''
+    
+        response = CommentModel.create({"comment_id":None, "reply_to":1, "user_nickname":"erkki", "tablature_id":tab_id, "body":"paraspas"})
+        response_id = self.handle.append_answer(response)
+        self.assertIsNone(response_id)
+    
+    def test_contains_comment(self):
+        '''
+        Try if table contains comment with id.
+        '''
+        
+        
+        user = UserModel.create({"user_nickname":"erkki", "email":"erkki@ekspertti.info", "description":"", "picture":"lahna.png"})
+        self.handle.add_user(user)
+        
+        tab = TablatureModel.create({'tablature_id':"Null", 'body':"1010010", "rating":0, "artist_id":"tuttiritari", "song_id":"tutti viimeinen", "user_nickname":"erkki", "rating_count":0})
+        tab_id = self.handle.add_tablature(tab)
+        
+        comment = CommentModel.create({"comment_id":None, "reply_to":None, "user_nickname":"erkki", "tablature_id":tab_id, "body":"ihan huono, ei jatkoon"})
+        comment_id = self.handle.add_comment(comment)
+        
+        contains = self.handle.contains_comment(comment_id)
+        
+        assertTrue(contains)
+        
+    def test_contains_comment(self):
+        contains = self.handle.contains_comment(1)
+        
+        assertFalse(contains)
     
     def tearDown(self):
         db.drop_tables()
