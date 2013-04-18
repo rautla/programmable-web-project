@@ -526,7 +526,7 @@ class TestSequenceFunctions(unittest.TestCase):
         '''
         Try to add comment without existing user or tablature.
         '''
-        comment = CommentModel.create({"comment_id":None, "reply_to":None, "user_nickname":"erkki", "tablature_id":tab_id, "body":"ihan huono, ei jatkoon"})
+        comment = CommentModel.create({"comment_id":None, "reply_to":None, "user_nickname":"erkki", "tablature_id":1, "body":"ihan huono, ei jatkoon"})
         comment_id = self.handle.add_comment(comment)
                 
         assertIsNone(comment_id)
@@ -591,7 +591,7 @@ class TestSequenceFunctions(unittest.TestCase):
         '''
         Try to modify comment that does not exist.
         '''
-        modified_id = CommentModel.create({"comment_id":comment_id, "reply_to":None, "user_nickname":"erkki", "body":"aivan super, mahtavaa"})
+        modified_id = CommentModel.create({"comment_id":1, "reply_to":None, "user_nickname":"erkki", "tablature_id":1, "body":"aivan super, mahtavaa"})
         self.assertIsNone(modified_id)
         
     def test_append_answer(self):
@@ -617,7 +617,7 @@ class TestSequenceFunctions(unittest.TestCase):
         Try to add reply to comment that doesn't exist.
         '''
     
-        response = CommentModel.create({"comment_id":None, "reply_to":1, "user_nickname":"erkki", "tablature_id":tab_id, "body":"paraspas"})
+        response = CommentModel.create({"comment_id":None, "reply_to":1, "user_nickname":"erkki", "tablature_id":1, "body":"paraspas"})
         response_id = self.handle.append_answer(response)
         self.assertIsNone(response_id)
     
