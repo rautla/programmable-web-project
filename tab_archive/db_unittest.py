@@ -395,7 +395,7 @@ class TestSequenceFunctions(unittest.TestCase):
         tab = self.handle.get_tablature(10)
         self.assertIsNone(tab)
         
-    def test_edit_tablature(self)
+    def test_edit_tablature(self):
         '''
         Try to edit tablature.
         '''
@@ -458,7 +458,7 @@ class TestSequenceFunctions(unittest.TestCase):
         rating = self.get_rating(tab_id)
         self.assertEqual(rating, [0,0])
     
-    def test_get_rating_fail(self)
+    def test_get_rating_fail(self):
         '''
         Try to get rating that doesn't exist.
         '''
