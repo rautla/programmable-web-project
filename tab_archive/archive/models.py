@@ -46,8 +46,9 @@ class CommentModel(object):
     @classmethod
     def create(cls, row):
     
-        reply_to = str(row['reply_to']) if row['reply_to'] is not None else ""
-        
+        reply_to = row['reply_to'] if row['reply_to'] is not None else ""
+        tablature_id = row['tablature_id'] if row['tablature_id'] is not None else ""
+		
         comment = CommentModel(row["comment_id"], reply_to=reply_to, tablature_id=tablature_id)
         comment.user_nickname = row['user_nickname']
         comment.body = row['body']

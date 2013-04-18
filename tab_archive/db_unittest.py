@@ -156,7 +156,8 @@ class TestSequenceFunctions(unittest.TestCase):
         tab = TablatureModel.create({'tablature_id':"Null", 'body':"1010010", "rating":0, "artist_id":"tuttiritari", "song_id":"tutti viimeinen", "user_nickname":"jorkki", "rating_count":0})
         tab_id = self.handle.add_tablature(tab)
         
-        self.assertEqual(tab_id, 1)
+        self.assertIsNone(tab_id)
+
         
     def test_get_songs_by_artist(self):
         '''
@@ -188,7 +189,7 @@ class TestSequenceFunctions(unittest.TestCase):
         songs = self.handle.get_songs("")
         songs.sort()
 
-        expected = [["tuttiritari", "tutti viimeinen"], ["tuttiritari", "toinen tutti"], ["paula koivuniemi", "kuka pelaa paulaa"]]
+        expected = [["tuttiritari", "tutti viimeinen"], ["tuttiritari", "toinen tutti"], ["paula koivuniemi", "kuka pelkaa paulaa"]]
         expected.sort()
 
         self.assertEqual(expected,songs)
@@ -217,7 +218,7 @@ class TestSequenceFunctions(unittest.TestCase):
         songs = self.handle.get_songs("")
         songs.sort()
 
-        expected = [["tuttiritari", "tutti viimeinen"], ["tuttiritari", "toinen tutti"], ["paula koivuniemi", "kuka pelaa paulaa"]]
+        expected = [["tuttiritari", "tutti viimeinen"], ["tuttiritari", "toinen tutti"], ["paula koivuniemi", "kuka pelkaa paulaa"]]
         expected.sort()
 
         self.assertEqual(expected,songs)
@@ -286,14 +287,14 @@ class TestSequenceFunctions(unittest.TestCase):
         tablatures = self.handle.get_tablatures('','')
 
         self.assertTrue(isinstance(tablatures[0], TablatureModel))
-        self.assertEqual(tablatures[0].tablature_id, tab1.tablature_id)
+        self.assertEqual(tablatures[0].tablature_id, tab_id1)
         self.assertEqual(tablatures[0].body, tab1.body)
         self.assertEqual(tablatures[0].rating, tab1.rating)
         self.assertEqual(tablatures[0].artist_id, tab1.artist_id)
         self.assertEqual(tablatures[0].song_id, tab1.song_id)
         self.assertEqual(tablatures[0].user_nickname, tab1.user_nickname)
         self.assertEqual(tablatures[0].rating_count, tab1.rating_count)
-        self.assertEqual(len(tablatures), 1)
+        self.assertEqual(len(tablatures), 4)
         
         
         
@@ -319,7 +320,7 @@ class TestSequenceFunctions(unittest.TestCase):
         tablatures = self.handle.get_tablatures('paula koivuniemi','')
 
         self.assertTrue(isinstance(tablatures[0], TablatureModel))
-        self.assertEqual(tablatures[0].tablature_id, tab2.tablature_id)
+        self.assertEqual(tablatures[0].tablature_id, tab_id2)
         self.assertEqual(tablatures[0].body, tab2.body)
         self.assertEqual(tablatures[0].rating, tab2.rating)
         self.assertEqual(tablatures[0].artist_id, tab2.artist_id)
@@ -351,7 +352,7 @@ class TestSequenceFunctions(unittest.TestCase):
         tablatures = self.handle.get_tablatures('','kuka pelkaa paulaa')
 
         self.assertTrue(isinstance(tablatures[0], TablatureModel))
-        self.assertEqual(tablatures[0].tablature_id, tab2.tablature_id)
+        self.assertEqual(tablatures[0].tablature_id, tab_id2)
         self.assertEqual(tablatures[0].body, tab2.body)
         self.assertEqual(tablatures[0].rating, tab2.rating)
         self.assertEqual(tablatures[0].artist_id, tab2.artist_id)
@@ -380,7 +381,7 @@ class TestSequenceFunctions(unittest.TestCase):
         
         got = self.handle.get_tablature(tab_id)
         self.assertTrue(isinstance(got, TablatureModel))
-        self.assertEqual(got.tablature_id, tab.tablature_id)
+        self.assertEqual(got.tablature_id, 1)
         self.assertEqual(got.body, tab.body)
         self.assertEqual(got.rating, tab.rating)
         self.assertEqual(got.artist_id, tab.artist_id)
@@ -405,9 +406,9 @@ class TestSequenceFunctions(unittest.TestCase):
         tab = TablatureModel.create({'tablature_id':"Null", 'body':"1010010", "rating":0, "artist_id":"tuttiritari", "song_id":"tutti viimeinen", "user_nickname":"erkki", "rating_count":0})
         tab_id = self.handle.add_tablature(tab)
         
-        edit = TablatureModel.create({'tablature_id':"Null", 'body':"1111111", "rating":0, "artist_id":"tuttiritari", "song_id":"tutti viimeinen", "user_nickname":"erkki", "rating_count":0})
-        edit['tablature_id'] = tab_id
-        edit_id = self.handle.edit_tablature(edited)
+        edit = TablatureModel.create({'tablature_id':tab_id, 'body':"1111111", "rating":0, "artist_id":"tuttiritari", "song_id":"tutti viimeinen", "user_nickname":"erkki", "rating_count":0})
+        
+        edit_id = self.handle.edit_tablature(edit)
         edited = self.handle.get_tablature(edit_id)
         
         self.assertEqual(edit_id, tab_id)
@@ -456,7 +457,7 @@ class TestSequenceFunctions(unittest.TestCase):
         tab_id = self.handle.add_tablature(tab)
             
         rating = self.handle.get_rating(tab_id)
-        self.assertEqual(rating, [0,0])
+        self.assertEqual(rating, (0,0))
     
     def test_get_rating_fail(self):
         '''
@@ -476,9 +477,9 @@ class TestSequenceFunctions(unittest.TestCase):
         tab_id = self.handle.add_tablature(tab)
         
         rating = self.handle.add_rating(tab_id, 5)
-        self.assertEqual(rating, [5,1])
+        self.assertEqual(rating, (5,1))
         rating = self.handle.add_rating(tab_id, 5)
-        self.assertEqual(rating, [10,2])
+        self.assertEqual(rating, (10,2))
         
     def test_add_rating_fail(self):
         '''
@@ -529,13 +530,13 @@ class TestSequenceFunctions(unittest.TestCase):
         comment = CommentModel.create({"comment_id":None, "reply_to":None, "user_nickname":"erkki", "tablature_id":1, "body":"ihan huono, ei jatkoon"})
         comment_id = self.handle.add_comment(comment)
                 
-        assertIsNone(comment_id)
+        self.assertIsNone(comment_id)
         
         user = UserModel.create({"user_nickname":"erkki", "email":"erkki@ekspertti.info", "description":"", "picture":"lahna.png"})
         self.handle.add_user(user)
         
         comment_id = self.handle.add_comment(comment)
-        assertIsNone(comment_id)
+        self.assertIsNone(comment_id)
         
     def test_get_comment(self):
         '''
@@ -551,11 +552,11 @@ class TestSequenceFunctions(unittest.TestCase):
         comment_id = self.handle.add_comment(comment)
         
         got = self.handle.get_comment(comment_id)
-        
+
         self.assertTrue(isinstance(got, CommentModel))
-        self.assertEqual(tab.comment_id, got.comment_id)
-        self.assertEqual(tab.user_nickname, got.user_nickname)
-        self.assertEqual(tab.body, got.body)
+        self.assertEqual(comment_id, got.comment_id)
+        self.assertEqual(comment.user_nickname, got.user_nickname)
+        self.assertEqual(comment.body, got.body)
     
     def test_get_comment_fail(self):
         '''
@@ -579,7 +580,7 @@ class TestSequenceFunctions(unittest.TestCase):
         comment = CommentModel.create({"comment_id":None, "reply_to":None, "user_nickname":"erkki", "tablature_id":tab_id, "body":"ihan huono, ei jatkoon"})
         comment_id = self.handle.add_comment(comment)
         
-        modify = CommentModel.create({"comment_id":comment_id, "reply_to":None, "user_nickname":"erkki", "body":"aivan super, mahtavaa"})
+        modify = CommentModel.create({"comment_id":comment_id, "reply_to":None, "tablature_id":tab_id, "user_nickname":"erkki", "body":"aivan super, mahtavaa"})
         modified_id = self.handle.modify_comment(modify)
         modified = self.handle.get_comment(modified_id)
         
@@ -591,7 +592,8 @@ class TestSequenceFunctions(unittest.TestCase):
         '''
         Try to modify comment that does not exist.
         '''
-        modified_id = CommentModel.create({"comment_id":1, "reply_to":None, "user_nickname":"erkki", "tablature_id":1, "body":"aivan super, mahtavaa"})
+        modify = CommentModel.create({"comment_id":1, "reply_to":None, "user_nickname":"erkki", "tablature_id":1, "body":"aivan super, mahtavaa"})
+        modified_id = self.handle.modify_comment(modify)
         self.assertIsNone(modified_id)
         
     def test_append_answer(self):

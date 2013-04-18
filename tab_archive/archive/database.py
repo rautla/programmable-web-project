@@ -251,7 +251,7 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
             if row is None:
                 return None
             else:    
-                print row.keys()
+                #print row.keys()
                 
                 return UserModel.create(row)        
     
@@ -380,12 +380,12 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
                 cur.execute(query, pvalue)
             #get results
             rows = cur.fetchall()
-            if rows is None:
+            if rows == []:
                 return None
                 
             songs = []
             for row in rows:
-                songs.append(row)
+                songs.append([row[0],row[1]])
             return songs
 
         
@@ -409,12 +409,12 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
             cur.execute(query)
             #get results
             rows = cur.fetchall()
-            if rows is None:
+            if rows == []:
                 return None
                 
             artists = []
             for row in rows:
-                artists.append(row)
+                artists.append(row[0])
             return artists
         
     def get_tablatures(self, artist_id, song_id):
@@ -428,15 +428,15 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
         keys_on = 'PRAGMA foreign_keys = ON'
         
         if song_id == '' and artist_id == '':
-            query = 'SELECT DISTINCT artist_id, song_id, tablature_id FROM tablatures'
+            query = 'SELECT * FROM tablatures'
         elif song_id == '':
-            query = 'SELECT DISTINCT artist_id, song_id, tablature_id FROM tablatures WHERE artist_id = ?'
+            query = 'SELECT * FROM tablatures WHERE artist_id = ?'
             pvalue = (artist_id,)
         elif artist_id == '':
-            query = 'SELECT DISTINCT artist_id, song_id, tablature_id FROM tablatures WHERE song_id = ?'
+            query = 'SELECT * FROM tablatures WHERE song_id = ?'
             pvalue = (song_id,)
         else:
-            query = 'SELECT DISTINCT artist_id, song_id, tablature_id FROM tablatures WHERE artist_id = ?, song_id = ?'
+            query = 'SELECT * FROM tablatures WHERE artist_id = ?, song_id = ?'
             pvalue = (artist_id, song_id,)
             
         #artist_id = None
@@ -454,13 +454,13 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
                 cur.execute(query, pvalue)
             #get results
             rows = cur.fetchall()
-            if rows is None:
+            if rows == []:
                 return None
                 
             tablatures = []
             for row in rows:
-                tablatures.append(row)
-            return TablatureModel.create(row)
+                tablatures.append(TablatureModel.create(row))
+            return tablatures
 
     def get_tablature(self, tablature_id):
         '''
@@ -510,7 +510,7 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
                 return None
             else:
                 stmnt = 'UPDATE tablatures SET body = ?, artist_id = ?, song_id = ? WHERE tablature_id = ?'
-                pvalue = (tablature.body or row["body"],tablature.artist_id or row["artist_id"],tablature.song_id or row["song_id"])
+                pvalue = (tablature.body or row["body"],tablature.artist_id or row["artist_id"],tablature.song_id or row["song_id"], tablature.tablature_id)
                 cur.execute(stmnt,pvalue)
                 
                 return tablature.tablature_id
@@ -556,6 +556,8 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
         pvalue = (tablature.body,None,0,tablature.artist_id,tablature.song_id,tablature.user_nickname,0)
         
         #tablature_id = None
+        if not self.contains_user(tablature.user_nickname):
+            return None
         
         #connects (and creates if necessary) to the database. gets a connection object
         con = sqlite3.connect(self.database_name)
@@ -588,10 +590,10 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
             #execute the statement
             cur.execute(query, pvalue)
             #just one result possible
-            rows = cur.fetchall()
-            if rows is None:
+            row = cur.fetchone()
+            if row is None:
                 return None           
-            return rating,rating_count
+            return row[0], row[1]
         
     def add_rating(self, tablature_id, rating):
         '''
@@ -619,10 +621,10 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
                 return None
             else:
                 stmnt = 'UPDATE tablatures SET rating = ?, rating_count = ? WHERE tablature_id = ?'
-                pvalue = (rating + row[0], row[1] + 1,)
+                pvalue = (rating + row[0], row[1] + 1, tablature_id)
                 cur.execute(stmnt,pvalue)
                 
-                return rating, rating_count
+                return rating + row[0], row[1] + 1
     
     def contains_tablature(self, tablature_id):
         '''
@@ -654,7 +656,7 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
             if row is None:
                 return None
             else:    
-                print row.keys()
+                #print row.keys()
                 
                 return CommentModel.create(row)
         
@@ -683,7 +685,7 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
                 return None
             else:
                 stmnt = 'UPDATE comments SET body = ? WHERE comment_id = ?'
-                pvalue = (comment.body or row["body"])
+                pvalue = (comment.body or row["body"], comment.comment_id)
                 cur.execute(stmnt,pvalue)
                 
                 return comment.comment_id
@@ -726,8 +728,13 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
         '''
         
         keys_on = 'PRAGMA foreign_keys = ON'
-        query = 'INSERT INTO comments(comment_id,body,tablature_id,user_nickname,reply_to) VALUES(?,?,?,?,?)'
-        pvalue = (Null,comment.body,comment.tablature_id,comment.user_nickname,comment.reply_to)
+        query = 'INSERT INTO comments(comment_id,body,tablature_id,user_nickname) VALUES(?,?,?,?)'
+        pvalue = (None,comment.body,comment.tablature_id,comment.user_nickname)
+        
+        if not self.contains_user(comment.user_nickname):
+            return None
+        if not self.contains_tablature(comment.tablature_id):
+            return None
         
         #connects (and creates if necessary) to the database. gets a connection object
         con = sqlite3.connect(self.database_name)
@@ -737,7 +744,8 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
             cur.execute(keys_on)        
             #execute the statement
             cur.execute(query, pvalue)
-            return comment.comment_id
+            lid = cur.lastrowid
+            return lid 
         
     def append_answer(self, comment):
         '''
@@ -748,6 +756,10 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
         keys_on = 'PRAGMA foreign_keys = ON'
         query = 'SELECT user_nickname from users WHERE user_nickname = ?'
         pvalue = (comment.user_nickname,)
+        if not self.contains_comment(comment.reply_to):
+            return None
+        if not self.contains_user(comment.user_nickname):
+            return None
         #user_id = None
         stmnt = 'INSERT INTO comments (body, user_nickname, reply_to) VALUES(?,?,?)'
         #connects (and creates if necessary) to the database. gets a connection object
