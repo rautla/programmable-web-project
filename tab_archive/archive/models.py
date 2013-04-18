@@ -39,7 +39,7 @@ class CommentModel(object):
         
         if raw_data is not None:
             self.body = raw_data.get('body', None)
-            self.user_nickname = raw.data.get('user_nickname', None)
+            self.user_nickname = raw_data.get('user_nickname', None)
         
         super(CommentModel, self).__init__()
         
@@ -48,9 +48,9 @@ class CommentModel(object):
     
         reply_to = str(row['reply_to']) if row['reply_to'] is not None else ""
         
-        comment = CommentModel(str(row["comment_id"]), reply_to=reply_to, tablature_id=tablature_id)
-        comment.user_nickname = row ['user_nickname']
-        comment.body = row ['body']
+        comment = CommentModel(row["comment_id"], reply_to=reply_to, tablature_id=tablature_id)
+        comment.user_nickname = row['user_nickname']
+        comment.body = row['body']
         return comment
         
     def serialize(self):
@@ -68,7 +68,7 @@ class TablatureModel(object):
         self.body = None
         self.rating = None
         self.artist_id = None
-        self.song_id
+        self.song_id = None
         user_nickname = None
         self.rating_count = None
         if raw_data is not None:

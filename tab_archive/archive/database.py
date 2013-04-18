@@ -417,7 +417,7 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
                 artists.append(row)
             return artists
         
-    def get_tablatures(self, artist, song):
+    def get_tablatures(self, artist_id, song_id):
         '''
         Return list of tablatures to specified song.
         If parameters are left empty return all tablatures.
@@ -431,13 +431,13 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
             query = 'SELECT DISTINCT artist_id, song_id, tablature_id FROM tablatures'
         elif song_id == '':
             query = 'SELECT DISTINCT artist_id, song_id, tablature_id FROM tablatures WHERE artist_id = ?'
-            pvalue = (artist,)
+            pvalue = (artist_id,)
         elif artist_id == '':
             query = 'SELECT DISTINCT artist_id, song_id, tablature_id FROM tablatures WHERE song_id = ?'
-            pvalue = (song,)
+            pvalue = (song_id,)
         else:
             query = 'SELECT DISTINCT artist_id, song_id, tablature_id FROM tablatures WHERE artist_id = ?, song_id = ?'
-            pvalue = (artist,song,)
+            pvalue = (artist_id, song_id,)
             
         #artist_id = None
         

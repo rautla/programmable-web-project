@@ -158,8 +158,24 @@ class Users(APIView):
         return response
     
 class Artist(APIView):
-    def get():
     '''HUOM HOX MITES TÄMÄ (get_tablatures ilman song_id:tä???) TÄTÄ EI LÖYDY MUUALTA KUIN DOKKARISTA'''
+    def get (self, request, artist_id):
+        #Get in an array the models of all the tablatures from songs of artist
+        tablaturemodels = database.get_tablatures(artist_id,'')
+
+        #Serialize each one of the tablatures. An array of tablatures looks like:
+        #[{'title':'message_title, 'link':{'rel':'self','href'=:'http://tab_archive/tablatures/tablature_id'}},
+        #{'title':'message_title, 'link':{'rel':'self','href'=:'http://tab_archive/tablatures/tablature_id'}}]
+        tablatures = []
+        for tablaturemodel in tablaturemodels: 
+            _tablatureid = tablaturemodel.tablature_id
+            _tablatureurl = "http://localhost:8000/tab_archive/tablatures/"+_tablatureid
+            _tablatureurl = reverse("tablature", (_tablatureid,), request=request)
+            tablature = {}
+            tablature['link'] = {'rel':'self', 'href':_tablatureurl}
+            tablatures.append(tablature)
+        '''HUOM HOX RATING, COMMENTS JA UPLOADER???(kts. dokkari)'''
+        return Response(tablatures, status=status.HTTP_200_OK)
 
 class Artists(APIView):
     def get (self, request):
@@ -182,10 +198,9 @@ class Artists(APIView):
         return response
     
 class Song(APIView):
-    def get(self, request):
-    '''HUOM HOX MITES TÄMÄ (get_tablatures???) NÄITÄ EI LÖYDY MUUALTA KUIN DOKKARISTA'''
+    def get(self, request, song_id):
         #Get in an array the models of all the tablatures
-        tablaturemodels = database.get_tablatures()
+        tablaturemodels = database.get_tablatures('', song_id)
 
         #Serialize each one of the tablatures. An array of tablatures looks like:
         #[{'song':'song_id, 'link':{'rel':'self','href'=:'http://tab_archive/artists/artist_id/song_id'}},
