@@ -21,6 +21,7 @@ class User(APIView):
             return self._readauthorized(request, user_nickname) 
         else:
             return self._readunathorized(request, user_nickname) 
+    
     def delete(self, request, user_nickname):
         authorization = ''
         try:
@@ -31,6 +32,7 @@ class User(APIView):
             return self._deleteauthorized(request, user_nickname) 
         else:
             return Response(status = 401) 
+    
     def put(self, request, user_nickname):
         authorization = ''
         try:
@@ -44,28 +46,24 @@ class User(APIView):
     
         #Use the database to extract a user information. Use the method 
         #database.getUser(user_id) to obtain a UserModel
-        usermodel = database.get_user(user_id)
+        usermodel = database.get_user(user_nickname)
         #If the database returns None return 404 not Found
         if usermodel is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
         #Get the url of the users resource
         uritousers = reverse("users", request=request)
-        #Get the url of this user history resource
-        uritohistory = reverse("history", (user_id,), request=request)
         
         #Create the response body output. The output is a dictionary with the 
         #format provided in the method description
         output = {}
         #Create the dictionaries for publicProfile, history and users. To avoid
         #problems transform the registrationdata and description in string using the str() function
-        publicprofile = {'nickname':usermodel.nickname,
-                       'registrationdate':str(usermodel.reg_date),
+        publicprofile = {'user_nickname':usermodel.user_nickname,
+                       'picture':usermodel.picture,
                        'description':str(usermodel.description)}
-        history = {'rel':'self', 'href':uritohistory}
         users = {'rel':'self', 'href':uritousers}
         #Append to the output
         output['publicprofile'] = publicprofile
-        output['history'] = history
         output['users'] = users
         return Response(output, status=status.HTTP_200_OK)
     
@@ -85,75 +83,62 @@ class User(APIView):
         output['users'] = users
         return Response(output, status=status.HTTP_200_OK)
         
-    def _deleteauthorized(self, request, user_id):
-        if database.delete_user(user_id) is not None:
+    def _deleteauthorized(self, request, user_nickname):
+        if database.delete_user(user_nickname) is not None:
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
-            error = ErrorModel("The message "+ user_id+
-                               " is not in the forum").serialize()
+            error = ErrorModel("The user "+ user_nickname+
+                               " is not in the archive").serialize()
             return Response(error, status=status.HTTP_404_NOT_FOUND)
     
-    def _updateuser(self, request, user_id):
-        usermodel = UserModel(user_id)
+    def _updateuser(self, request, user_nickname):
+        usermodel = UserModel(user_nickname)
         if usermodel is None:
             return Response(status = status.HTTP_404_NOT_FOUND)
         #request.DATA contains a dictionary with the entity body input.
         #Deserialize the data and modify the model
         try:
             #EXTRACT THE PRIVATE DATA
-            firstname = request.DATA['firstname']
-            lastname = request.DATA['lastname']
-            age = request.DATA['age']
-            gender = request.DATA['gender']
-            residence = request.DATA['residence']
+
             email = request.DATA['email']
-            website = request.DATA['website']
             description = request.DATA.get("description","")
             #SET VALUES TO USER
-            usermodel.nickname = user_id
+            usermodel.nickname = user_nickname
             usermodel.description = description
-            usermodel.firstname = firstname
-            usermodel.lastname = lastname
-            usermodel.age = int(age)
-            usermodel.gender = gender
-            usermodel.residence = residence
             usermodel.email = email
-            usermodel.website = website
         except Exception as e:
             print "Could not add the data "+ str(e)
             traceback.print_exc()
             return Response(status = 400)
         #Update the model to the database
-        database.modify_user(usermodel)
-        url = reverse("user", (user_id,), request=request)
+        database.edit_user(usermodel)
+        url = reverse("user", (user_nickname,), request=request)
         return Response(status=status.HTTP_204_NO_CONTENT,
                         headers={"Location":url})
     
     def _createuser(self, request, user_id):
-        if database.contains_user(user_id):
+        if database.contains_user(user_nickname):
             return Response(status=status.HTTP_409_CONFLICT)
         usermodel = None
         try:
-            usermodel = UserModel(user_id, raw_data=request.DATA)
+            usermodel = UserModel(user_nickname, raw_data=request.DATA)
         except Exception as e:
             print "Could not add the data "+ str(e)
             traceback.print_exc()
             return Response(status = 400)
-        database.append_user(usermodel)
-        url = reverse("user", (user_id,), request=request)
+        database.add_user(usermodel)
+        url = reverse("user", (user_nickname,), request=request)
         return Response(status=status.HTTP_204_NO_CONTENT,
                         headers={"Location":url})
     
-    def _isauthorized(self, user_id, authorization): 
+    def _isauthorized(self, user_nickname, authorization): 
         if authorization is not None and (authorization.lower() == "admin" or 
-                                          authorization.lower() == user_id.lower()):
+                                          authorization.lower() == user_nickname.lower()):
             return True
         return False
     
-
 class Users(APIView):
     def get (self, request):
-
         #Get in an array the models of all the messages
         usermodels = database.get_users()
         #Users output looks: 
@@ -174,22 +159,56 @@ class Users(APIView):
     
 class Artist(APIView):
     def get():
-    
+    '''HUOM HOX MITES TÄMÄ (get_tablatures ilman song_id:tä???) TÄTÄ EI LÖYDY MUUALTA KUIN DOKKARISTA'''
 
 class Artists(APIView):
-    def get():
+    def get (self, request):
+        #Get an array of all the artists
+        artistsmodels = database.get_artists()
+        #Artists output looks: 
+        #[{'artist':artist_id, 'link':{'rel':'self','href'=:'http://tab_archive/artists/artist_id'}},
+        #{{'artist':artist_id, 'link':{'rel':'self','href'=:'http://tab_archive/artists/artist_id'}}]
+        artists = []
+        for tablaturemodel in artistmodels:'''HUOM HOX MITES TÄMÄ'''
+            _artistid = tablaturemodel.artist_id
+            _artisturl = "http://localhost:8000/tab_archive/artists/"+_artist_id
+            _artisturl = reverse("artist", (_artistid,), request=request)
+            artist = {}
+            artist['artist_id'] = _artistid
+            artist['link'] = {'rel':'self', 'href':_artisturl}
+            artists.append(artist)
+        
+        response = Response(artists, status=status.HTTP_200_OK)
+        return response
     
-
 class Song(APIView):
     def get():
+    '''HUOM HOX MITES TÄMÄ (get_tablatures???) NÄITÄ EI LÖYDY MUUALTA KUIN DOKKARISTA'''
     
     def post():
-    
+    '''HUOM HOX MITES TÄMÄ (add_tablature???)'''
 
 class Songs(APIView):
-    def get():
+    def get (self, request):
+        #Get in an array the models of all the messages
+        songmodels = database.get_songs()
+        #Users output looks: 
+        #[{'song':song_id, 'link':{'rel':'self','href'=:'http://tab_archive/artists/artist_id/song_id'}},
+        #{{'song':song_id, 'link':{'rel':'self','href'=:'http://tab_archive/artists/artist_id/song_id'}}]
+        songs = []
+        for tablaturemodel in songmodels:'''HUOM HOX MITES TÄMÄ'''
+            _artistid = tablaturemodel.artist_id
+            _songid = tablaturemodel.song_id
+            _songurl = "http://localhost:8000/tab_archive/artists/%s/%s" %(_artistid ,_song_id)
+            _songurl = reverse("user", (_songid,), request=request)
+            song = {}
+            song['song_id'] = _songid
+            song['link'] = {'rel':'self', 'href':_songurl}
+            songs.append(song)
+        
+        response = Response(songs, status=status.HTTP_200_OK)
+        return response
     
-
 class Comment(APIView):
     #GET return the comment which comment id is comment_id
     def get (self, request, comment_id):
@@ -215,36 +234,197 @@ class Comment(APIView):
         #If replyto exists, include the url of the reply message
         replytocomment_url = None
         if 'reply_to' in comment:
-            replytocomment_url = "http://localhost:8000/tab_archive/tablatures/%i/%i" %(comment[tablature_id],comment[comment_id])
+            replytocomment_url = "http://localhost:8000/tab_archive/tablatures/" + comment[tablature_id] + "/" + comment[comment_id])
             replytomessage_url = reverse("comment", (comment['reply_to'],), 
                                          request=request)
             comment['reply_to'] = replytocomment_url
         return Response(comment, status=status.HTTP_200_OK)    
     
-    def delete():
+    def delete(self, request, comment_id):
+       try:
+            if database.delete_comment(comment_id):
+                return Response(None, status=status.HTTP_204_NO_CONTENT)
+            else:
+                error = ErrorModel("The comment "+comment_id+
+                                   " is not in the archive").serialize()
+                return Response(error, status=status.HTTP_404_NOT_FOUND)
+        except Exception:
+            error = ErrorModel("The comment "+comment_id+
+                                   " is not in the archive").serialize()
+            return Response(error, status=status.HTTP_400_BAD_REQUEST)    
     
-    def put():
+    def put(self, request, comment_id):
+       #request.DATA contains the request body already deserialized in a
+        #python dictionary
+        if not request.DATA:
+            error = ErrorModel('The the body of the comment\
+                               cannot be empty').serialize()
+            return Response(error, status=status.HTTP_400_BAD_REQUEST)
+        if not database.contains_comment(comment_id):
+            error = ErrorModel("The comment "+ comment_id+
+                               " is not in the archive").serialize()
+            return Response(error, status=status.HTTP_404_NOT_FOUND)
+
+        #Deserialize and modify the data in the message.
+        try:
+            body = request.DATA['body']
+            database.modify_comment(comment_id, body)
+        except Exception:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        
+        return Response(None, status=status.HTTP_204_NO_CONTENT)     
     
-    def post():
+    def post(self, request, comment_id):
+        #request.DATA contains the request body already deserialized in
+        #a python dictionary
+        if not request.DATA:
+            error = ErrorModel('The body of the comment\
+                               cannot be empty').serialize()
+            return Response(error, status=status.HTTP_404_NOT_FOUND)
+        if not database.contains_comment(comment_id):
+            error = ErrorModel("The comment "+comment_id+
+                               " is not in the archive").serialize()
+            return Response(error, status=status.HTTP_404_NOT_FOUND)
+        
+        #Deserialize and add a new answer to the message.
+        try:
+            body = request.DATA['body']
+            sender = request.DATA['user_nickname']
+            #Create the new message and build the response code'
+            newcomment = database.append_answer(
+                                    comment_id, body,
+                                    request.META.get('REMOTE_ADDR'),
+                                    sender)
+            if not newcomment:
+                return Response(ErrorModel("Unknown error creating the post")
+                                .serialize(), status=500)
+            #Create the response path
+            url = reverse("comment", (newcomment,), request=request)
+            return Response(status=status.HTTP_201_CREATED,
+                            headers={'Location':url})
+        except Exception:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
     
 
 class Rating(APIView):
-    def get():
+    '''HUOM HOX MITES TÄMÄ'''
+    def get(self, request):
+        ratingmodel = database.get_rating()
+        if ratingmodel is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)        
+        #Rating output looks: 
+        #[{'rating':rating, 'link':{'rel':'self','href'=:'http://tab_archive/tablatures/tablature_id/rating'}}]
+        rating[]
+        _rating = tablaturemodel.rating
+        _ratingurl = "http://localhost:8000/tab_archive/tablatures/" + tablature[tablature_id] + "/" + tablature[rating]
+        _ratingurl = reverse("rating", (_rating,), request=request)
+        rating = {}
+        rating['rating'] = _rating
+        rating['link'] = {'rel':'self', 'href':_ratingurl}
+        
+        response = Response(rating, status=status.HTTP_200_OK)
+        return response    
     
     def put():
     
 
 class Tablature(APIView):
-    def get():
+    def get (self, request, message_id):
+    '''HUOM HOX TÄTÄ EI LÖYDY MUUALTA KUIN DOKKARISTA'''
+    #GET return the message which message id is messageid
+        #Get the model
+        tablaturemodel = database.get_tablature(tablature_id)
+        if tablaturemodel is None:
+            error = ErrorModel("The tablature "+ tablature_id+
+                               " is not in the archive").serialize()
+            return Response(error, status=status.HTTP_404_NOT_FOUND)
+
+        #Serialize and modify the result so the sender is linked to its url
+        tablature = tablaturemodel.serialize()
+        print tablature
+        #Modify the sender so it includes the URL of the sender:
+        #From sender:"Axel" => I create sender:{'user_nickname':'Axel','link':{'rel':'self','href'=:'http://tab_archive/users/Axel'}}
+        #senderurl = "http://localhost:8000/tab_archive/users/"+tablature['user_nickname']
+        if tablature['user_nickname'] is not None:
+            senderurl = reverse("user_nickname",(talbature['user_nickname'],), request=request)
+            tablature['user_nickname'] = {'user_nickname':tablature['user_nickname'], 
+                                 'link':{'rel':'self','href':senderurl}}
+        else:
+            tablature['user_nickname'] = "Anonymous"
+        return Response(tablature, status=status.HTTP_200_OK)    
     
-    def delete():
+    def delete(self, request, tablature_id):
+        try:
+            if database.delete_tablature(tablature_id):
+                return Response(None, status=status.HTTP_204_NO_CONTENT)
+            else:
+                error = ErrorModel("The tablature "+tablature_id+
+                                   " is not in the archive").serialize()
+                return Response(error, status=status.HTTP_404_NOT_FOUND)
+        except Exception:
+            error = ErrorModel("The tablature "+tablature_id+
+                                   " is not in the archive").serialize()
+            return Response(error, status=status.HTTP_400_BAD_REQUEST)    
     
-    def put():
+    def put(self, request, tablature_id):
+        #request.DATA contains the request body already deserialized in a
+        #python dictionary
+        if not request.DATA:
+            error = ErrorModel('The artist_id, song_id and body of the tablature\
+                               cannot be empty').serialize()
+            return Response(error, status=status.HTTP_400_BAD_REQUEST)
+        if not database.contains_tablature(tablature_id):
+            error = ErrorModel("The tablature "+ tablature_id+
+                               " is not in the archive").serialize()
+            return Response(error, status=status.HTTP_404_NOT_FOUND)
+
+        #Deserialize and modify the data in the message.
+        try:
+            '''TÄÄ ON VÄÄRIN'''
+            body = request.DATA['body']
+            artist_id = request.DATA['artist_id']
+            song_id = request.DATA['song_id']
+            database.edit_tablature('''TÄNNE JOTAKI''')
+        except Exception:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        
+        return Response(None, status=status.HTTP_204_NO_CONTENT)     
     
-    def post():
+    def post(self, request, tablature_id):
+        #request.DATA contains the request body already deserialized in
+        #a python dictionary
+        if not request.DATA:
+            error = ErrorModel('The artist_id, song_id and the body of the message\
+                               cannot be empty').serialize()
+            return Response(error, status=status.HTTP_404_NOT_FOUND)
+        if not database.contains_tablature(tablature_id):
+            error = ErrorModel("The tablature "+tablature_id+
+                               " is not in the archive").serialize()
+            return Response(error, status=status.HTTP_404_NOT_FOUND)
+        
+        #Deserialize and add a new answer to the message.
+        try:
+            body = request.DATA['body']
+            sender = request.DATA['user_nickname']
+            artist = request.
+            #Create the new message and build the response code'
+            newmessage = database.append_answer(
+                                    message_id, title, body,
+                                    request.META.get('REMOTE_ADDR'),
+                                    sender)
+            if not newmessage:
+                return Response(ErrorModel("Unknown error creating the post")
+                                .serialize(), status=500)
+            #Create the response path
+            url = reverse("message", (newmessage,), request=request)
+            return Response(status=status.HTTP_201_CREATED,
+                            headers={'Location':url})
+        except Exception:
+            return Response(status=status.HTTP_400_BAD_REQUEST)    
     
 
 class Tablatures(APIView):
     def get():
+    
     def post():
-
+    '''HUOM HOX TÄTÄ EI LÖYDY MUUALTA KUIN DOKKARISTA(sama kuin song post ja tablature post)'''
