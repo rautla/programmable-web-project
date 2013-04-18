@@ -56,6 +56,12 @@ class ArchiveDatabaseInterface(object):
         '''
         
         raise NotImplementedError("")
+
+    def contains_user(self, user_nickname):
+        '''
+        Returns true if the user is in the database. False otherwise
+        '''
+        raise NotImplementedError("")
     
     #TABLATURES
     def get_songs(self, artist):
@@ -80,6 +86,14 @@ class ArchiveDatabaseInterface(object):
         If parameters are left empty return all tablatures.
         If song parameter is left empty return all tablatures by artist.
         Return "not found error if song, artist or tablatures are not found.
+        '''
+        
+        raise NotImplementedError("")
+
+    def get_tablature(self, tablature_id):
+        '''
+        Return tablature.
+        Return "None" if tablature was not found
         '''
         
         raise NotImplementedError("")
@@ -119,7 +133,12 @@ class ArchiveDatabaseInterface(object):
         '''
             
         raise NotImplementedError("")
-        
+ 
+    def contains_tablature(self, tablature_id):
+        '''
+        Returns true if the tablature is in the database. False otherwise
+        '''
+        raise NotImplementedError("")       
    
     #COMMENT
     def get_comment(self, comment_id):
@@ -156,7 +175,21 @@ class ArchiveDatabaseInterface(object):
         
         raise NotImplementedError("")
         
-
+    def append_answer(self, comment_id, body, user_nickname):
+        '''
+        Writes an answer to the message with id=comment_id
+        raises ForumDatabaseError if the DB could not be modified.
+        raises ValueError if the message_id has a wrong format
+        returns the id of the new message
+        '''
+        
+        raise NotImplementedError("")
+        
+    def contains_comment(self, comment_id):
+        '''
+        Returns true if the message is in the database. False otherwise.
+        '''
+        raise NotImplementedError("")        
         
 class ArchiveDatabase(ArchiveDatabaseInterface):
     
@@ -428,6 +461,29 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
             for row in rows:
                 tablatures.append(row)
             return TablatureModel.create(row)
+
+    def get_tablature(self, tablature_id):
+        '''
+        Return a tablature.
+        Return "None" if tablature was not found.
+        '''
+        
+        keys_on = 'PRAGMA foreign_keys = ON'
+        query = 'SELECT * FROM tablatures WHERE tablature_id = ?'
+        pvalue = (tablature_id,)
+        #connects (and creates if necessary) to the database. gets a connection object
+        con = sqlite3.connect(self.database_name)
+        with con:
+            con.row_factory = sqlite3.Row
+            cur = con.cursor()
+            cur.execute(keys_on)        
+            #execute the statement
+            cur.execute(query, pvalue)
+            #just one result possible
+            row = cur.fetchone()
+            if row is None:
+                return None
+            return TablatureModel.create(row)
         
     def edit_tablature(self, tablature):
         '''
@@ -537,7 +593,7 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
                 return None           
             return rating,rating_count
         
-    def add_rating(self, tablature_id, rating, rating_count):
+    def add_rating(self, tablature_id, rating):
         '''
         Calculate new rating.
         Returns "None" if tablature doesn't exist.
@@ -563,7 +619,7 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
                 return None
             else:
                 stmnt = 'UPDATE tablatures SET rating = ?, rating_count = ? WHERE tablature_id = ?'
-                pvalue = (rating + row[rating],row[rating_count] + 1,)
+                pvalue = (rating + row[0], row[1] + 1,)
                 cur.execute(stmnt,pvalue)
                 
                 return rating, rating_count
@@ -683,22 +739,15 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
             cur.execute(query, pvalue)
             return comment.comment_id
         
-    def append_answer(self, comment_id, body, user_nickname):
+    def append_answer(self, comment):
         '''
-        Writes an answer to the message with id=comment_id
-        raises ForumDatabaseError if the DB could not be modified.
-        raises ValueError if the message_id has a wrong format
-        returns the id of the new message
+        Writes an answer to the comment with id=comment_id
+        returns the id of the new comment
         '''
-        if comment_id is not None: 
-            match = re.match(comment_id)
-            if match is None:
-                raise ValueError("The comment_id is malformed")
-            comment_id = int(match.group(1))
 
         keys_on = 'PRAGMA foreign_keys = ON'
         query = 'SELECT user_nickname from users WHERE user_nickname = ?'
-        pvalue = (user_nickname,)
+        pvalue = (comment.user_nickname,)
         #user_id = None
         stmnt = 'INSERT INTO comments (body, user_nickname, reply_to) VALUES(?,?,?)'
         #connects (and creates if necessary) to the database. gets a connection object
@@ -712,8 +761,8 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
             #just one result possible
             row = cur.fetchone()
             if row != None:
-                user_nickname = row["user_nickname"]
-            pvalue = (body,user_nickname, comment_id)
+                comment.user_nickname = row["user_nickname"]
+            pvalue = (comment.body,comment.user_nickname, comment.comment_id)
             #execute the statement
             cur.execute(stmnt,pvalue)
             lid = cur.lastrowid
