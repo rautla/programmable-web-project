@@ -139,7 +139,7 @@ class User(APIView):
     
 class Users(APIView):
     def get (self, request):
-        #Get in an array the models of all the messages
+        #Get in an array the models of all the users
         usermodels = database.get_users()
         #Users output looks: 
         #[{'nickname':user_nickname, 'link':{'rel':'self','href'=:'http://tab_archive/users/user_nickname'}},
@@ -182,21 +182,62 @@ class Artists(APIView):
         return response
     
 class Song(APIView):
-    def get():
+    def get(self, request):
     '''HUOM HOX MITES TÄMÄ (get_tablatures???) NÄITÄ EI LÖYDY MUUALTA KUIN DOKKARISTA'''
+        #Get in an array the models of all the tablatures
+        tablaturemodels = database.get_tablatures()
+
+        #Serialize each one of the tablatures. An array of tablatures looks like:
+        #[{'song':'song_id, 'link':{'rel':'self','href'=:'http://tab_archive/artists/artist_id/song_id'}},
+        #{'song':'song_id, 'link':{'rel':'self','href'=:'http://tab_archive/artists/artist_id/song_id'}}]
+        tablatures = []
+        for tablaturemodel in tablaturemodels: 
+            _tablatureid = tablaturemodel.tablature_id
+            _tablatureurl = "http://localhost:8000/tab_archive/tablatures/"+_tablatureid
+            _tablatureurl = reverse("tablature", (_tablatureid,), request=request)
+            tablature = {}
+            tablature['link'] = {'rel':'self', 'href':_tablatureurl}
+            tablatures.append(tablature)
+        '''HUOM HOX RATING, COMMENTS JA UPLOADER???(kts. dokkari)'''
+        return Response(tablatures, status=status.HTTP_200_OK)    
     
-    def post():
-    '''HUOM HOX MITES TÄMÄ (add_tablature???)'''
+    def post(self, request, tablature_id):
+    '''HUOM HOX MITES TÄMÄ (tablatures->post??? add_tablature???)'''
+        #request.DATA contains the request body already deserialized in
+        #a python dictionary
+        if not request.DATA:
+            error = ErrorModel('The artist_id, song_id and the body of the tablature\
+                               cannot be empty').serialize()
+            return Response(error, status=status.HTTP_404_NOT_FOUND)
+        if not database.contains_tablature(tablature_id):
+            error = ErrorModel("The tablature "+tablature_id+
+                               " is not in the archive").serialize()
+            return Response(error, status=status.HTTP_404_NOT_FOUND)
+        
+        '''HUOM HOX MITES TUON tablature_id:n KANSSA'''
+        if database.contains_tablature(tablature_id):
+            return Response(status=status.HTTP_409_CONFLICT)
+        tablaturemodel = None
+        try:
+            tablaturemodel = TablatureModel(tablature_id, raw_data=request.DATA)
+        except Exception as e:
+            print "Could not add the data "+ str(e)
+            traceback.print_exc()
+            return Response(status = 400)
+        database.add_tablature(tablaturemodel)
+        url = reverse("tablature", (tablature_id,), request=request)
+        return Response(status=status.HTTP_204_NO_CONTENT,
+                        headers={"Location":url})    
 
 class Songs(APIView):
     def get (self, request):
-        #Get in an array the models of all the messages
+        #Get in an array the models of all the songs
         songmodels = database.get_songs()
         #Users output looks: 
         #[{'song':song_id, 'link':{'rel':'self','href'=:'http://tab_archive/artists/artist_id/song_id'}},
         #{{'song':song_id, 'link':{'rel':'self','href'=:'http://tab_archive/artists/artist_id/song_id'}}]
         songs = []
-        for tablaturemodel in songmodels:'''HUOM HOX MITES TÄMÄ'''
+        for tablaturemodel in songmodels:'''HUOM HOX MITES TÄMÄ VARMAAN EI MEE NÄIN'''
             _artistid = tablaturemodel.artist_id
             _songid = tablaturemodel.song_id
             _songurl = "http://localhost:8000/tab_archive/artists/%s/%s" %(_artistid ,_song_id)
@@ -231,11 +272,11 @@ class Comment(APIView):
                                  'link':{'rel':'self','href':senderurl}}
         else:
             comment['user_nickname'] = "Anonymous"                                                     
-        #If replyto exists, include the url of the reply message
+        #If replyto exists, include the url of the reply comment
         replytocomment_url = None
         if 'reply_to' in comment:
             replytocomment_url = "http://localhost:8000/tab_archive/tablatures/" + comment[tablature_id] + "/" + comment[comment_id])
-            replytomessage_url = reverse("comment", (comment['reply_to'],), 
+            replytocomment_url = reverse("comment", (comment['reply_to'],), 
                                          request=request)
             comment['reply_to'] = replytocomment_url
         return Response(comment, status=status.HTTP_200_OK)    
@@ -265,7 +306,7 @@ class Comment(APIView):
                                " is not in the archive").serialize()
             return Response(error, status=status.HTTP_404_NOT_FOUND)
 
-        #Deserialize and modify the data in the message.
+        #Deserialize and modify the data in the comment.
         try:
             body = request.DATA['body']
             database.modify_comment(comment_id, body)
@@ -286,24 +327,21 @@ class Comment(APIView):
                                " is not in the archive").serialize()
             return Response(error, status=status.HTTP_404_NOT_FOUND)
         
-        #Deserialize and add a new answer to the message.
+        '''TÄMÄ EI OLE VALMIS'''
+        commentmodel = None
+        if database.contains_comment(comment_id):
+            return Response(status=status.HTTP_409_CONFLICT)        
         try:
-            body = request.DATA['body']
-            sender = request.DATA['user_nickname']
-            #Create the new message and build the response code'
-            newcomment = database.append_answer(
-                                    comment_id, body,
-                                    request.META.get('REMOTE_ADDR'),
-                                    sender)
-            if not newcomment:
-                return Response(ErrorModel("Unknown error creating the post")
-                                .serialize(), status=500)
-            #Create the response path
-            url = reverse("comment", (newcomment,), request=request)
-            return Response(status=status.HTTP_201_CREATED,
-                            headers={'Location':url})
-        except Exception:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            commentmodel = CommentModel(comment_id, raw_data=request.DATA)
+        except Exception as e:
+            print "Could not add the data "+ str(e)
+            traceback.print_exc()
+            return Response(status = 400)
+        usermodel.reply_to = '''KOMMENTTI JOHON VASTATAAN'''
+        database.add_comment(commentmodel)
+        url = reverse("comment", (comment_id,), request=request)
+        return Response(status=status.HTTP_204_NO_CONTENT,
+                        headers={"Location":url})
     
 
 class Rating(APIView):
@@ -325,13 +363,35 @@ class Rating(APIView):
         response = Response(rating, status=status.HTTP_200_OK)
         return response    
     
-    def put():
+    def put(self, request, tablature_id):
+        #request.DATA contains the request body already deserialized in a
+        #python dictionary
+        if not request.DATA:
+            error = ErrorModel('The artist_id, song_id and body of the tablature\
+                               cannot be empty').serialize()
+            return Response(error, status=status.HTTP_400_BAD_REQUEST)
+        if not database.contains_tablature(tablature_id):
+            error = ErrorModel("The tablature "+ tablature_id+
+                               " is not in the archive").serialize()
+            return Response(error, status=status.HTTP_404_NOT_FOUND)
+
+        #Deserialize and modify the data in the tablature.
+        try:
+            '''TÄTÄ PITÄÄ EHKÄ MUOKATA mallina kts. ex2->message->put()'''
+            tablature_id = tablature_id '''MITES TÄÄ'''
+            rating = request.DATA['rating']
+            ratingcount = rating_count '''MITES TÄÄ'''
+            database.add_rating(tablature_id, rating, rating_count)
+        except Exception:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        
+        return Response(None, status=status.HTTP_204_NO_CONTENT)
     
 
 class Tablature(APIView):
-    def get (self, request, message_id):
+    def get (self, request, tablature_id):
     '''HUOM HOX TÄTÄ EI LÖYDY MUUALTA KUIN DOKKARISTA'''
-    #GET return the message which message id is messageid
+    #GET return the tablature which tablature id is tablature_id
         #Get the model
         tablaturemodel = database.get_tablature(tablature_id)
         if tablaturemodel is None:
@@ -377,20 +437,69 @@ class Tablature(APIView):
             error = ErrorModel("The tablature "+ tablature_id+
                                " is not in the archive").serialize()
             return Response(error, status=status.HTTP_404_NOT_FOUND)
-
-        #Deserialize and modify the data in the message.
+        
+        tablaturemodel = TablatureModel(tablature_id)
+        if tablaturemodel is None:
+            return Response(status = status.HTTP_404_NOT_FOUND)
+        #request.DATA contains a dictionary with the entity body input.
+        #Deserialize the data and modify the model
         try:
-            '''TÄÄ ON VÄÄRIN'''
+            #EXTRACT THE PRIVATE DATA
             body = request.DATA['body']
             artist_id = request.DATA['artist_id']
             song_id = request.DATA['song_id']
-            database.edit_tablature('''TÄNNE JOTAKI''')
-        except Exception:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        
-        return Response(None, status=status.HTTP_204_NO_CONTENT)     
+            #SET VALUES TO USER
+            tablaturemodel.tablature_id = tablature_id
+            tablaturemodel.body = body
+            tablaturemodel.artist_id = artist_id
+            tablaturemodel.song_id = song_id
+        except Exception as e:
+            print "Could not add the data "+ str(e)
+            traceback.print_exc()
+            return Response(status = 400)
+        #Update the model to the database
+        database.edit_tablature(tablaturemodel)
+        url = reverse("tablature", (tablature_id,), request=request)
+        return Response(status=status.HTTP_204_NO_CONTENT,
+                        headers={"Location":url})    
+    
+    def post(self, request, comment_id):
+        '''HUOM HOX MITES TÄMÄ'''
+        if database.contains_comment(comment_id):
+            return Response(status=status.HTTP_409_CONFLICT)
+        commentmodel = None
+        try:
+            commentmodel = CommentModel(comment_id, raw_data=request.DATA)
+        except Exception as e:
+            print "Could not add the data "+ str(e)
+            traceback.print_exc()
+            return Response(status = 400)
+        database.add_comment(commentmodel)
+        url = reverse("comment", (comment_id,), request=request)
+        return Response(status=status.HTTP_204_NO_CONTENT,
+                        headers={"Location":url})      
+
+class Tablatures(APIView):
+    def get (self, request):
+        #Get in an array the models of all the tablatures
+        tablaturemodels = database.get_tablatures()
+
+        #Serialize each one of the tablatures. An array of tablatures looks like:
+        #[{'title':'message_title, 'link':{'rel':'self','href'=:'http://tab_archive/tablatures/tablature_id'}},
+        #{'title':'message_title, 'link':{'rel':'self','href'=:'http://tab_archive/tablatures/tablature_id'}}]
+        tablatures = []
+        for tablaturemodel in tablaturemodels: 
+            _tablatureid = tablaturemodel.tablature_id
+            _tablatureurl = "http://localhost:8000/tab_archive/tablatures/"+_tablatureid
+            _tablatureurl = reverse("tablature", (_tablatureid,), request=request)
+            tablature = {}
+            tablature['link'] = {'rel':'self', 'href':_tablatureurl}
+            tablatures.append(tablature)
+        '''HUOM HOX RATING, COMMENTS JA UPLOADER???(kts. dokkari)'''
+        return Response(tablatures, status=status.HTTP_200_OK)
     
     def post(self, request, tablature_id):
+    '''HUOM HOX TÄTÄ EI LÖYDY MUUALTA KUIN DOKKARISTA(sama kuin song post)'''
         #request.DATA contains the request body already deserialized in
         #a python dictionary
         if not request.DATA:
@@ -402,29 +511,17 @@ class Tablature(APIView):
                                " is not in the archive").serialize()
             return Response(error, status=status.HTTP_404_NOT_FOUND)
         
-        #Deserialize and add a new answer to the message.
+        '''HUOM HOX MITES TUON tablature_id:n KANSSA'''
+        if database.contains_tablature(tablature_id):
+            return Response(status=status.HTTP_409_CONFLICT)
+        tablaturemodel = None
         try:
-            body = request.DATA['body']
-            sender = request.DATA['user_nickname']
-            artist = request.
-            #Create the new message and build the response code'
-            newmessage = database.append_answer(
-                                    message_id, title, body,
-                                    request.META.get('REMOTE_ADDR'),
-                                    sender)
-            if not newmessage:
-                return Response(ErrorModel("Unknown error creating the post")
-                                .serialize(), status=500)
-            #Create the response path
-            url = reverse("message", (newmessage,), request=request)
-            return Response(status=status.HTTP_201_CREATED,
-                            headers={'Location':url})
-        except Exception:
-            return Response(status=status.HTTP_400_BAD_REQUEST)    
-    
-
-class Tablatures(APIView):
-    def get():
-    
-    def post():
-    '''HUOM HOX TÄTÄ EI LÖYDY MUUALTA KUIN DOKKARISTA(sama kuin song post ja tablature post)'''
+            tablaturemodel = TablatureModel(tablature_id, raw_data=request.DATA)
+        except Exception as e:
+            print "Could not add the data "+ str(e)
+            traceback.print_exc()
+            return Response(status = 400)
+        database.add_tablature(tablaturemodel)
+        url = reverse("tablature", (tablature_id,), request=request)
+        return Response(status=status.HTTP_204_NO_CONTENT,
+                        headers={"Location":url})
