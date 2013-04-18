@@ -38,7 +38,7 @@ class TestSequenceFunctions(unittest.TestCase):
         user2 = UserModel.create({"user_nickname":"erkki" , "email":"erkki@sposti.org", "description":"Hodor", "picture":"hodor.png"})
         name = self.handle.add_user(user2)
         
-        self.assertEqual(name, None)
+        self.assertIsNone(name)
         
     def test_get_user(self):
         '''
@@ -59,7 +59,7 @@ class TestSequenceFunctions(unittest.TestCase):
         '''
         user = self.handle.get_user("erkki")
         
-        self.assertEqual(user, None)        
+        self.assertIsNone(user)        
         
     def test_edit_user(self):
         '''
@@ -87,7 +87,7 @@ class TestSequenceFunctions(unittest.TestCase):
         
         name = self.handle.edit_user(user)
         
-        self.assertEqual(name, None)
+        self.assertIsNone(name)
         
     def test_delete_user(self):
         '''
@@ -106,7 +106,7 @@ class TestSequenceFunctions(unittest.TestCase):
         
         name = self.handle.delete_user("erkki")
         
-        self.assertEqual(name, None)
+        self.assertIsNone(name)
         
     def test_get_users(self):
         '''
@@ -135,22 +135,38 @@ class TestSequenceFunctions(unittest.TestCase):
         '''        
         
         ret_val = self.handle.get_users()
-        self.assertEqual(ret_val, None)
+        self.assertIsNone(ret_val)
         
-    #def test_add_tablature(self):
-    #   user = UserModel.create({"user_nickname":"erkki", "email":"erkki@ekspertti.info", "description":"", "picture":"lahna.png"})
-    #    self.handle.add_user(user)
-    #
-    #    tab = TablatureModel.create({'tablature_id':"Null", 'body':"1010010", "rating":0, "artist_id":"tuttiritari", "song_id":"tutti viimeinen", "user_nickname":"erkki", "rating_count":0})
-    #    
-    #    self.assertEqual(tab, True)
+    def test_add_tablature(self):
+        user = UserModel.create({"user_nickname":"erkki", "email":"erkki@ekspertti.info", "description":"", "picture":"lahna.png"})
+        self.handle.add_user(user)
+    
+        tab = TablatureModel.create({'tablature_id':"Null", 'body':"1010010", "rating":0, "artist_id":"tuttiritari", "song_id":"tutti viimeinen", "user_nickname":"erkki", "rating_count":0})
+        tab_id = self.handle.add_tablature(tab)
         
-    def test_get_songs():
+        self.assertEqual(tab_id, 1)
+        
+    def test_get_songs(self):
         '''
         Try to get songs.
         '''
-        TablatureModel
+        user = UserModel.create({"user_nickname":"erkki", "email":"erkki@ekspertti.info", "description":"", "picture":"lahna.png"})
+        self.handle.add_user(user)
         
+        tab1 = TablatureModel.create({'tablature_id':"Null", 'body':"1010010", "rating":0, "artist_id":"tuttiritari", "song_id":"tutti viimeinen", "user_nickname":"erkki", "rating_count":0})
+        tab_id1 = self.handle.add_tablature(tab1)
+        
+        tab2 = TablatureModel.create({'tablature_id':"Null", 'body':"1011111", "rating":0, "artist_id":"paula koivuniemi", "song_id":"kuka pelkaa paulaa", "user_nickname":"erkki", "rating_count":0})
+        tab_id2 = self.handle.add_tablature(tab2)
+        
+        tab3 = TablatureModel.create({'tablature_id':"Null", 'body':"1010011", "rating":0, "artist_id":"tuttiritari", "song_id":"toinen tutti", "user_nickname":"erkki", "rating_count":0})
+        tab_id3 = self.handle.add_tablature(tab3)
+        
+        tab4 = TablatureModel.create({'tablature_id':"Null", 'body':"1010010", "rating":0, "artist_id":"tuttiritari", "song_id":"tutti viimeinen", "user_nickname":"erkki", "rating_count":0})
+        tab_id4 = self.handle.add_tablature(tab4)
+        
+        songs =self.handle.get_songs("tuttiritari");
+        print songs
     
     def tearDown(self):
         db.drop_tables()
