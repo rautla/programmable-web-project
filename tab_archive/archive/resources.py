@@ -1,3 +1,5 @@
+ï»¿# -*- coding: utf-8 -*-
+
 import traceback
 
 from rest_framework.views import APIView
@@ -7,7 +9,6 @@ from rest_framework.reverse import reverse
 
 from archive.database import database
 from archive.models import UserModel, TablatureModel, CommentModel, ErrorModel
-
 
 
 class User(APIView):
@@ -158,24 +159,26 @@ class Users(APIView):
         return response
     
 class Artist(APIView):
-    '''HUOM HOX MITES TÄMÄ (get_tablatures ilman song_id:tä???) TÄTÄ EI LÖYDY MUUALTA KUIN DOKKARISTA'''
     def get (self, request, artist_id):
         #Get in an array the models of all the tablatures from songs of artist
-        tablaturemodels = database.get_tablatures(artist_id,'')
+        songemodels = database.get_songs(artist_id)
 
         #Serialize each one of the tablatures. An array of tablatures looks like:
         #[{'title':'message_title, 'link':{'rel':'self','href'=:'http://tab_archive/tablatures/tablature_id'}},
         #{'title':'message_title, 'link':{'rel':'self','href'=:'http://tab_archive/tablatures/tablature_id'}}]
-        tablatures = []
-        for tablaturemodel in tablaturemodels: 
-            _tablatureid = tablaturemodel.tablature_id
-            _tablatureurl = "http://localhost:8000/tab_archive/tablatures/"+_tablatureid
-            _tablatureurl = reverse("tablature", (_tablatureid,), request=request)
-            tablature = {}
-            tablature['link'] = {'rel':'self', 'href':_tablatureurl}
-            tablatures.append(tablature)
-        '''HUOM HOX RATING, COMMENTS JA UPLOADER???(kts. dokkari)'''
-        return Response(tablatures, status=status.HTTP_200_OK)
+        songs = []
+        for songmodel in songmodels: 
+            _artistid = songmodel[0]
+            _songid = songmodel[1]
+            _songurl = "http://localhost:8000/tab_archive/artists/"+_artistid + "/" +_songid
+            _songurl = reverse("song", (_songid,), request=request)
+            song = {}
+            song['song_id']
+            song['link'] = {'rel':'self', 'href':_songurl}
+            songs.append(song)
+        
+        response = Response(songs, status=status.HTTP_200_OK)
+        return response
 
 class Artists(APIView):
     def get (self, request):
@@ -184,16 +187,17 @@ class Artists(APIView):
         #Artists output looks: 
         #[{'artist':artist_id, 'link':{'rel':'self','href'=:'http://tab_archive/artists/artist_id'}},
         #{{'artist':artist_id, 'link':{'rel':'self','href'=:'http://tab_archive/artists/artist_id'}}]
+
         artists = []
-        for tablaturemodel in artistmodels:'''HUOM HOX MITES TÄMÄ'''
-            _artistid = tablaturemodel.artist_id
-            _artisturl = "http://localhost:8000/tab_archive/artists/"+_artist_id
-            _artisturl = reverse("artist", (_artistid,), request=request)
+        for artistmodel in artistmodels:
+            _artistid = artistmodel
+            _artisturl = "http://localhost:8000/tab_archive/artists/"+_artistid
+            _artisturl = reverse("artist",(_artistid,), request=request)
             artist = {}
             artist['artist_id'] = _artistid
             artist['link'] = {'rel':'self', 'href':_artisturl}
             artists.append(artist)
-        
+            
         response = Response(artists, status=status.HTTP_200_OK)
         return response
     
@@ -208,16 +212,19 @@ class Song(APIView):
         tablatures = []
         for tablaturemodel in tablaturemodels: 
             _tablatureid = tablaturemodel.tablature_id
+            _rating = tablaturemodel.rating
             _tablatureurl = "http://localhost:8000/tab_archive/tablatures/"+_tablatureid
             _tablatureurl = reverse("tablature", (_tablatureid,), request=request)
             tablature = {}
+            tablature['tablature_id'] = _tablatureid
+            tablature['rating'] = _rating
             tablature['link'] = {'rel':'self', 'href':_tablatureurl}
             tablatures.append(tablature)
-        '''HUOM HOX RATING, COMMENTS JA UPLOADER???(kts. dokkari)'''
-        return Response(tablatures, status=status.HTTP_200_OK)    
-    
+        
+        response = Response(tablatures, status=status.HTTP_200_OK)  
+        return response
+        
     def post(self, request, tablature_id):
-    '''HUOM HOX MITES TÄMÄ (tablatures->post??? add_tablature???)'''
         #request.DATA contains the request body already deserialized in
         #a python dictionary
         if not request.DATA:
@@ -252,9 +259,9 @@ class Songs(APIView):
         #[{'song':song_id, 'link':{'rel':'self','href'=:'http://tab_archive/artists/artist_id/song_id'}},
         #{{'song':song_id, 'link':{'rel':'self','href'=:'http://tab_archive/artists/artist_id/song_id'}}]
         songs = []
-        for tablaturemodel in songmodels:'''HUOM HOX MITES TÄMÄ VARMAAN EI MEE NÄIN'''
-            _artistid = tablaturemodel.artist_id
-            _songid = tablaturemodel.song_id
+        for songmodel in songmodels:
+            _artistid = songmodel[0]
+            _songid = songmodel[1]
             _songurl = "http://localhost:8000/tab_archive/artists/%s/%s" %(_artistid ,_song_id)
             _songurl = reverse("user", (_songid,), request=request)
             song = {}
@@ -342,17 +349,16 @@ class Comment(APIView):
                                " is not in the archive").serialize()
             return Response(error, status=status.HTTP_404_NOT_FOUND)
         
-        '''TÄMÄ EI OLE VALMIS'''
         commentmodel = None
         if database.contains_comment(comment_id):
             return Response(status=status.HTTP_409_CONFLICT)        
         try:
-            commentmodel = CommentModel(comment_id, raw_data=request.DATA)
+            commentmodel = CommentModel('', raw_data=request.DATA)
         except Exception as e:
             print "Could not add the data "+ str(e)
             traceback.print_exc()
             return Response(status = 400)
-        usermodel.reply_to = '''KOMMENTTI JOHON VASTATAAN'''
+        commentmodel.reply_to = comment_id '''TÃ„Ã„LLÃ„ VOI OLLA MÃ„TÃ„Ã„'''
         database.add_comment(commentmodel)
         url = reverse("comment", (comment_id,), request=request)
         return Response(status=status.HTTP_204_NO_CONTENT,
@@ -360,7 +366,7 @@ class Comment(APIView):
     
 
 class Rating(APIView):
-    '''HUOM HOX MITES TÄMÄ'''
+    '''HUOM HOX MITES TÃ„MÃ„'''
     def get(self, request):
         ratingmodel = database.get_rating()
         if ratingmodel is None:
@@ -378,7 +384,7 @@ class Rating(APIView):
         response = Response(rating, status=status.HTTP_200_OK)
         return response    
     
-    def put(self, request, tablature_id):
+    def post(self, request, tablature_id):
         #request.DATA contains the request body already deserialized in a
         #python dictionary
         if not request.DATA:
@@ -392,20 +398,18 @@ class Rating(APIView):
 
         #Deserialize and modify the data in the tablature.
         try:
-            '''TÄTÄ PITÄÄ EHKÄ MUOKATA mallina kts. ex2->message->put()'''
-            tablature_id = tablature_id '''MITES TÄÄ'''
-            rating = request.DATA['rating']
-            ratingcount = rating_count '''MITES TÄÄ'''
-            database.add_rating(tablature_id, rating, rating_count)
+            tablature_id = tablature_id
+            newrating = request.DATA['rating']
+            rating = database.add_rating(tablature_id, newrating)
         except Exception:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+        '''JOS EI TOIMI TÃ„Ã„LLÃ„ ON VIKA''' 
         
-        return Response(None, status=status.HTTP_204_NO_CONTENT)
+        return Response(rating[0], status=status.HTTP_200_OK)
     
 
 class Tablature(APIView):
     def get (self, request, tablature_id):
-    '''HUOM HOX TÄTÄ EI LÖYDY MUUALTA KUIN DOKKARISTA'''
     #GET return the tablature which tablature id is tablature_id
         #Get the model
         tablaturemodel = database.get_tablature(tablature_id)
@@ -479,7 +483,7 @@ class Tablature(APIView):
                         headers={"Location":url})    
     
     def post(self, request, comment_id):
-        '''HUOM HOX MITES TÄMÄ'''
+        '''HUOM HOX MITES TÃ„MÃ„'''
         if database.contains_comment(comment_id):
             return Response(status=status.HTTP_409_CONFLICT)
         commentmodel = None
@@ -508,13 +512,12 @@ class Tablatures(APIView):
             _tablatureurl = "http://localhost:8000/tab_archive/tablatures/"+_tablatureid
             _tablatureurl = reverse("tablature", (_tablatureid,), request=request)
             tablature = {}
+            tablature['tablature_id'] = tablature_id      
             tablature['link'] = {'rel':'self', 'href':_tablatureurl}
             tablatures.append(tablature)
-        '''HUOM HOX RATING, COMMENTS JA UPLOADER???(kts. dokkari)'''
         return Response(tablatures, status=status.HTTP_200_OK)
     
     def post(self, request, tablature_id):
-    '''HUOM HOX TÄTÄ EI LÖYDY MUUALTA KUIN DOKKARISTA(sama kuin song post)'''
         #request.DATA contains the request body already deserialized in
         #a python dictionary
         if not request.DATA:

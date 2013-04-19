@@ -1,3 +1,5 @@
+﻿# -*- coding: utf-8 -*-
+
 from exceptions import NotImplementedError
 import re
 from datetime import datetime

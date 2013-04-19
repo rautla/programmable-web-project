@@ -1,3 +1,5 @@
+﻿# -*- coding: utf-8 -*-
+
 from django.conf.urls import patterns, include, url
 from forum.resources import Message, Messages, Users, User, History
 
