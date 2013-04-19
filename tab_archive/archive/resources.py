@@ -45,7 +45,9 @@ class User(APIView):
         else:
             return self._createuser(request, user_nickname)
     
-    def _readunathorized(self, request, user_nickname):
+
+    def _readunauthorized(self, request, user_nickname):
+
         #Use the database to extract a user information. Use the method 
         #database.getUser(user_id) to obtain a UserModel
         usermodel = database.get_user(user_nickname)
@@ -65,9 +67,12 @@ class User(APIView):
                        'description':str(usermodel.description)}
         users = {'rel':'self', 'href':uritousers}
         #Append to the output
-        output['publicprofile'] = publicprofile
-        output['users'] = users
-        return Response(output, status=status.HTTP_200_OK)    
+
+        #output['publicprofile'] = publicprofile
+        #output['users'] = users
+        publicprofile['users'] = users
+        return Response(publicprofile, status=status.HTTP_200_OK)
+
     
     def _readauthorized(self, request, user_nickname):
         usermodel = database.get_user(user_nickname)
@@ -359,7 +364,9 @@ class Comment(APIView):
             print "Could not add the data "+ str(e)
             traceback.print_exc()
             return Response(status = 400)
-        commentmodel.reply_to = comment_id #TÄÄLLÄ VOI OLLA MÄTÄÄ
+
+        commentmodel.reply_to = comment_id 
+
         database.add_comment(commentmodel)
         url = reverse("comment", (comment_id,), request=request)
         return Response(status=status.HTTP_204_NO_CONTENT,
@@ -373,6 +380,8 @@ class Rating(APIView):
             return Response(status=status.HTTP_404_NOT_FOUND)        
         #Rating output looks: 
         #[{'rating':rating, 'link':{'rel':'self','href'=:'http://tab_archive/tablatures/tablature_id/rating'}}]
+
+        
 
         _rating = tablaturemodel.rating
         _ratingurl = "http://localhost:8000/tab_archive/tablatures/" + tablature[tablature_id] + "/" + tablature[rating]
