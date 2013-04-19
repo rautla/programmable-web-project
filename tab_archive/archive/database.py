@@ -918,3 +918,4 @@ def drop_tables(database_name = 'debug.db'):
 def get_database(database_name = 'archive.db'):    
     return ArchiveDatabase(database_name)
     
+database = ArchiveDatabase()
