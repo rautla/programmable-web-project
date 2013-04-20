@@ -12,7 +12,7 @@ from archive.models import UserModel, TablatureModel, CommentModel, ErrorModel
 
 
 class User(APIView):
-    def get (self, request, user_nickname): 
+    def get (self, request, user_nickname):
         authorization = ''  
         try:
             authorization = request.META["HTTP_AUTHORIZATION"]
@@ -35,6 +35,8 @@ class User(APIView):
             return Response(status = 401) 
     
     def put(self, request, user_nickname):
+        
+        
         authorization = ''
         try:
             authorization = request.META["HTTP_AUTHORIZATION"]
@@ -60,18 +62,20 @@ class User(APIView):
         output = {}
         #Create the dictionaries for publicProfile, history and users. To avoid
         #problems transform the registrationdata and description in string using the str() function
-        publicprofile = {'user_nickname':usermodel.user_nickname,
+        user = {'user_nickname':usermodel.user_nickname,
                        'picture':usermodel.picture,
                        'description':str(usermodel.description)}
         users = {'rel':'self', 'href':uritousers}
         #Append to the output
         #output['publicprofile'] = publicprofile
         #output['users'] = users
-        publicprofile['users'] = users
-        return Response(publicprofile, status=status.HTTP_200_OK)
+        output = {"users":users, "user":user}
+        return Response(output, status=status.HTTP_200_OK)
     
     def _readauthorized(self, request, user_nickname):
+        
         usermodel = database.get_user(user_nickname)
+        
         if usermodel is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
         #Get the url of the users resource
@@ -82,7 +86,7 @@ class User(APIView):
         output = {}
         #Create the dictionaries for userProfile, history and users
         users = {'rel':'self', 'href':uritousers}
-        output['userprofile'] = usermodel.serialize()
+        output['user'] = usermodel.serialize()
         output['users'] = users
         return Response(output, status=status.HTTP_200_OK)
         
@@ -119,7 +123,7 @@ class User(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT,
                         headers={"Location":url})
     
-    def _createuser(self, request, user_id):
+    def _createuser(self, request, user_nickname):
         if database.contains_user(user_nickname):
             return Response(status=status.HTTP_409_CONFLICT)
         usermodel = None
@@ -226,7 +230,7 @@ class Song(APIView):
         response = Response(tablatures, status=status.HTTP_200_OK)  
         return response
         
-    def post(self, request, tablature_id):
+    def post(self, request, artist_id, song_id):
         #request.DATA contains the request body already deserialized in
         #a python dictionary
         if not request.DATA:

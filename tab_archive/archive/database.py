@@ -211,6 +211,7 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
         #user_nickname = None
         
         #connects (and creates if necessary) to the database. gets a connection object
+        #con = sqlite3.connect(self.database_name)
         con = sqlite3.connect(self.database_name)
         with con:
             con.row_factory = sqlite3.Row
@@ -241,6 +242,7 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
         #user_nickname = None
         
         #connects (and creates if necessary) to the database. gets a connection object
+        #con = sqlite3.connect(self.database_name)
         con = sqlite3.connect(self.database_name)
         with con:
             con.row_factory = sqlite3.Row
@@ -270,6 +272,7 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
         #user_nickname = None
         
         #connects (and creates if necessary) to the database. gets a connection object
+        #con = sqlite3.connect(self.database_name)
         con = sqlite3.connect(self.database_name)
         with con:
             con.row_factory = sqlite3.Row
@@ -301,6 +304,7 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
         #user_nickname = None
         
         #connects (and creates if necessary) to the database. gets a connection object
+        #con = sqlite3.connect(self.database_name)
         con = sqlite3.connect(self.database_name)
         with con:
             con.row_factory = sqlite3.Row
@@ -331,6 +335,7 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
         #user_nickname = None
         
         #connects (and creates if necessary) to the database. gets a connection object
+        #con = sqlite3.connect(self.database_name)
         con = sqlite3.connect(self.database_name)
         with con:
             con.row_factory = sqlite3.Row
@@ -919,3 +924,15 @@ def get_database(database_name = 'archive.db'):
     return ArchiveDatabase(database_name)
     
 database = ArchiveDatabase()
+if (sys.argv[0] == "db_unittest.py"):
+    database = ArchiveDatabase('debug.db')
+elif (sys.argv[1] == "test"):
+    database = ArchiveDatabase('debug.db')
+else:
+    database = ArchiveDatabase()
+#print sys.argv
+#print len(sys.argv)
+#create_users_table("Test_archive.db")
+#create_tablatures_table("Test_archive.db")
+#create_comments_table("Test_archive.db")
+#drop_tables("Test_archive.db")

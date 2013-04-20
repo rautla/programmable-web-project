@@ -59,7 +59,14 @@ class TestSequenceFunctions(unittest.TestCase):
         '''
         user = self.handle.get_user("erkki")
         
-        self.assertIsNone(user)        
+        self.assertIsNone(user)
+        
+        user = UserModel.create({"user_nickname":"erkki", "email":"erkki@ekspertti.info", "description":"", "picture":"lahna.png"})
+        self.handle.add_user(user) 
+
+        user = self.handle.get_user("oula")
+        
+        self.assertIsNone(user)
         
     def test_edit_user(self):
         '''
@@ -95,9 +102,11 @@ class TestSequenceFunctions(unittest.TestCase):
         '''
         user = UserModel.create({"user_nickname":"erkki", "email":"erkki@ekspertti.info", "description":"", "picture":"lahna.png"})
         self.handle.add_user(user)
+        self.assertTrue(self.handle.contains_user("erkki"))
         name = self.handle.delete_user("erkki")
         
         self.assertEqual(name, "erkki")
+        self.assertFalse(self.handle.contains_user("erkki"))
         
     def test_delete_user_fail(self):
         '''
