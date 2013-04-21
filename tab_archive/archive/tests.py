@@ -140,7 +140,7 @@ class TestUsers(unittest.TestCase):
         
         
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(content[0]["user_nickname"], "jonne")
+        self.assertEqual(content["users"][0]["user_nickname"], "jonne")
         self.assertEqual(len(content), 1)
         
     def test_post(self):
@@ -215,7 +215,7 @@ class TestSong(unittest.TestCase):
         
         location = response["Location"]
                 
-        self.assertEqual(location, '/tab_archive/paula_koivuniemi/kuka_pelkaa_paulaa/1')
+        self.assertEqual(location, 'http://testserver/tab_archive/tablatures/1')
         
     def test_get(self):
         extra = {
@@ -230,7 +230,7 @@ class TestSong(unittest.TestCase):
         location = response["Location"]
     
         #Here we try to get tablatures to song
-        response = self.client.get('/tab_archive/paula koivuniemi/kuka pelkaa paulaa', {"Accept":"application/json"}, content_type = "application/json")
+        response = self.client.get('/tab_archive/artists/paula koivuniemi/kuka pelkaa paulaa', {"Accept":"application/json"}, content_type = "application/json")
         
         content = json.loads(response.content)
         
@@ -238,12 +238,111 @@ class TestSong(unittest.TestCase):
         self.assertEqual(len(content["tablatures"]), 1)
         self.assertEqual(content["artist_id"], "paula koivuniemi")
         self.assertEqual(content["song_id"], "kuka pelkaa paulaa")
-        self.assertEqual(content["tablatures"][0]["tablature"], "10110101")
+        self.assertEqual(content["tablatures"][0]["tablature_id"], 1)
         
     def tearDown(self):
         #Make sure that no data is retained between tests
         db.drop_tables()
         
+
+class TestSongs(unittest.TestCase):
+    def setUp(self):
+        # Every test needs a client.
+        self.client = Client()
+        
+        #Make sure that tables exist for each test
+        db.create_users_table("debug.db")
+        db.create_tablatures_table("debug.db")
+        db.create_comments_table("debug.db")  
+
+    def test_get(self):
+        '''
+        Try to get list of songs added to the database.
+        '''
+    
+        extra = {
+            'HTTP_AUTHORIZATION': "jonne"
+        }
+    
+        data = '{"user_nickname":"jonne", "email":"jolli@live.fi", "picture":"es-purkki.png", "description":"opettajien kauhu"}'
+        response = self.client.put('/tab_archive/users/jonne', data = data , content_type = 'application/json')
+    
+        data = '{"body":"10110101", "artist_id":"paula koivuniemi", "song_id":"kuka pelkaa paulaa", "user_nickname":"jonne"}'
+        response = self.client.post('/tab_archive/artists/paula koivuniemi/kuka pelkaa paulaa', data = data , content_type = 'application/json', **extra)
+        
+        #Here we try to get songs
+        response = self.client.get('/tab_archive/songs', {"Accept":"application/json"}, content_type = "application/json")
+        self.assertEqual(response.status_code, 200)
+        
+        content = json.loads(response.content)
+        
+        self.assertEqual(len(content["songs"]), 1)
+        self.assertEqual(content["songs"][0]["artist_id"], "paula koivuniemi")
+        self.assertEqual(content["songs"][0]["song_id"], "kuka pelkaa paulaa")
+        
+        
+    def tearDown(self):
+        #Make sure that no data is retained between tests
+        db.drop_tables()
+        
+
+class TestTablature(unittest.TestCase):
+    def setUp(self):
+        # Every test needs a client.
+        self.client = Client()
+        
+        #Make sure that tables exist for each test
+        db.create_users_table("debug.db")
+        db.create_tablatures_table("debug.db")
+        db.create_comments_table("debug.db")  
+        
+    def test_get(self):
+        extra = {
+            'HTTP_AUTHORIZATION': "jonne"
+        }
+    
+        data = '{"user_nickname":"jonne", "email":"jolli@live.fi", "picture":"es-purkki.png", "description":"opettajien kauhu"}'
+        response = self.client.put('/tab_archive/users/jonne', data = data , content_type = 'application/json')
+    
+        data = '{"body":"10110101", "artist_id":"paula koivuniemi", "song_id":"kuka pelkaa paulaa", "user_nickname":"jonne"}'
+        response = self.client.post('/tab_archive/artists/paula koivuniemi/kuka pelkaa paulaa', data = data , content_type = 'application/json', **extra)
+        location = response["Location"]
+        #Here we try to get tablature
+        
+        
+    def tearDown(self):
+        #Make sure that no data is retained between tests
+        db.drop_tables()
+        
+        
+class TestComment(unittest.TestCase):
+    def setUp(self):
+        # Every test needs a client.
+        self.client = Client()
+        
+        #Make sure that tables exist for each test
+        db.create_users_table("debug.db")
+        db.create_tablatures_table("debug.db")
+        db.create_comments_table("debug.db")  
+        
+    def test_post(self):
+        
+        extra = {
+            'HTTP_AUTHORIZATION': "jonne"
+        }
+    
+        data = '{"user_nickname":"jonne", "email":"jolli@live.fi", "picture":"es-purkki.png", "description":"opettajien kauhu"}'
+        response = self.client.put('/tab_archive/users/jonne', data = data , content_type = 'application/json')
+    
+        data = '{"body":"10110101", "artist_id":"paula koivuniemi", "song_id":"kuka pelkaa paulaa", "user_nickname":"jonne"}'
+        response = self.client.post('/tab_archive/artists/paula koivuniemi/kuka pelkaa paulaa', data = data , content_type = 'application/json', **extra)
+        
+        
+        
+    def tearDown(self):
+        #Make sure that no data is retained between tests
+        db.drop_tables()
+
 
 class TestArtists(unittest.TestCase):
     def setUp(self):
@@ -643,6 +742,9 @@ class TestDatabaseInterface(unittest.TestCase):
         self.assertEqual(tablatures[0].song_id, tab2.song_id)
         self.assertEqual(tablatures[0].user_nickname, tab2.user_nickname)
         self.assertEqual(tablatures[0].rating_count, tab2.rating_count)
+        self.assertEqual(len(tablatures), 1)
+        
+        tablatures = self.handle.get_tablatures('paula koivuniemi','kuka pelkaa paulaa')
         self.assertEqual(len(tablatures), 1)
         
     def test_get_tablatures_fail(self):

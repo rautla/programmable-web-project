@@ -443,7 +443,7 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
             query = 'SELECT * FROM tablatures WHERE song_id = ?'
             pvalue = (song_id,)
         else:
-            query = 'SELECT * FROM tablatures WHERE artist_id = ?, song_id = ?'
+            query = 'SELECT * FROM tablatures WHERE artist_id = ? AND song_id = ?'
             pvalue = (artist_id, song_id,)
             
         #artist_id = None
