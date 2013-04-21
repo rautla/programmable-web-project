@@ -307,8 +307,15 @@ class TestTablature(unittest.TestCase):
         data = '{"body":"10110101", "artist_id":"paula koivuniemi", "song_id":"kuka pelkaa paulaa", "user_nickname":"jonne"}'
         response = self.client.post('/tab_archive/artists/paula koivuniemi/kuka pelkaa paulaa', data = data , content_type = 'application/json', **extra)
         location = response["Location"]
+        tablature_id = location[location.rfind("/") + 1 :]
         #Here we try to get tablature
         
+        response = self.client.get('/tab_archive/tablatures/' + tablature_id, content_type = 'application/json')
+        self.assertEqual(response.status_code, 200)
+        
+        content = json.loads(response.content)
+        self.assertEqual(content["tablature_id"], tablature_id)
+        self.assertEqual(content["user_nickname"], "jonne")
         
     def tearDown(self):
         #Make sure that no data is retained between tests
