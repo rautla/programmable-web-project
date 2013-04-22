@@ -140,7 +140,7 @@ class TestUsers(unittest.TestCase):
         
         
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(content["users"][0]["user_nickname"], "jonne")
+        self.assertEqual(content[0]["user_nickname"], "jonne")
         self.assertEqual(len(content), 1)
         
     def test_post(self):
@@ -179,7 +179,7 @@ class TestArtist(unittest.TestCase):
         content = json.loads(response.content)
         
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(content["songs"][0]["song_id"], "kuka pelkaa paulaa")
+        self.assertEqual(content[0]["song_id"], "kuka pelkaa paulaa")
         
     def tearDown(self):
         #Make sure that no data is retained between tests
@@ -276,9 +276,9 @@ class TestSongs(unittest.TestCase):
         
         content = json.loads(response.content)
         
-        self.assertEqual(len(content["songs"]), 1)
-        self.assertEqual(content["songs"][0]["artist_id"], "paula koivuniemi")
-        self.assertEqual(content["songs"][0]["song_id"], "kuka pelkaa paulaa")
+        self.assertEqual(len(content), 1)
+        self.assertEqual(content[0]["artist_id"], "paula koivuniemi")
+        self.assertEqual(content[0]["song_id"], "kuka pelkaa paulaa")
         
         
     def tearDown(self):
@@ -314,8 +314,123 @@ class TestTablature(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         
         content = json.loads(response.content)
-        self.assertEqual(content["tablature_id"], tablature_id)
-        self.assertEqual(content["user_nickname"], "jonne")
+        self.assertEqual(content["tablature_id"], int(tablature_id))
+        self.assertEqual(content["user_nickname"]["user_nickname"], "jonne")
+        
+    def test_post(self):
+        extra = {
+            'HTTP_AUTHORIZATION': "jonne"
+        }
+    
+        data = '{"user_nickname":"jonne", "email":"jolli@live.fi", "picture":"es-purkki.png", "description":"opettajien kauhu"}'
+        response = self.client.put('/tab_archive/users/jonne', data = data , content_type = 'application/json')
+    
+        data = '{"body":"10110101", "artist_id":"paula koivuniemi", "song_id":"kuka pelkaa paulaa", "user_nickname":"jonne"}'
+        response = self.client.post('/tab_archive/artists/paula koivuniemi/kuka pelkaa paulaa', data = data , content_type = 'application/json', **extra)
+        
+        location = response["Location"]
+        tablature_id = location[location.rfind("/") + 1 :]
+        
+        extra = {
+            'HTTP_AUTHORIZATION': "erkki"
+        }
+        
+        data = '{"user_nickname":"erkki", "email":"erkki@yahoo.fi", "picture":"minajarattori.jpg", "description":"paras"}'
+        response = self.client.put('/tab_archive/users/erkki', data = data , content_type = 'application/json')
+        
+        #Here we try to post comment to a tablature
+        data = '{"user_nickname":"erkki", "body":"onpa hyva, tykkaan!"}' 
+        response = self.client.post('/tab_archive/tablatures/' + tablature_id, data = data , content_type = 'application/json', **extra)
+        self.assertEqual(response.status_code, 201)
+        
+        location = response["Location"]
+                
+        self.assertEqual(location, 'http://testserver/tab_archive/tablatures/1/1')
+        
+    def test_put(self):
+        extra = {
+            'HTTP_AUTHORIZATION': "jonne"
+        }
+    
+        data = '{"user_nickname":"jonne", "email":"jolli@live.fi", "picture":"es-purkki.png", "description":"opettajien kauhu"}'
+        response = self.client.put('/tab_archive/users/jonne', data = data , content_type = 'application/json')
+    
+        data = '{"body":"10110101", "artist_id":"paula koivuniemi", "song_id":"kuka pelkaa paulaa", "user_nickname":"jonne"}'
+        response = self.client.post('/tab_archive/artists/paula koivuniemi/kuka pelkaa paulaa', data = data , content_type = 'application/json', **extra)
+        location = response["Location"]
+        tablature_id = location[location.rfind("/") + 1 :]
+   
+        #Here we try to put modified version of tablature
+        data = '{"body":"11111111"}'
+        response = self.client.put('/tab_archive/tablatures/' + tablature_id, data = data , content_type = 'application/json', **extra)
+        self.assertEqual(response.status_code, 204)
+        
+    def test_delete(self):
+        extra = {
+            'HTTP_AUTHORIZATION': "jonne"
+        }
+    
+        data = '{"user_nickname":"jonne", "email":"jolli@live.fi", "picture":"es-purkki.png", "description":"opettajien kauhu"}'
+        response = self.client.put('/tab_archive/users/jonne', data = data , content_type = 'application/json')
+
+        data = '{"body":"10110101", "artist_id":"paula koivuniemi", "song_id":"kuka pelkaa paulaa", "user_nickname":"jonne"}'
+        response = self.client.post('/tab_archive/artists/paula koivuniemi/kuka pelkaa paulaa', data = data , content_type = 'application/json', **extra)
+
+        location = response["Location"]
+        tablature_id = location[location.rfind("/") + 1 :]
+        
+        #Here we try to delete tablature
+        response = self.client.delete('/tab_archive/tablatures/' + tablature_id, content_type = 'application/json', **extra)
+        self.assertEqual(response.status_code, 204)
+        
+    def tearDown(self):
+        #Make sure that no data is retained between tests
+        db.drop_tables()
+        
+
+class TestTablatures(unittest.TestCase):
+    def setUp(self):
+        # Every test needs a client.
+        self.client = Client()
+        
+        #Make sure that tables exist for each test
+        db.create_users_table("debug.db")
+        db.create_tablatures_table("debug.db")
+        db.create_comments_table("debug.db")
+        
+    def test_post(self):
+        extra = {
+            'HTTP_AUTHORIZATION': "jonne"
+        }
+    
+        data = '{"user_nickname":"jonne", "email":"jolli@live.fi", "picture":"es-purkki.png", "description":"opettajien kauhu"}'
+        response = self.client.put('/tab_archive/users/jonne', data = data , content_type = 'application/json')
+    
+        #Here we try to post tablature
+        data = '{"body":"10110101", "artist_id":"paula koivuniemi", "song_id":"kuka pelkaa paulaa", "user_nickname":"jonne"}'
+        response = self.client.post('/tab_archive/tablatures', data = data , content_type = 'application/json', **extra)
+        self.assertEqual(response.status_code, 201)
+        location = response["Location"]
+        self.assertEqual(location, 'http://testserver/tab_archive/tablatures/1')
+        
+    def test_get(self):
+        extra = {
+            'HTTP_AUTHORIZATION': "jonne"
+        }
+    
+        data = '{"user_nickname":"jonne", "email":"jolli@live.fi", "picture":"es-purkki.png", "description":"opettajien kauhu"}'
+        response = self.client.put('/tab_archive/users/jonne', data = data , content_type = 'application/json')
+        
+        data = '{"body":"10110101", "artist_id":"paula koivuniemi", "song_id":"kuka pelkaa paulaa", "user_nickname":"jonne"}'
+        response = self.client.post('/tab_archive/tablatures', data = data , content_type = 'application/json', **extra)
+        #Here we try to get list of tablatures
+        response = self.client.get('/tab_archive/tablatures', content_type = 'application/json', **extra)
+        self.assertEqual(response.status_code, 200)
+        
+        content = json.loads(response.content)
+        
+        self.assertEqual(content[0]["artist_id"], "paula koivuniemi")
+        self.assertEqual(content[0]["song_id"], "kuka pelkaa paulaa")
         
     def tearDown(self):
         #Make sure that no data is retained between tests
@@ -332,6 +447,146 @@ class TestComment(unittest.TestCase):
         db.create_tablatures_table("debug.db")
         db.create_comments_table("debug.db")  
         
+    def test_get(self):
+        extra = {
+            'HTTP_AUTHORIZATION': "jonne"
+        }
+    
+        data = '{"user_nickname":"jonne", "email":"jolli@live.fi", "picture":"es-purkki.png", "description":"opettajien kauhu"}'
+        response = self.client.put('/tab_archive/users/jonne', data = data , content_type = 'application/json')
+    
+        data = '{"body":"10110101", "artist_id":"paula koivuniemi", "song_id":"kuka pelkaa paulaa", "user_nickname":"jonne"}'
+        response = self.client.post('/tab_archive/artists/paula koivuniemi/kuka pelkaa paulaa', data = data , content_type = 'application/json', **extra)
+        
+        location = response["Location"]
+        tablature_id = location[location.rfind("/") + 1 :]
+        
+        extra = {
+            'HTTP_AUTHORIZATION': "erkki"
+        }
+        
+        data = '{"user_nickname":"erkki", "email":"erkki@yahoo.fi", "picture":"minajarattori.jpg", "description":"paras"}'
+        response = self.client.put('/tab_archive/users/erkki', data = data , content_type = 'application/json')
+       
+        data = '{"user_nickname":"erkki", "body":"onpa hyva, tykkaan!"}' 
+        response = self.client.post('/tab_archive/tablatures/' + tablature_id, data = data , content_type = 'application/json', **extra)
+       
+        extra = {
+            'HTTP_AUTHORIZATION': "jonne"
+        }
+        data = '{"user_nickname":"jonne", "body":"niin munstaki!!"}' 
+        response = self.client.post('/tab_archive/tablatures/1/1', data = data , content_type = 'application/json', **extra)
+       
+        #Here we try to get comment
+        response = self.client.get('/tab_archive/tablatures/1/2', content_type = 'application/json')
+        self.assertEqual(response.status_code, 200)
+        
+        content = json.loads(response.content)
+        
+        self.assertEqual(content["comment"]["body"], "niin munstaki!!")
+        self.assertEqual(content["comment"]["user_nickname"], "jonne")
+       
+    def test_post(self):
+        
+        extra = {
+            'HTTP_AUTHORIZATION': "jonne"
+        }
+    
+        data = '{"user_nickname":"jonne", "email":"jolli@live.fi", "picture":"es-purkki.png", "description":"opettajien kauhu"}'
+        response = self.client.put('/tab_archive/users/jonne', data = data , content_type = 'application/json')
+    
+        data = '{"body":"10110101", "artist_id":"paula koivuniemi", "song_id":"kuka pelkaa paulaa", "user_nickname":"jonne"}'
+        response = self.client.post('/tab_archive/artists/paula koivuniemi/kuka pelkaa paulaa', data = data , content_type = 'application/json', **extra)
+       
+        extra = {
+            'HTTP_AUTHORIZATION': "erkki"
+        }
+        
+        data = '{"user_nickname":"erkki", "email":"erkki@yahoo.fi", "picture":"minajarattori.jpg", "description":"paras"}'
+        response = self.client.put('/tab_archive/users/erkki', data = data , content_type = 'application/json')
+       
+        data = '{"user_nickname":"erkki", "body":"hieno tabu, hermanni!"}' 
+        response = self.client.post('/tab_archive/tablatures/1', data = data , content_type = 'application/json', **extra)
+       
+        #Here we try to post reply to comment
+        extra = {
+            'HTTP_AUTHORIZATION': "jonne"
+        }
+        data = '{"user_nickname":"jonne", "body":"niin munstaki!!"}' 
+        response = self.client.post('/tab_archive/tablatures/1/1', data = data , content_type = 'application/json', **extra)
+        self.assertEqual(response.status_code, 204)
+        
+        location = response["Location"]
+                
+        self.assertEqual(location, 'http://testserver/tab_archive/tablatures/1/2')
+        
+    def test_delete(self):
+        extra = {
+            'HTTP_AUTHORIZATION': "jonne"
+        }
+    
+        data = '{"user_nickname":"jonne", "email":"jolli@live.fi", "picture":"es-purkki.png", "description":"opettajien kauhu"}'
+        response = self.client.put('/tab_archive/users/jonne', data = data , content_type = 'application/json')
+    
+        data = '{"body":"10110101", "artist_id":"paula koivuniemi", "song_id":"kuka pelkaa paulaa", "user_nickname":"jonne"}'
+        response = self.client.post('/tab_archive/artists/paula koivuniemi/kuka pelkaa paulaa', data = data , content_type = 'application/json', **extra)
+       
+        extra = {
+            'HTTP_AUTHORIZATION': "erkki"
+        }
+        
+        data = '{"user_nickname":"erkki", "email":"erkki@yahoo.fi", "picture":"minajarattori.jpg", "description":"paras"}'
+        response = self.client.put('/tab_archive/users/erkki', data = data , content_type = 'application/json')
+       
+        data = '{"user_nickname":"erkki", "body":"hieno tabu, hermanni!"}' 
+        response = self.client.post('/tab_archive/tablatures/1', data = data , content_type = 'application/json', **extra)
+
+        #Here we try to delete comment
+        response = self.client.delete('/tab_archive/tablatures/1/1', content_type = 'application/json', **extra)
+        self.assertEqual(response.status_code, 204)
+        
+    def test_put(self):
+        extra = {
+            'HTTP_AUTHORIZATION': "jonne"
+        }
+    
+        data = '{"user_nickname":"jonne", "email":"jolli@live.fi", "picture":"es-purkki.png", "description":"opettajien kauhu"}'
+        response = self.client.put('/tab_archive/users/jonne', data = data , content_type = 'application/json')
+    
+        data = '{"body":"10110101", "artist_id":"paula koivuniemi", "song_id":"kuka pelkaa paulaa", "user_nickname":"jonne"}'
+        response = self.client.post('/tab_archive/artists/paula koivuniemi/kuka pelkaa paulaa', data = data , content_type = 'application/json', **extra)
+       
+        extra = {
+            'HTTP_AUTHORIZATION': "erkki"
+        }
+        
+        data = '{"user_nickname":"erkki", "email":"erkki@yahoo.fi", "picture":"minajarattori.jpg", "description":"paras"}'
+        response = self.client.put('/tab_archive/users/erkki', data = data , content_type = 'application/json')
+       
+        data = '{"user_nickname":"erkki", "body":"hieno tabu, hermanni!"}' 
+        response = self.client.post('/tab_archive/tablatures/1', data = data , content_type = 'application/json', **extra)
+        
+        #Here we try to put edited version of comment
+        data = '{"body":"aika sux"}' 
+        response = self.client.put('/tab_archive/tablatures/1/1', data = data , content_type = 'application/json', **extra)
+        self.assertEqual(response.status_code, 204)
+        
+        
+    def tearDown(self):
+        #Make sure that no data is retained between tests
+        db.drop_tables()
+
+
+class TestRating(unittest.TestCase):
+    def setUp(self):
+        # Every test needs a client.
+        self.client = Client()
+        
+        #Make sure that tables exist for each test
+        db.create_users_table("debug.db")
+        db.create_tablatures_table("debug.db")
+        db.create_comments_table("debug.db")
+        
     def test_post(self):
         
         extra = {
@@ -344,13 +599,36 @@ class TestComment(unittest.TestCase):
         data = '{"body":"10110101", "artist_id":"paula koivuniemi", "song_id":"kuka pelkaa paulaa", "user_nickname":"jonne"}'
         response = self.client.post('/tab_archive/artists/paula koivuniemi/kuka pelkaa paulaa', data = data , content_type = 'application/json', **extra)
         
+        #Here we try to post rating to tablature
+
+        data = '{"rating":5}'
+        response = self.client.post('/tab_archive/tablatures/1/rating', data = data , content_type = 'application/json', )
+        self.assertEqual(response.status_code, 200)
+        
+    def test_get(self):
+        extra = {
+            'HTTP_AUTHORIZATION': "jonne"
+        }
+    
+        data = '{"user_nickname":"jonne", "email":"jolli@live.fi", "picture":"es-purkki.png", "description":"opettajien kauhu"}'
+        response = self.client.put('/tab_archive/users/jonne', data = data , content_type = 'application/json')
+    
+        data = '{"body":"10110101", "artist_id":"paula koivuniemi", "song_id":"kuka pelkaa paulaa", "user_nickname":"jonne"}'
+        response = self.client.post('/tab_archive/artists/paula koivuniemi/kuka pelkaa paulaa', data = data , content_type = 'application/json', **extra)
+
+        data = '{"rating":5}'
+        response = self.client.post('/tab_archive/tablatures/1/rating', data = data , content_type = 'application/json', )
+        self.assertEqual(response.status_code, 200)
+        
+        #here we try to get tablature rating
+        response = self.client.get('/tab_archive/tablatures/1/rating', content_type = 'application/json', )
+        self.assertEqual(response.status_code, 200)
+        
+        content = json.loads(response.content)
+        self.assertEqual(content["rating"], 5)
+        self.assertEqual(content["rating_count"], 1)
         
         
-    def tearDown(self):
-        #Make sure that no data is retained between tests
-        db.drop_tables()
-
-
 class TestArtists(unittest.TestCase):
     def setUp(self):
         # Every test needs a client.
@@ -799,7 +1077,7 @@ class TestDatabaseInterface(unittest.TestCase):
         tab = TablatureModel.create({'tablature_id':"Null", 'body':"1010010", "rating":0, "artist_id":"tuttiritari", "song_id":"tutti viimeinen", "user_nickname":"erkki", "rating_count":0})
         tab_id = self.handle.add_tablature(tab)
         
-        edit = TablatureModel.create({'tablature_id':tab_id, 'body':"1111111", "rating":0, "artist_id":"tuttiritari", "song_id":"tutti viimeinen", "user_nickname":"erkki", "rating_count":0})
+        edit = TablatureModel.create({'tablature_id':tab_id, 'body':"1111111", "rating":0, "artist_id":None, "song_id":"tutti viimeinen", "user_nickname":"erkki", "rating_count":0})
         
         edit_id = self.handle.edit_tablature(edit)
         edited = self.handle.get_tablature(edit_id)
