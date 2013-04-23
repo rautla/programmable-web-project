@@ -12,7 +12,7 @@ from archive.models import UserModel, TablatureModel, CommentModel, ErrorModel
 
 
 class User(APIView):
-    def get (self, request, user_nickname): 
+    def get (self, request, user_nickname):
         authorization = ''  
         try:
             authorization = request.META["HTTP_AUTHORIZATION"]
@@ -35,6 +35,8 @@ class User(APIView):
             return Response(status = 401) 
     
     def put(self, request, user_nickname):
+        
+        
         authorization = ''
         try:
             authorization = request.META["HTTP_AUTHORIZATION"]
@@ -62,7 +64,11 @@ class User(APIView):
         output = {}
         #Create the dictionaries for publicProfile, history and users. To avoid
         #problems transform the registrationdata and description in string using the str() function
+<<<<<<< HEAD
         publicprofile = {'nickname':usermodel.user_nickname,
+=======
+        user = {'user_nickname':usermodel.user_nickname,
+>>>>>>> d0efae31225291cae4377fe9c07156aa36bdc83b
                        'picture':usermodel.picture,
                        'description':str(usermodel.description)}
         users = {'rel':'self', 'href':uritousers}
@@ -70,12 +76,19 @@ class User(APIView):
 
         #output['publicprofile'] = publicprofile
         #output['users'] = users
+<<<<<<< HEAD
         publicprofile['users'] = users
         return Response(publicprofile, status=status.HTTP_200_OK)
 
+=======
+        output = {"users":users, "user":user}
+        return Response(output, status=status.HTTP_200_OK)
+>>>>>>> d0efae31225291cae4377fe9c07156aa36bdc83b
     
     def _readauthorized(self, request, user_nickname):
+        
         usermodel = database.get_user(user_nickname)
+        
         if usermodel is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
         #Get the url of the users resource
@@ -86,7 +99,7 @@ class User(APIView):
         output = {}
         #Create the dictionaries for userProfile, history and users
         users = {'rel':'self', 'href':uritousers}
-        output['userprofile'] = usermodel.serialize()
+        output['user'] = usermodel.serialize()
         output['users'] = users
         return Response(output, status=status.HTTP_200_OK)
         
@@ -123,7 +136,7 @@ class User(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT,
                         headers={"Location":url})
     
-    def _createuser(self, request, user_id):
+    def _createuser(self, request, user_nickname):
         if database.contains_user(user_nickname):
             return Response(status=status.HTTP_409_CONFLICT)
         usermodel = None
@@ -151,7 +164,8 @@ class Users(APIView):
         #Users output looks: 
         #[{'nickname':user_nickname, 'link':{'rel':'self','href'=:'http://tab_archive/users/user_nickname'}},
         #{{'nickname':user_nickname, 'link':{'rel':'self','href'=:'http://tab_archive/users/user_nickname'}}]
-        users = []
+        users = {}
+        userlist = []
         for usermodel in usermodels:
             _usernickname = usermodel.user_nickname
             _userurl = "http://localhost:8000/tab_archive/users/"+_usernickname
@@ -159,15 +173,15 @@ class Users(APIView):
             user = {}
             user['user_nickname'] = _usernickname
             user['link'] = {'rel':'self', 'href':_userurl}
-            users.append(user)
-        
+            userlist.append(user)
+        users["users"] = userlist
         response = Response(users, status=status.HTTP_200_OK)
         return response
     
 class Artist(APIView):
     def get (self, request, artist_id):
         #Get in an array the models of all the tablatures from songs of artist
-        songemodels = database.get_songs(artist_id)
+        songmodels = database.get_songs(artist_id)
 
         #Serialize each one of the tablatures. An array of tablatures looks like:
         #[{'title':'message_title, 'link':{'rel':'self','href'=:'http://tab_archive/tablatures/tablature_id'}},
@@ -189,7 +203,7 @@ class Artist(APIView):
 class Artists(APIView):
     def get (self, request):
         #Get an array of all the artists
-        artistsmodels = database.get_artists()
+        artistmodels = database.get_artists()
         #Artists output looks: 
         #[{'artist':artist_id, 'link':{'rel':'self','href'=:'http://tab_archive/artists/artist_id'}},
         #{{'artist':artist_id, 'link':{'rel':'self','href'=:'http://tab_archive/artists/artist_id'}}]
@@ -208,73 +222,89 @@ class Artists(APIView):
         return response
     
 class Song(APIView):
-    def get(self, request, song_id):
+    def get(self, request, artist_id, song_id):
         #Get in an array the models of all the tablatures
         tablaturemodels = database.get_tablatures('', song_id)
 
         #Serialize each one of the tablatures. An array of tablatures looks like:
         #[{'song':'song_id, 'link':{'rel':'self','href'=:'http://tab_archive/artists/artist_id/song_id'}},
         #{'song':'song_id, 'link':{'rel':'self','href'=:'http://tab_archive/artists/artist_id/song_id'}}]
+        song = {}
+        song["artist_id"] = artist_id
+        song["song_id"] = song_id
         tablatures = []
         for tablaturemodel in tablaturemodels: 
             _tablatureid = tablaturemodel.tablature_id
             _rating = tablaturemodel.rating
-            _tablatureurl = "http://localhost:8000/tab_archive/tablatures/"+_tablatureid
+            _tablatureurl = "http://localhost:8000/tab_archive/tablatures/"+str(_tablatureid)
             _tablatureurl = reverse("tablature", (_tablatureid,), request=request)
             tablature = {}
             tablature['tablature_id'] = _tablatureid
             tablature['rating'] = _rating
             tablature['link'] = {'rel':'self', 'href':_tablatureurl}
             tablatures.append(tablature)
-        
-        response = Response(tablatures, status=status.HTTP_200_OK)  
+        song["tablatures"] = tablatures
+        response = Response(song, status=status.HTTP_200_OK)  
         return response
         
-    def post(self, request, tablature_id):
-        #request.DATA contains the request body already deserialized in
-        #a python dictionary
+    def post(self, request, artist_id, song_id):
+    
         if not request.DATA:
             error = ErrorModel('The artist_id, song_id and the body of the tablature\
                                cannot be empty').serialize()
-            return Response(error, status=status.HTTP_404_NOT_FOUND)
-        if not database.contains_tablature(tablature_id):
-            error = ErrorModel("The tablature "+tablature_id+
-                               " is not in the archive").serialize()
-            return Response(error, status=status.HTTP_404_NOT_FOUND)
-        
-        '''HUOM HOX MITES TUON tablature_id:n KANSSA'''
-        if database.contains_tablature(tablature_id):
-            return Response(status=status.HTTP_409_CONFLICT)
+            return Response(error, status=status.HTTP_400_BAD_REQUEST)
         tablaturemodel = None
         try:
-            tablaturemodel = TablatureModel(tablature_id, raw_data=request.DATA)
+            tablaturemodel = TablatureModel(None, raw_data=request.DATA)
+            user_nickname = tablaturemodel.user_nickname
         except Exception as e:
-            print "Could not add the data "+ str(e)
+            print "Could not add the data " + str(e)
             traceback.print_exc()
             return Response(status = 400)
-        database.add_tablature(tablaturemodel)
+        
+        authorization = ''
+        try:
+            authorization = request.META["HTTP_AUTHORIZATION"]
+        except KeyError:
+            pass
+        if self._isauthorized(user_nickname, authorization):
+            return self._createtablature(tablaturemodel, request) 
+        else:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        
+    def _createtablature(self, tablaturemodel, request):
+        
+        tablature_id = database.add_tablature(tablaturemodel)
         url = reverse("tablature", (tablature_id,), request=request)
-        return Response(status=status.HTTP_204_NO_CONTENT,
+        return Response(status=status.HTTP_201_CREATED,
                         headers={"Location":url})    
+    
+    def _isauthorized(self, user_nickname, authorization): 
+        if authorization is not None and (authorization.lower() == "admin" or 
+                                          authorization.lower() == user_nickname.lower()):
+            return True
+        return False
 
 class Songs(APIView):
     def get (self, request):
         #Get in an array the models of all the songs
-        songmodels = database.get_songs()
+        songmodels = database.get_songs("")
         #Users output looks: 
         #[{'song':song_id, 'link':{'rel':'self','href'=:'http://tab_archive/artists/artist_id/song_id'}},
         #{{'song':song_id, 'link':{'rel':'self','href'=:'http://tab_archive/artists/artist_id/song_id'}}]
-        songs = []
+        songs = {}
+        songlist = []
         for songmodel in songmodels:
             _artistid = songmodel[0]
             _songid = songmodel[1]
-            _songurl = "http://localhost:8000/tab_archive/artists/%s/%s" %(_artistid ,_song_id)
+            _songurl = "http://localhost:8000/tab_archive/artists/%s/%s" %(_artistid ,_songid)
             _songurl = reverse("user", (_songid,), request=request)
             song = {}
             song['song_id'] = _songid
+            song['artist_id'] = _artistid
             song['link'] = {'rel':'self', 'href':_songurl}
-            songs.append(song)
-        
+            songlist.append(song)
+        songs["songs"] = songlist
         response = Response(songs, status=status.HTTP_200_OK)
         return response
     

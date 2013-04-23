@@ -72,7 +72,7 @@ class TablatureModel(object):
         self.rating = None
         self.artist_id = None
         self.song_id = None
-        user_nickname = None
+        self.user_nickname = None
         self.rating_count = None
         if raw_data is not None:
             self.body = raw_data.get('body', None) 
