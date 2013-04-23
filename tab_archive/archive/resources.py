@@ -47,9 +47,7 @@ class User(APIView):
         else:
             return self._createuser(request, user_nickname)
     
-
     def _readunauthorized(self, request, user_nickname):
-
         #Use the database to extract a user information. Use the method 
         #database.getUser(user_id) to obtain a UserModel
         usermodel = database.get_user(user_nickname)
@@ -64,26 +62,15 @@ class User(APIView):
         output = {}
         #Create the dictionaries for publicProfile, history and users. To avoid
         #problems transform the registrationdata and description in string using the str() function
-<<<<<<< HEAD
-        publicprofile = {'nickname':usermodel.user_nickname,
-=======
         user = {'user_nickname':usermodel.user_nickname,
->>>>>>> d0efae31225291cae4377fe9c07156aa36bdc83b
                        'picture':usermodel.picture,
                        'description':str(usermodel.description)}
         users = {'rel':'self', 'href':uritousers}
         #Append to the output
-
         #output['publicprofile'] = publicprofile
         #output['users'] = users
-<<<<<<< HEAD
-        publicprofile['users'] = users
-        return Response(publicprofile, status=status.HTTP_200_OK)
-
-=======
         output = {"users":users, "user":user}
         return Response(output, status=status.HTTP_200_OK)
->>>>>>> d0efae31225291cae4377fe9c07156aa36bdc83b
     
     def _readauthorized(self, request, user_nickname):
         
@@ -174,8 +161,8 @@ class Users(APIView):
             user['user_nickname'] = _usernickname
             user['link'] = {'rel':'self', 'href':_userurl}
             userlist.append(user)
-        users["users"] = userlist
-        response = Response(users, status=status.HTTP_200_OK)
+        
+        response = Response(userlist, status=status.HTTP_200_OK)
         return response
     
 class Artist(APIView):
@@ -191,9 +178,9 @@ class Artist(APIView):
             _artistid = songmodel[0]
             _songid = songmodel[1]
             _songurl = "http://localhost:8000/tab_archive/artists/"+_artistid + "/" +_songid
-            _songurl = reverse("song", (_songid,), request=request)
+            _songurl = reverse("song", (_artistid,_songid), request=request)         # <- bugged
             song = {}
-            song['song_id']
+            song['song_id'] = _songid
             song['link'] = {'rel':'self', 'href':_songurl}
             songs.append(song)
         
@@ -305,12 +292,12 @@ class Songs(APIView):
             song['link'] = {'rel':'self', 'href':_songurl}
             songlist.append(song)
         songs["songs"] = songlist
-        response = Response(songs, status=status.HTTP_200_OK)
+        response = Response(songlist, status=status.HTTP_200_OK)
         return response
     
 class Comment(APIView):
     #GET return the comment which comment id is comment_id
-    def get (self, request, comment_id):
+    def get (self, request, tablature_id, comment_id):
         #Get the model
         commentmodel = database.get_comment(comment_id)
         if commentmodel is None:
@@ -319,106 +306,152 @@ class Comment(APIView):
             return Response(error, status=status.HTTP_404_NOT_FOUND)
 
         #Serialize and modify the result so the sender is linked to its url
-        comment = commentmodel.serialize()
-        print comment
+        comment = {}
+        comment["comment"] = commentmodel.serialize()
+        #print comment
         #Modify the sender so it includes the URL of the sender:
         #From sender:"Axel" => I create sender:{'nickname':'Axel','link':{'rel':'self','href'=:'http://tab_archive/users/Axel'}}
         #senderurl = "http://localhost:8000/tab_archive/users/"+comment['sender']
-        if comment['user_nickname'] is not None:
-            senderurl = reverse("user",(comment['user_nickname'],), request=request)
-            comment['user_nickname'] = {'user_nickname':comment['user_nickname'], 
-                                 'link':{'rel':'self','href':senderurl}}
-        else:
-            comment['user_nickname'] = "Anonymous"                                                     
+        
+        senderurl = reverse("user",(commentmodel.user_nickname,), request=request)
+        comment['user'] = {'user_nickname':commentmodel.user_nickname, 'link':{'rel':'self','href':senderurl}}
+                                                 
         #If replyto exists, include the url of the reply comment
         replytocomment_url = None
-        if 'reply_to' in comment:
-            replytocomment_url = "http://localhost:8000/tab_archive/tablatures/" + comment[tablature_id] + "/" + comment[comment_id]
-            replytocomment_url = reverse("comment", (comment['reply_to'],), 
-                                         request=request)
+
+        if commentmodel.reply_to != "":
+
+            replytocomment_url = reverse("comment", (commentmodel.tablature_id, commentmodel.reply_to), request=request)
             comment['reply_to'] = replytocomment_url
         return Response(comment, status=status.HTTP_200_OK)    
     
-    def delete(self, request, comment_id):
+    def delete(self, request, tablature_id, comment_id):
+        authorization = ''
+        try:
+            authorization = request.META["HTTP_AUTHORIZATION"]
+        except KeyError:
+            pass
+            
+        if not database.contains_comment(comment_id):
+            error = ErrorModel("The comment " + str(comment_id) + " is not in the archive").serialize()
+            return Response(error, status=status.HTTP_404_NOT_FOUND)
+            
+        commentmodel = database.get_comment(comment_id)
+        if self._modifyisauthorized(commentmodel, authorization):
+            return self._deletecomment(commentmodel.comment_id, request) 
+        else:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        
+    def _deletecomment(self, comment_id, request):
         try:
             if database.delete_comment(comment_id):
                 return Response(None, status=status.HTTP_204_NO_CONTENT)
-            else:
-                error = ErrorModel("The comment "+comment_id+
-                                   " is not in the archive").serialize()
-                return Response(error, status=status.HTTP_404_NOT_FOUND)
+                
         except Exception:
             error = ErrorModel("The comment "+comment_id+
                                    " is not in the archive").serialize()
             return Response(error, status=status.HTTP_400_BAD_REQUEST)    
     
-    def put(self, request, comment_id):
+    def put(self, request, tablature_id, comment_id):
        #request.DATA contains the request body already deserialized in a
         #python dictionary
         if not request.DATA:
             error = ErrorModel('The the body of the comment\
                                cannot be empty').serialize()
+            print "HERP"
             return Response(error, status=status.HTTP_400_BAD_REQUEST)
         if not database.contains_comment(comment_id):
             error = ErrorModel("The comment "+ comment_id+
                                " is not in the archive").serialize()
             return Response(error, status=status.HTTP_404_NOT_FOUND)
-
+        commentmodel = database.get_comment(comment_id)
+        commentmodel.body = request.DATA["body"]
+        authorization = ''
+        try:
+            authorization = request.META["HTTP_AUTHORIZATION"]
+        except KeyError:
+            pass
+        if self._modifyisauthorized(commentmodel, authorization):
+            return self._modifycomment(commentmodel, request) 
+        else:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+            
+        
+    def _modifycomment(self, comment, request):
         #Deserialize and modify the data in the comment.
         try:
-            body = request.DATA['body']
-            database.modify_comment(comment_id, body)
+            database.modify_comment(comment)
         except Exception:
+            print "derp"
             return Response(status=status.HTTP_400_BAD_REQUEST)
         
         return Response(None, status=status.HTTP_204_NO_CONTENT)     
     
-    def post(self, request, comment_id):
+    def post(self, request, tablature_id, comment_id):
         #request.DATA contains the request body already deserialized in
         #a python dictionary
         if not request.DATA:
             error = ErrorModel('The body of the comment\
                                cannot be empty').serialize()
-            return Response(error, status=status.HTTP_404_NOT_FOUND)
+            return Response(error, status=status.HTTP_400_BAD_REQUEST)
         if not database.contains_comment(comment_id):
             error = ErrorModel("The comment "+comment_id+
                                " is not in the archive").serialize()
             return Response(error, status=status.HTTP_404_NOT_FOUND)
-        
         commentmodel = None
-        if database.contains_comment(comment_id):
-            return Response(status=status.HTTP_409_CONFLICT)        
+        
         try:
             commentmodel = CommentModel('', raw_data=request.DATA)
         except Exception as e:
             print "Could not add the data "+ str(e)
             traceback.print_exc()
             return Response(status = 400)
-
         commentmodel.reply_to = comment_id 
+        commentmodel.tablature_id = tablature_id
+        
+        authorization = ''
+        try:
+            authorization = request.META["HTTP_AUTHORIZATION"]
+        except KeyError:
+            pass
+        if self._isauthorized(commentmodel.user_nickname, authorization):
+            return self._createreply(commentmodel, request) 
+        else:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        
+    def _createreply(self, commentmodel, request):
+        comment_id = database.add_comment(commentmodel)
 
-        database.add_comment(commentmodel)
-        url = reverse("comment", (comment_id,), request=request)
+        url = reverse("comment", (commentmodel.tablature_id, comment_id), request=request)
         return Response(status=status.HTTP_204_NO_CONTENT,
-                        headers={"Location":url})   
+                        headers={"Location":url})
+                        
+    def _isauthorized(self, user_nickname, authorization): 
+        if authorization is not None and (authorization.lower() == "admin" or 
+                                          authorization.lower() == user_nickname.lower()):
+            return True
+        return False
+        
+    def _modifyisauthorized(self, comment, authorization): 
+        if authorization is not None and (authorization.lower() == "admin" or 
+                                          authorization.lower() == comment.user_nickname.lower()):
+            return True
+        return False
+    
 
 class Rating(APIView):
     '''HUOM HOX MITES TÄMÄ'''
-    def get(self, request):
-        ratingmodel = database.get_rating()
+    def get(self, request, tablature_id):
+        ratingmodel = database.get_rating(tablature_id)
         if ratingmodel is None:
             return Response(status=status.HTTP_404_NOT_FOUND)        
         #Rating output looks: 
         #[{'rating':rating, 'link':{'rel':'self','href'=:'http://tab_archive/tablatures/tablature_id/rating'}}]
-
         
-
-        _rating = tablaturemodel.rating
-        _ratingurl = "http://localhost:8000/tab_archive/tablatures/" + tablature[tablature_id] + "/" + tablature[rating]
-        _ratingurl = reverse("rating", (_rating,), request=request)
+        
         rating = {}
-        rating['rating'] = _rating
-        rating['link'] = {'rel':'self', 'href':_ratingurl}
+        rating['rating'] = ratingmodel[0]
+        rating['rating_count'] = ratingmodel[1]
         
         response = Response(rating, status=status.HTTP_200_OK)
         return response    
@@ -444,7 +477,8 @@ class Rating(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         '''JOS EI TOIMI TÄÄLLÄ ON VIKA''' 
         
-        return Response(rating[0], status=status.HTTP_200_OK)   
+        return Response(rating[0], status=status.HTTP_200_OK)
+    
 
 class Tablature(APIView):
     def get (self, request, tablature_id):
@@ -458,12 +492,12 @@ class Tablature(APIView):
 
         #Serialize and modify the result so the sender is linked to its url
         tablature = tablaturemodel.serialize()
-        print tablature
+        #print tablature
         #Modify the sender so it includes the URL of the sender:
         #From sender:"Axel" => I create sender:{'user_nickname':'Axel','link':{'rel':'self','href'=:'http://tab_archive/users/Axel'}}
         #senderurl = "http://localhost:8000/tab_archive/users/"+tablature['user_nickname']
         if tablature['user_nickname'] is not None:
-            senderurl = reverse("user_nickname",(talbature['user_nickname'],), request=request)
+            senderurl = reverse("user",(tablature['user_nickname'],), request=request)
             tablature['user_nickname'] = {'user_nickname':tablature['user_nickname'], 
                                  'link':{'rel':'self','href':senderurl}}
         else:
@@ -471,6 +505,17 @@ class Tablature(APIView):
         return Response(tablature, status=status.HTTP_200_OK)    
     
     def delete(self, request, tablature_id):
+        authorization = ''
+        try:
+            authorization = request.META["HTTP_AUTHORIZATION"]
+        except KeyError:
+            pass
+        if self._modifyisauthorized(tablature_id, authorization):
+            return self._deletetablature(tablature_id) 
+        else:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+    
+    def _deletetablature(self, tablature_id):
         try:
             if database.delete_tablature(tablature_id):
                 return Response(None, status=status.HTTP_204_NO_CONTENT)
@@ -486,25 +531,36 @@ class Tablature(APIView):
     def put(self, request, tablature_id):
         #request.DATA contains the request body already deserialized in a
         #python dictionary
+
         if not request.DATA:
+            
             error = ErrorModel('The artist_id, song_id and body of the tablature\
                                cannot be empty').serialize()
             return Response(error, status=status.HTTP_400_BAD_REQUEST)
         if not database.contains_tablature(tablature_id):
+            
             error = ErrorModel("The tablature "+ tablature_id+
                                " is not in the archive").serialize()
             return Response(error, status=status.HTTP_404_NOT_FOUND)
         
-        tablaturemodel = TablatureModel(tablature_id)
-        if tablaturemodel is None:
-            return Response(status = status.HTTP_404_NOT_FOUND)
+        
         #request.DATA contains a dictionary with the entity body input.
         #Deserialize the data and modify the model
+        tablaturemodel = TablatureModel(tablature_id)
         try:
             #EXTRACT THE PRIVATE DATA
-            body = request.DATA['body']
-            artist_id = request.DATA['artist_id']
-            song_id = request.DATA['song_id']
+            if request.DATA.has_key("body"):
+                body = request.DATA['body']
+            else:
+                body = None
+            if request.DATA.has_key("artist_id"):
+                artist_id = request.DATA["artist_id"]
+            else:
+                artist_id = None
+            if request.DATA.has_key("song_id"):
+                song_id = request.DATA['song_id']
+            else:
+                song_id = None
             #SET VALUES TO USER
             tablaturemodel.tablature_id = tablature_id
             tablaturemodel.body = body
@@ -514,70 +570,127 @@ class Tablature(APIView):
             print "Could not add the data "+ str(e)
             traceback.print_exc()
             return Response(status = 400)
+            
+        authorization = ''
+        try:
+            authorization = request.META["HTTP_AUTHORIZATION"]
+        except KeyError:
+            pass
+        if self._modifyisauthorized(tablature_id, authorization):
+            return self._modifytablature(tablaturemodel, request) 
+        else:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+            
+            
+    def _modifytablature(self, tablaturemodel, request):
         #Update the model to the database
         database.edit_tablature(tablaturemodel)
-        url = reverse("tablature", (tablature_id,), request=request)
-        return Response(status=status.HTTP_204_NO_CONTENT,
-                        headers={"Location":url})    
+        return Response(status=status.HTTP_204_NO_CONTENT)    
     
-    def post(self, request, comment_id):
-        '''HUOM HOX MITES TÄMÄ'''
-        if database.contains_comment(comment_id):
-            return Response(status=status.HTTP_409_CONFLICT)
+    def post(self, request, tablature_id):
+        if not request.DATA:
+            error = ErrorModel('The artist_id, song_id and the body of the tablature\
+                               cannot be empty').serialize()
+            return Response(error, status=status.HTTP_400_BAD_REQUEST)
         commentmodel = None
         try:
-            commentmodel = CommentModel(comment_id, raw_data=request.DATA)
+            commentmodel = CommentModel(None, raw_data=request.DATA)
+            user_nickname = commentmodel.user_nickname
+            commentmodel.tablature_id = tablature_id
         except Exception as e:
             print "Could not add the data "+ str(e)
             traceback.print_exc()
             return Response(status = 400)
-        database.add_comment(commentmodel)
-        url = reverse("comment", (comment_id,), request=request)
-        return Response(status=status.HTTP_204_NO_CONTENT,
+            
+        authorization = ''
+        try:
+            authorization = request.META["HTTP_AUTHORIZATION"]
+        except KeyError:
+            pass
+        if self._isauthorized(user_nickname, authorization):
+            return self._createcomment(commentmodel, request) 
+        else:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        
+        
+    def _createcomment(self, commentmodel, request):
+        comment_id = database.add_comment(commentmodel)
+        url = reverse("comment", (commentmodel.tablature_id,comment_id,), request=request)
+        return Response(status=status.HTTP_201_CREATED,
                         headers={"Location":url})      
+                        
+    def _isauthorized(self, user_nickname, authorization): 
+        if authorization is not None and (authorization.lower() == "admin" or 
+                                          authorization.lower() == user_nickname.lower()):
+            return True
+        return False
+        
+    def _modifyisauthorized(self, tablature_id, authorization): 
+        tablaturemodel = database.get_tablature(tablature_id)
+        user_nickname = tablaturemodel.user_nickname
+        if authorization is not None and (authorization.lower() == "admin" or 
+                                          authorization.lower() == user_nickname.lower()):
+            return True
+        return False
 
 class Tablatures(APIView):
     def get (self, request):
         #Get in an array the models of all the tablatures
-        tablaturemodels = database.get_tablatures()
+        tablaturemodels = database.get_tablatures('', '')
 
         #Serialize each one of the tablatures. An array of tablatures looks like:
         #[{'title':'message_title, 'link':{'rel':'self','href'=:'http://tab_archive/tablatures/tablature_id'}},
         #{'title':'message_title, 'link':{'rel':'self','href'=:'http://tab_archive/tablatures/tablature_id'}}]
-        tablatures = []
+        songs = []
         for tablaturemodel in tablaturemodels: 
+            song = {}
+            song["artist_id"] = tablaturemodel.artist_id
+            song["song_id"] = tablaturemodel.song_id
+            
             _tablatureid = tablaturemodel.tablature_id
-            _tablatureurl = "http://localhost:8000/tab_archive/tablatures/"+_tablatureid
+            _tablatureurl = "http://localhost:8000/tab_archive/tablatures/"+str(_tablatureid)
             _tablatureurl = reverse("tablature", (_tablatureid,), request=request)
             tablature = {}
-            tablature['tablature_id'] = tablature_id      
+            tablature['tablature_id'] = _tablatureid
             tablature['link'] = {'rel':'self', 'href':_tablatureurl}
-            tablatures.append(tablature)
-        return Response(tablatures, status=status.HTTP_200_OK)
+            song["tablature"] = tablature
+            songs.append(song)
+        return Response(songs, status=status.HTTP_200_OK)
     
-    def post(self, request, tablature_id):
-        #request.DATA contains the request body already deserialized in
-        #a python dictionary
+    def post(self, request):
+    
         if not request.DATA:
-            error = ErrorModel('The artist_id, song_id and the body of the message\
+            error = ErrorModel('The artist_id, song_id and the body of the tablature\
                                cannot be empty').serialize()
-            return Response(error, status=status.HTTP_404_NOT_FOUND)
-        if not database.contains_tablature(tablature_id):
-            error = ErrorModel("The tablature "+tablature_id+
-                               " is not in the archive").serialize()
-            return Response(error, status=status.HTTP_404_NOT_FOUND)
-        
-        '''HUOM HOX MITES TUON tablature_id:n KANSSA'''
-        if database.contains_tablature(tablature_id):
-            return Response(status=status.HTTP_409_CONFLICT)
+            return Response(error, status=status.HTTP_400_BAD_REQUEST)
         tablaturemodel = None
         try:
-            tablaturemodel = TablatureModel(tablature_id, raw_data=request.DATA)
+            tablaturemodel = TablatureModel(None, raw_data=request.DATA)
+            user_nickname = tablaturemodel.user_nickname
         except Exception as e:
-            print "Could not add the data "+ str(e)
+            print "Could not add the data " + str(e)
             traceback.print_exc()
             return Response(status = 400)
-        database.add_tablature(tablaturemodel)
+        
+        authorization = ''
+        try:
+            authorization = request.META["HTTP_AUTHORIZATION"]
+        except KeyError:
+            pass
+        if self._isauthorized(user_nickname, authorization):
+            return self._createtablature(tablaturemodel, request) 
+        else:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        
+    def _createtablature(self, tablaturemodel, request):
+        
+        tablature_id = database.add_tablature(tablaturemodel)
         url = reverse("tablature", (tablature_id,), request=request)
-        return Response(status=status.HTTP_204_NO_CONTENT,
-                        headers={"Location":url})
+        return Response(status=status.HTTP_201_CREATED,
+                        headers={"Location":url})    
+    
+    def _isauthorized(self, user_nickname, authorization): 
+        if authorization is not None and (authorization.lower() == "admin" or 
+                                          authorization.lower() == user_nickname.lower()):
+            return True
+        return False

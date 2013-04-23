@@ -96,15 +96,15 @@ class TablatureModel(object):
         tablature.rating_count = row['rating_count']
         return tablature
         
-    def serialize(object):
+    def serialize(self):
         _entity = {}
         _entity['body'] = self.body
         _entity['tablature_id'] = self.tablature_id
-        _entity['rating'] = self.rating_id
-        _entity['artist_id'] = row['artist_id']
-        _entity['song_id'] = row['song_id']
-        _entity['user_nickname'] = row['user_nickname']
-        _entity['rating_count'] = row['rating_count']
+        _entity['rating'] = self.rating
+        _entity['artist_id'] = self.artist_id
+        _entity['song_id'] = self.song_id
+        _entity['user_nickname'] = self.user_nickname
+        _entity['rating_count'] = self.rating_count
         return _entity
         
         
