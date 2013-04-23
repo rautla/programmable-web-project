@@ -87,10 +87,13 @@ class User(APIView):
                        'picture':usermodel.picture,
                        'description':str(usermodel.description)}
         users = {'rel':'self', 'href':uritousers}
-        
         output = {"users":users, "user":user}
-        output['comments'] = reverse("user_comments", (user_nickname,), request=request)
-        output['tablatures'] = reverse("user_tablatures", (user_nickname,), request=request)
+        
+        _commentsurl = reverse("user_comments", (user_nickname,), request=request)
+        _tablaturesurl = reverse("user_tablatures", (user_nickname,), request=request)
+        
+        output['comments'] = {'rel':'self', 'href':_commentsurl}
+        output['tablatures'] = {'rel':'self', 'href':_tablaturesurl}
         
         return Response(output, status=status.HTTP_200_OK)
     
@@ -112,8 +115,11 @@ class User(APIView):
         users = {'rel':'self', 'href':uritousers}
         output['user'] = usermodel.serialize()
         output['users'] = users
-        output['comments'] = reverse("user_comments", (user_nickname,), request=request)
-        output['tablatures'] = reverse("user_tablatures", (user_nickname,), request=request)
+        _commentsurl = reverse("user_comments", (user_nickname,), request=request)
+        _tablaturesurl = reverse("user_tablatures", (user_nickname,), request=request)
+        
+        output['comments'] = {'rel':'self', 'href':_commentsurl}
+        output['tablatures'] = {'rel':'self', 'href':_tablaturesurl}
        
             
         return Response(output, status=status.HTTP_200_OK)
@@ -137,7 +143,12 @@ class User(APIView):
         Return 400 if request is invalid.
         Return 204 on success.
         '''
-        usermodel = UserModel(user_nickname)
+        try:
+            usermodel = UserModel(user_nickname)
+        except Exception as e:
+            print "Could not add the data "+ str(e)
+            traceback.print_exc()
+            return Response(status = 400)
         if usermodel is None:
             return Response(status = status.HTTP_404_NOT_FOUND)
         #request.DATA contains a dictionary with the entity body input.
@@ -219,6 +230,16 @@ class Users(APIView):
         response = Response(userlist, status=status.HTTP_200_OK)
         return response
     
+
+class TablatureComments(APIView):
+    '''
+    NOT IMPLEMENTED YET!
+    '''
+    def get(self, request, tablature_id):
+    
+        pass
+    
+    
 class UserComments(APIView):
     '''
     NOT IMPLEMENTED YET!
@@ -237,6 +258,7 @@ class UserComments(APIView):
         #       
         #        comments.append(comment_info)
         #    output['comments'] = comments
+    
     
     
 class UserTablatures(APIView):
@@ -354,6 +376,10 @@ class Song(APIView):
             return Response(error, status=status.HTTP_400_BAD_REQUEST)
         tablaturemodel = None
         try:
+            if not request.DATA.has_key("artist_id"):
+                request.DATA["artist_id"] = artist_id
+            if not request.DATA.has_key("song_id"):
+                request.DATA["song_id"] = song_id
             tablaturemodel = TablatureModel(None, raw_data=request.DATA)
             user_nickname = tablaturemodel.user_nickname
         except Exception as e:
@@ -406,7 +432,7 @@ class Songs(APIView):
             _artistid = songmodel[0]
             _songid = songmodel[1]
             _songurl = "http://localhost:8000/tab_archive/artists/%s/%s" %(_artistid ,_songid)
-            _songurl = reverse("user", (_songid,), request=request)
+            _songurl = reverse("song", (_artistid, _songid,), request=request)
             song = {}
             song['song_id'] = _songid
             song['artist_id'] = _artistid
@@ -674,10 +700,9 @@ class Tablature(APIView):
         #senderurl = "http://localhost:8000/tab_archive/users/"+tablature['user_nickname']
         if tablature['user_nickname'] is not None:
             senderurl = reverse("user",(tablature['user_nickname'],), request=request)
-            tablature['user_nickname'] = {'user_nickname':tablature['user_nickname'], 
-                                 'link':{'rel':'self','href':senderurl}}
-        else:
-            tablature['user_nickname'] = "Anonymous"
+            tablature['link'] = {'rel':'self','href':senderurl}
+        commentsurl = reverse("tablaturecomments", (tablature_id,), request=request)
+        tablature["comments"] = {'rel':'self','href':commentsurl}
         return Response(tablature, status=status.HTTP_200_OK)    
     
     def delete(self, request, tablature_id):
@@ -793,6 +818,11 @@ class Tablature(APIView):
             error = ErrorModel('The artist_id, song_id and the body of the tablature\
                                cannot be empty').serialize()
             return Response(error, status=status.HTTP_400_BAD_REQUEST)
+        
+        if not database.contains_tablature(tablature_id):
+            error = ErrorModel('Tablature was not found.').serialize()
+            return Response(error, status=status.HTTP_404_NOT_FOUND)
+        
         commentmodel = None
         try:
             commentmodel = CommentModel(None, raw_data=request.DATA)

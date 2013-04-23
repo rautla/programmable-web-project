@@ -87,7 +87,7 @@ class ArchiveDatabaseInterface(object):
         Return list of tablatures to specified song.
         If parameters are left empty return all tablatures.
         If song parameter is left empty return all tablatures by artist.
-        Return "not found error if song, artist or tablatures are not found.
+        Return None if song, artist or tablatures are not found.
         '''
         
         raise NotImplementedError("")
@@ -155,7 +155,6 @@ class ArchiveDatabaseInterface(object):
         '''
         Changes the comment in database to modified version.
         If comment doesn't exist return "None".
-        If user is not the original poster, return "unauthorized" error.
         '''
         
         raise NotImplementedError("")
@@ -163,26 +162,22 @@ class ArchiveDatabaseInterface(object):
     def delete_comment(self, comment_id):
         '''
         Deletes comment.
-        If comment doesn't exist return "None".
-        If user is not the original poster, return "unauthorized" error.
+        If comment doesn't exist return "None".        
         '''
         
         raise NotImplementedError("")
         
     def add_comment(self, comment):
         '''
-        Adds comment to table.
-        Return "unauthorized" if user is not logged in.
+        Adds comment to table.        
         '''
         
         raise NotImplementedError("")
         
     def append_answer(self, comment_id, body, user_nickname):
         '''
-        Writes an answer to the message with id=comment_id
-        raises ForumDatabaseError if the DB could not be modified.
-        raises ValueError if the message_id has a wrong format
-        returns the id of the new message
+        Writes an answer to the comment with id=comment_id
+        returns the id of the new comment
         '''
         
         raise NotImplementedError("")
@@ -494,7 +489,7 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
         
     def edit_tablature(self, tablature):
         '''
-        Return tablature.
+        Edit tablature.
         '''
         
         keys_on = 'PRAGMA foreign_keys = ON'
@@ -700,7 +695,6 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
         '''
         Changes the comment in database to modified version.
         If comment doesn't exist return "None".
-        If user is not the original poster, return "unauthorized" error.
         '''
         
         keys_on = 'PRAGMA foreign_keys = ON'
@@ -730,7 +724,6 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
         '''
         Deletes comment.
         If comment doesn't exist return "None".
-        If user is not the original poster, return "unauthorized" error.
         '''
         
         keys_on = 'PRAGMA foreign_keys = ON'
@@ -760,7 +753,7 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
     def add_comment(self, comment):
         '''
         Adds comment to table.
-        Return "unauthorized" if user is not logged in.
+        Return None if user or tablature don't exist.
         '''
         
         keys_on = 'PRAGMA foreign_keys = ON'
@@ -963,9 +956,3 @@ elif (sys.argv[1] == "test"):
     database = ArchiveDatabase('debug.db')
 else:
     database = ArchiveDatabase()
-#print sys.argv
-#print len(sys.argv)
-#create_users_table("Test_archive.db")
-#create_tablatures_table("Test_archive.db")
-#create_comments_table("Test_archive.db")
-#drop_tables("Test_archive.db")

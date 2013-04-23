@@ -1,7 +1,7 @@
 ﻿# -*- coding: utf-8 -*-
 
 from django.conf.urls import patterns, include, url
-from archive.resources import Users, User, Artists, Artist, Song, Songs, Comment, Rating, Tablature, Tablatures, UserComments, UserTablatures
+from archive.resources import Users, User, Artists, Artist, Song, Songs, Comment, Rating, Tablature, Tablatures, UserComments, UserTablatures, TablatureComments
 
 # Uncomment the next two lines to enable the admin:
 # from django.contrib import admin
@@ -20,6 +20,7 @@ urlpatterns = patterns('',
     url(r'^tab_archive/tablatures$',Tablatures.as_view(), name="tablatures"),
     url(r'^tab_archive/tablatures/(?P<tablature_id>\d+)$', Tablature.as_view(),name="tablature"),
     url(r'^tab_archive/tablatures/(?P<tablature_id>\d+)/rating$', Rating.as_view(),name="rating"),
+    url(r'^tab_archive/tablatures/(?P<tablature_id>\d+)/comments$', TablatureComments.as_view(),name="tablaturecomments"),
     url(r'^tab_archive/tablatures/(?P<tablature_id>\d+)/(?P<comment_id>\d+)$', Comment.as_view(),name="comment"),
 
     # Uncomment the admin/doc line below to enable admin documentation:
