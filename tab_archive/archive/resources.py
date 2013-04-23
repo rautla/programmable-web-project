@@ -186,7 +186,7 @@ class User(APIView):
         except Exception as e:
             print "Could not add the data "+ str(e)
             traceback.print_exc()
-            return Response(status = 400)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
         database.add_user(usermodel)
         url = reverse("user", (user_nickname,), request=request)
         return Response(status=status.HTTP_204_NO_CONTENT,
@@ -213,6 +213,8 @@ class Users(APIView):
         '''
         #Get in an array the models of all the users
         usermodels = database.get_users()
+        if usermodels == None:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
         #Users output looks: 
         #[{'nickname':user_nickname, 'link':{'rel':'self','href'=:'http://tab_archive/users/user_nickname'}},
         #{{'nickname':user_nickname, 'link':{'rel':'self','href'=:'http://tab_archive/users/user_nickname'}}]
@@ -280,6 +282,8 @@ class Artist(APIView):
         '''
         #Get in an array the models of all the tablatures from songs of artist
         songmodels = database.get_songs(artist_id)
+        if songmodels == None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
         #Serialize each one of the tablatures. An array of tablatures looks like:
         #[{'song_id':song_id, 'link':{'rel':'self','href'=:'http://tab_archive/artists/artist_id/song_id'}},
@@ -314,7 +318,8 @@ class Artists(APIView):
         #Artists output looks: 
         #[{'artist':artist_id, 'link':{'rel':'self','href'=:'http://tab_archive/artists/artist_id'}},
         #{{'artist':artist_id, 'link':{'rel':'self','href'=:'http://tab_archive/artists/artist_id'}}]
-
+        if artistmodels == None:        
+            return Response(status=status.HTTP_404_NOT_FOUND)
         artists = []
         for artistmodel in artistmodels:
             _artistid = artistmodel
@@ -341,7 +346,9 @@ class Song(APIView):
         
         #Get in an array the models of all the tablatures
         tablaturemodels = database.get_tablatures(artist_id, song_id)
-
+        if tablaturemodels == None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        
         #Serialize each one of the tablatures. An array of tablatures looks like:
         #[{'song':'song_id, 'link':{'rel':'self','href'=:'http://tab_archive/artists/artist_id/song_id'}},
         #{'song':'song_id, 'link':{'rel':'self','href'=:'http://tab_archive/artists/artist_id/song_id'}}]
@@ -423,6 +430,9 @@ class Songs(APIView):
     def get (self, request):
         #Get in an array the models of all the songs
         songmodels = database.get_songs("")
+        if songmodels == None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        
         #Users output looks: 
         #[{'song':song_id, 'link':{'rel':'self','href'=:'http://tab_archive/artists/artist_id/song_id'}},
         #{{'song':song_id, 'link':{'rel':'self','href'=:'http://tab_archive/artists/artist_id/song_id'}}]
@@ -474,7 +484,7 @@ class Comment(APIView):
         if commentmodel.reply_to != "":
 
             replytocomment_url = reverse("comment", (commentmodel.tablature_id, commentmodel.reply_to), request=request)
-            comment['reply_to'] = replytocomment_url
+            comment['reply_to'] = {'rel':'self','href':replytocomment_url }
         return Response(comment, status=status.HTTP_200_OK)    
     
     def delete(self, request, tablature_id, comment_id):
@@ -711,6 +721,11 @@ class Tablature(APIView):
         Requires authorization.
         If not authorized return 401.
         '''
+        if not database.contains_tablature(tablature_id):
+            
+            error = ErrorModel("The tablature "+ tablature_id+
+                               " is not in the archive").serialize()
+            return Response(error, status=status.HTTP_404_NOT_FOUND)
         authorization = ''
         try:
             authorization = request.META["HTTP_AUTHORIZATION"]
@@ -886,6 +901,10 @@ class Tablatures(APIView):
         '''
         #Get in an array the models of all the tablatures
         tablaturemodels = database.get_tablatures('', '')
+        if tablaturemodels == None:
+            error = ErrorModel('Tablatures were not found.').serialize()
+            return Response(error, status=status.HTTP_404_NOT_FOUND)
+            
 
         #Serialize each one of the tablatures. An array of tablatures looks like:
         #[{'title':'message_title, 'link':{'rel':'self','href'=:'http://tab_archive/tablatures/tablature_id'}},

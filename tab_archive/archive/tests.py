@@ -522,8 +522,46 @@ class TestTablature(unittest.TestCase):
         data = '{"body":"11111111"}'
         response = self.client.put('/tab_archive/tablatures/' + tablature_id, data = data , content_type = 'application/json', **extra)
         self.assertEqual(response.status_code, 204)
+    
+    def test_put_fail(self):
+        '''
+        Try to put empty data to existing tablature.
+        Try to edit without authorization.
+        Try to edit tablature that doesn't exist.
+        '''
+        response = precond_user_tablature(self.client)
+        
+        location = response["Location"]
+        tablature_id = location[location.rfind("/") + 1 :]
+        
+        extra = {
+            'HTTP_AUTHORIZATION': "jonne"
+        }
+        data = '{}'
+        response = self.client.put('/tab_archive/tablatures/' + tablature_id, data = data , content_type = 'application/json', **extra)
+        self.assertEqual(response.status_code, 400)
+        
+        
+        extra = {
+            'HTTP_AUTHORIZATION': "erkki"
+        }
+        data = '{"body":"11111111"}'
+        response = self.client.put('/tab_archive/tablatures/' + tablature_id, data = data , content_type = 'application/json', **extra)
+        self.assertEqual(response.status_code, 401)
+        
+        
+        extra = {
+            'HTTP_AUTHORIZATION': "jonne"
+        }
+        data = '{"body":"11111111"}'
+        response = self.client.put('/tab_archive/tablatures/9', data = data , content_type = 'application/json', **extra)
+        self.assertEqual(response.status_code, 404)
+        
         
     def test_delete(self):
+        '''
+        Try to delete tablature.
+        '''
         response = precond_user_tablature(self.client)
 
         location = response["Location"]
@@ -535,6 +573,28 @@ class TestTablature(unittest.TestCase):
         }
         response = self.client.delete('/tab_archive/tablatures/' + tablature_id, content_type = 'application/json', **extra)
         self.assertEqual(response.status_code, 204)
+        
+    def test_delete_fail(self):
+        '''
+        Try to delete tablature that doesn't exist.
+        Try to delete tablature without authorization.
+        '''
+        response = precond_user_tablature(self.client)
+
+        location = response["Location"]
+        tablature_id = location[location.rfind("/") + 1 :]
+        
+        extra = {
+            'HTTP_AUTHORIZATION': "jonne"
+        }
+        response = self.client.delete('/tab_archive/tablatures/9', content_type = 'application/json', **extra)
+        self.assertEqual(response.status_code, 404)
+        
+        extra = {
+            'HTTP_AUTHORIZATION': "erkki"
+        }
+        response = self.client.delete('/tab_archive/tablatures/1', content_type = 'application/json', **extra)
+        self.assertEqual(response.status_code, 401)
         
     def tearDown(self):
         #Make sure that no data is retained between tests
@@ -552,6 +612,10 @@ class TestTablatures(unittest.TestCase):
         db.create_comments_table("debug.db")
         
     def test_post(self):
+        '''
+        Post a new tablature.
+        '''
+        
         extra = {
             'HTTP_AUTHORIZATION': "jonne"
         }
@@ -565,7 +629,31 @@ class TestTablatures(unittest.TestCase):
         location = response["Location"]
         self.assertEqual(location, 'http://testserver/tab_archive/tablatures/1')
         
+    def test_post_fail(self):
+        ''' 
+        Try to post without authorization.
+        Try to post empty data.
+        '''
+    
+        extra = {
+            'HTTP_AUTHORIZATION': "jonne"
+        }
+    
+        response = precond_user(self.client)
+    
+        #Here we try to post tablature
+        data = '{"body":"10110101", "artist_id":"paula koivuniemi", "song_id":"kuka pelkaa paulaa", "user_nickname":"jonne"}'
+        response = self.client.post('/tab_archive/tablatures', data = data , content_type = 'application/json',)
+        self.assertEqual(response.status_code, 401)
+        
+        response = self.client.post('/tab_archive/tablatures', data = {} , content_type = 'application/json',)
+        self.assertEqual(response.status_code, 400)
+        
     def test_get(self):
+        '''
+        Try to get list of tablatures.
+        '''
+        
         response = precond_user_tablature(self.client)
         
         #Here we try to get list of tablatures
@@ -577,8 +665,16 @@ class TestTablatures(unittest.TestCase):
         
         content = json.loads(response.content)
         
-        self.assertEqual(content[0]["artist_id"], "paula koivuniemi")
-        self.assertEqual(content[0]["song_id"], "kuka pelkaa paulaa")
+        expected = [{u'artist_id': u'paula koivuniemi', u'song_id': u'kuka pelkaa paulaa', u'tablature': {u'tablature_id': 1, u'link': {u'href': u'http://testserver/tab_archive/tablatures/1', u'rel': u'self'}}}]
+        
+        self.assertEqual(content, expected)
+    
+    def test_get_fail(self):
+        '''
+        Try to get from empty database.
+        '''
+        response = self.client.get('/tab_archive/tablatures', content_type = 'application/json')
+        self.assertEqual(response.status_code, 404)
         
     def tearDown(self):
         #Make sure that no data is retained between tests
@@ -596,6 +692,10 @@ class TestComment(unittest.TestCase):
         db.create_comments_table("debug.db")  
         
     def test_get(self):
+        '''
+        Try to get comment.
+        '''
+        
         response = precond_user_tablature(self.client)
         
         location = response["Location"]
@@ -623,10 +723,43 @@ class TestComment(unittest.TestCase):
         
         content = json.loads(response.content)
         
-        self.assertEqual(content["comment"]["body"], "niin munstaki!!")
-        self.assertEqual(content["comment"]["user_nickname"], "jonne")
+        expected = {u'comment': {u'body': u'niin munstaki!!', u'reply_to': 1, u'tablature_id': 1, u'user_nickname': u'jonne'}, u'reply_to': 
+        {u'href': u'http://testserver/tab_archive/tablatures/1/1', u'rel': u'self'}, u'user': 
+        {u'link': {u'href': u'http://testserver/tab_archive/users/jonne', u'rel': u'self'}, u'user_nickname': u'jonne'}}
+        self.assertEqual(content, expected)
+        
+    def test_get_fail(self):
+        '''
+        Try to get comment that doesn't exist
+        '''
+        response = precond_user_tablature(self.client)
+        
+        location = response["Location"]
+        tablature_id = location[location.rfind("/") + 1 :]
+        
+        extra = {
+            'HTTP_AUTHORIZATION': "erkki"
+        }
+        
+        data = '{"user_nickname":"erkki", "email":"erkki@yahoo.fi", "picture":"minajarattori.jpg", "description":"paras"}'
+        response = self.client.put('/tab_archive/users/erkki', data = data , content_type = 'application/json')
+       
+        data = '{"user_nickname":"erkki", "body":"onpa hyva, tykkaan!"}' 
+        response = self.client.post('/tab_archive/tablatures/' + tablature_id, data = data , content_type = 'application/json', **extra)
+       
+        extra = {
+            'HTTP_AUTHORIZATION': "jonne"
+        }
+        data = '{"user_nickname":"jonne", "body":"niin munstaki!!"}' 
+        response = self.client.post('/tab_archive/tablatures/1/1', data = data , content_type = 'application/json', **extra)
+        
+        response = self.client.get('/tab_archive/tablatures/1/3', content_type = 'application/json')
+        self.assertEqual(response.status_code, 404)
        
     def test_post(self):
+        '''
+        Try to post reply to comment.
+        '''
         
         response = precond_user_tablature(self.client)
        
@@ -652,7 +785,50 @@ class TestComment(unittest.TestCase):
                 
         self.assertEqual(location, 'http://testserver/tab_archive/tablatures/1/2')
         
+    def test_post_fail(self):
+        '''
+        Try to post unauthorized.
+        Try to post empty data.
+        Try to reply to comment that dosen't exist.
+        '''
+        response = precond_user_tablature(self.client)
+       
+        extra = {
+            'HTTP_AUTHORIZATION': "erkki"
+        }
+        
+        data = '{"user_nickname":"erkki", "email":"erkki@yahoo.fi", "picture":"minajarattori.jpg", "description":"paras"}'
+        response = self.client.put('/tab_archive/users/erkki', data = data , content_type = 'application/json')
+       
+        data = '{"user_nickname":"erkki", "body":"hieno tabu, hermanni!"}' 
+        response = self.client.post('/tab_archive/tablatures/1', data = data , content_type = 'application/json', **extra)
+       
+        #Here we try to post reply to comment
+        extra = {
+            'HTTP_AUTHORIZATION': "erkki"
+        }
+        data = '{"user_nickname":"jonne", "body":"niin munstaki!!"}' 
+        response = self.client.post('/tab_archive/tablatures/1/1', data = data , content_type = 'application/json', **extra)
+        self.assertEqual(response.status_code, 401)
+
+        extra = {
+            'HTTP_AUTHORIZATION': "jonne"
+        }
+        
+        data = '{}' 
+        response = self.client.post('/tab_archive/tablatures/1/1', data = data , content_type = 'application/json', **extra)
+        self.assertEqual(response.status_code, 400)
+        
+        data = '{"user_nickname":"jonne", "body":"niin munstaki!!"}' 
+        response = self.client.post('/tab_archive/tablatures/2/2', data = data , content_type = 'application/json', **extra)
+        self.assertEqual(response.status_code, 404)
+        
+        
+        
     def test_delete(self):
+        '''
+        Try to delete comment.
+        '''
         response = precond_user_tablature(self.client)
        
         extra = {
@@ -670,6 +846,10 @@ class TestComment(unittest.TestCase):
         self.assertEqual(response.status_code, 204)
         
     def test_put(self):
+        '''
+        Try to edit comment.
+        '''
+        
         response = precond_user_tablature(self.client)
        
         extra = {
@@ -705,7 +885,9 @@ class TestRating(unittest.TestCase):
         
         
     def test_post(self):
-        
+        '''
+        Rate a tablutature.
+        '''
         response = precond_user_tablature(self.client)
         
         #Here we try to post rating to tablature
@@ -715,6 +897,9 @@ class TestRating(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         
     def test_get(self):
+        '''
+        Get rating of tablature.
+        '''
         response = precond_user_tablature(self.client)
 
         data = '{"rating":5}'
@@ -744,6 +929,9 @@ class TestArtists(unittest.TestCase):
         db.create_comments_table("debug.db")
         
     def test_get(self):
+        '''
+        Get list of artists.
+        '''
         response = precond_user_tablature(self.client)
         location = response["Location"]
         

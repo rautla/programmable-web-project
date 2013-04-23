@@ -60,6 +60,7 @@ class CommentModel(object):
         _entity = {}
         _entity['body'] = self.body
         _entity['user_nickname'] = self.user_nickname
+        _entity['tablature_id'] = self.tablature_id
         if self.reply_to is not None:
             _entity['reply_to'] = self.reply_to
         return _entity
