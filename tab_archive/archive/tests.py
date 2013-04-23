@@ -7,6 +7,29 @@ import archive.database as db
 from operator import attrgetter
 from archive.models import UserModel, TablatureModel, CommentModel
 
+
+def precond_user(client):
+    data = '{"user_nickname":"jonne", "email":"jolli@live.fi", "picture":"es-purkki.png", "description":"opettajien kauhu"}'
+    response = client.put('/tab_archive/users/jonne', data = data , content_type = 'application/json')
+
+    return response
+        
+def precond_user2(client):
+    data = '{"user_nickname":"erkki", "email":"erkki@pertti.fi", "picture":"kissakuva.png", "description":"maan viljeljia"}'
+    response = client.put('/tab_archive/users/erkki', data = data , content_type = 'application/json')
+    
+def precond_user_tablature(client):
+    extra = {
+            'HTTP_AUTHORIZATION': "jonne"
+        }
+
+    precond_user(client)
+    
+    data = '{"body":"10110101", "artist_id":"paula koivuniemi", "song_id":"kuka pelkaa paulaa", "user_nickname":"jonne"}'
+    response = client.post('/tab_archive/artists/paula koivuniemi/kuka pelkaa paulaa', data = data , content_type = 'application/json', **extra)
+    
+    return response
+
 class TestUser(unittest.TestCase):
     def setUp(self):
         # Every test needs a client.
@@ -17,13 +40,14 @@ class TestUser(unittest.TestCase):
         db.create_tablatures_table("debug.db")
         db.create_comments_table("debug.db")
 
+        
     def test_put_add_user(self):
         '''
         Try to add user.
         '''
      
-        data = '{"user_nickname":"jonne", "email":"jolli@live.fi", "picture":"es-purkki.png", "description":"opettajien kauhu"}'
-        response = self.client.put('/tab_archive/users/jonne', data = data , content_type = 'application/json')
+        #Here we try to put user
+        response = precond_user(self.client)
 
         self.assertEqual(response.status_code, 204)
         
@@ -32,10 +56,7 @@ class TestUser(unittest.TestCase):
         Try to get user with no authorization.
         '''
         
-        data = '{"user_nickname":"jonne", "email":"jolli@live.fi", "picture":"es-purkki.png", "description":"opettajien kauhu"}'
-        response = self.client.put('/tab_archive/users/jonne', data = data , content_type = 'application/json')
-        
-        self.assertEqual(response.status_code, 204)
+        response = precond_user(self.client)
         
         response = self.client.get('/tab_archive/users/jonne', {"Accept":"application/json"})
         self.assertEqual(response.status_code, 200)
@@ -57,8 +78,7 @@ class TestUser(unittest.TestCase):
         }
         
         
-        data = '{"user_nickname":"jonne", "email":"jolli@live.fi", "picture":"es-purkki.png", "description":"opettajien kauhu"}'
-        response = self.client.put('/tab_archive/users/jonne', data = data , content_type = 'application/json')
+        response = precond_user(self.client)
         
         self.assertEqual(response.status_code, 204)
         
@@ -92,8 +112,7 @@ class TestUser(unittest.TestCase):
         Try to delete user without authorization.
         '''
         
-        data = '{"user_nickname":"jonne", "email":"jolli@live.fi", "picture":"es-purkki.png", "description":"opettajien kauhu"}'
-        response = self.client.put('/tab_archive/users/jonne', data = data , content_type = 'application/json')
+        response = precond_user(self.client)
         
         response = self.client.delete('/tab_archive/users/jonne', {"Accept":"application/json"}, content_type = "application/json")
         
@@ -107,9 +126,7 @@ class TestUser(unittest.TestCase):
         extra = {
             'HTTP_AUTHORIZATION': "erkki"
         }
-        data = '{"user_nickname":"erkki", "email":"erkki@pertti.fi", "picture":"kissakuva.png", "description":"maan viljeljia"}'
-        response = self.client.put('/tab_archive/users/erkki', data = data , content_type = 'application/json')
-        
+        response = precond_user2(self.client)    
         
         response = self.client.delete('/tab_archive/users/erkki', {"Accept":"application/json"}, content_type = "application/json", **extra)
         
@@ -131,9 +148,9 @@ class TestUsers(unittest.TestCase):
         db.create_comments_table("debug.db")
         
     def test_get(self):
-        data = '{"user_nickname":"jonne", "email":"jolli@live.fi", "picture":"es-purkki.png", "description":"opettajien kauhu"}'
-        response = self.client.put('/tab_archive/users/jonne', data = data , content_type = 'application/json')
+        response = precond_user(self.client)
     
+        #Here we try to get users
         response = self.client.get('/tab_archive/users', {"Accept":"application/json"}, content_type = "application/json")
         
         content = json.loads(response.content)
@@ -163,15 +180,8 @@ class TestArtist(unittest.TestCase):
         db.create_comments_table("debug.db")
         
     def test_get(self):
-        extra = {
-            'HTTP_AUTHORIZATION': "jonne"
-        }
     
-        data = '{"user_nickname":"jonne", "email":"jolli@live.fi", "picture":"es-purkki.png", "description":"opettajien kauhu"}'
-        response = self.client.put('/tab_archive/users/jonne', data = data , content_type = 'application/json')
-    
-        data = '{"body":"10110101", "artist_id":"paula koivuniemi", "song_id":"kuka pelkaa paulaa", "user_nickname":"jonne"}'
-        response = self.client.post('/tab_archive/artists/paula koivuniemi/kuka pelkaa paulaa', data = data , content_type = 'application/json', **extra)
+        response = precond_user_tablature(self.client)
     
         #Here we try to get artist
         response = self.client.get('/tab_archive/artists/paula koivuniemi', {"Accept":"application/json"}, content_type = "application/json")
@@ -204,8 +214,7 @@ class TestSong(unittest.TestCase):
             'HTTP_AUTHORIZATION': "jonne"
         }
         
-        data = '{"user_nickname":"jonne", "email":"jolli@live.fi", "picture":"es-purkki.png", "description":"opettajien kauhu"}'
-        response = self.client.put('/tab_archive/users/jonne', data = data , content_type = 'application/json')
+        response = precond_user(self.client)
     
         data = '{"body":"10110101",  "song_id":"kuka pelkaa paulaa", "user_nickname":"jonne"}'
         
@@ -218,15 +227,8 @@ class TestSong(unittest.TestCase):
         self.assertEqual(location, 'http://testserver/tab_archive/tablatures/1')
         
     def test_get(self):
-        extra = {
-            'HTTP_AUTHORIZATION': "jonne"
-        }
-    
-        data = '{"user_nickname":"jonne", "email":"jolli@live.fi", "picture":"es-purkki.png", "description":"opettajien kauhu"}'
-        response = self.client.put('/tab_archive/users/jonne', data = data , content_type = 'application/json')
-    
-        data = '{"body":"10110101", "artist_id":"paula koivuniemi", "song_id":"kuka pelkaa paulaa", "user_nickname":"jonne"}'
-        response = self.client.post('/tab_archive/artists/paula koivuniemi/kuka pelkaa paulaa', data = data , content_type = 'application/json', **extra)
+        response = precond_user_tablature(self.client)
+        
         location = response["Location"]
     
         #Here we try to get tablatures to song
@@ -260,15 +262,7 @@ class TestSongs(unittest.TestCase):
         Try to get list of songs added to the database.
         '''
     
-        extra = {
-            'HTTP_AUTHORIZATION': "jonne"
-        }
-    
-        data = '{"user_nickname":"jonne", "email":"jolli@live.fi", "picture":"es-purkki.png", "description":"opettajien kauhu"}'
-        response = self.client.put('/tab_archive/users/jonne', data = data , content_type = 'application/json')
-    
-        data = '{"body":"10110101", "artist_id":"paula koivuniemi", "song_id":"kuka pelkaa paulaa", "user_nickname":"jonne"}'
-        response = self.client.post('/tab_archive/artists/paula koivuniemi/kuka pelkaa paulaa', data = data , content_type = 'application/json', **extra)
+        response = precond_user_tablature(self.client)
         
         #Here we try to get songs
         response = self.client.get('/tab_archive/songs', {"Accept":"application/json"}, content_type = "application/json")
@@ -297,15 +291,8 @@ class TestTablature(unittest.TestCase):
         db.create_comments_table("debug.db")  
         
     def test_get(self):
-        extra = {
-            'HTTP_AUTHORIZATION': "jonne"
-        }
-    
-        data = '{"user_nickname":"jonne", "email":"jolli@live.fi", "picture":"es-purkki.png", "description":"opettajien kauhu"}'
-        response = self.client.put('/tab_archive/users/jonne', data = data , content_type = 'application/json')
-    
-        data = '{"body":"10110101", "artist_id":"paula koivuniemi", "song_id":"kuka pelkaa paulaa", "user_nickname":"jonne"}'
-        response = self.client.post('/tab_archive/artists/paula koivuniemi/kuka pelkaa paulaa', data = data , content_type = 'application/json', **extra)
+        response = precond_user_tablature(self.client)
+        
         location = response["Location"]
         tablature_id = location[location.rfind("/") + 1 :]
         #Here we try to get tablature
@@ -318,15 +305,7 @@ class TestTablature(unittest.TestCase):
         self.assertEqual(content["user_nickname"]["user_nickname"], "jonne")
         
     def test_post(self):
-        extra = {
-            'HTTP_AUTHORIZATION': "jonne"
-        }
-    
-        data = '{"user_nickname":"jonne", "email":"jolli@live.fi", "picture":"es-purkki.png", "description":"opettajien kauhu"}'
-        response = self.client.put('/tab_archive/users/jonne', data = data , content_type = 'application/json')
-    
-        data = '{"body":"10110101", "artist_id":"paula koivuniemi", "song_id":"kuka pelkaa paulaa", "user_nickname":"jonne"}'
-        response = self.client.post('/tab_archive/artists/paula koivuniemi/kuka pelkaa paulaa', data = data , content_type = 'application/json', **extra)
+        response = precond_user_tablature(self.client)
         
         location = response["Location"]
         tablature_id = location[location.rfind("/") + 1 :]
@@ -348,38 +327,29 @@ class TestTablature(unittest.TestCase):
         self.assertEqual(location, 'http://testserver/tab_archive/tablatures/1/1')
         
     def test_put(self):
-        extra = {
-            'HTTP_AUTHORIZATION': "jonne"
-        }
-    
-        data = '{"user_nickname":"jonne", "email":"jolli@live.fi", "picture":"es-purkki.png", "description":"opettajien kauhu"}'
-        response = self.client.put('/tab_archive/users/jonne', data = data , content_type = 'application/json')
-    
-        data = '{"body":"10110101", "artist_id":"paula koivuniemi", "song_id":"kuka pelkaa paulaa", "user_nickname":"jonne"}'
-        response = self.client.post('/tab_archive/artists/paula koivuniemi/kuka pelkaa paulaa', data = data , content_type = 'application/json', **extra)
+        response = precond_user_tablature(self.client)
+        
         location = response["Location"]
         tablature_id = location[location.rfind("/") + 1 :]
    
         #Here we try to put modified version of tablature
+        extra = {
+            'HTTP_AUTHORIZATION': "jonne"
+        }
         data = '{"body":"11111111"}'
         response = self.client.put('/tab_archive/tablatures/' + tablature_id, data = data , content_type = 'application/json', **extra)
         self.assertEqual(response.status_code, 204)
         
     def test_delete(self):
-        extra = {
-            'HTTP_AUTHORIZATION': "jonne"
-        }
-    
-        data = '{"user_nickname":"jonne", "email":"jolli@live.fi", "picture":"es-purkki.png", "description":"opettajien kauhu"}'
-        response = self.client.put('/tab_archive/users/jonne', data = data , content_type = 'application/json')
-
-        data = '{"body":"10110101", "artist_id":"paula koivuniemi", "song_id":"kuka pelkaa paulaa", "user_nickname":"jonne"}'
-        response = self.client.post('/tab_archive/artists/paula koivuniemi/kuka pelkaa paulaa', data = data , content_type = 'application/json', **extra)
+        response = precond_user_tablature(self.client)
 
         location = response["Location"]
         tablature_id = location[location.rfind("/") + 1 :]
         
         #Here we try to delete tablature
+        extra = {
+            'HTTP_AUTHORIZATION': "jonne"
+        }
         response = self.client.delete('/tab_archive/tablatures/' + tablature_id, content_type = 'application/json', **extra)
         self.assertEqual(response.status_code, 204)
         
@@ -403,8 +373,7 @@ class TestTablatures(unittest.TestCase):
             'HTTP_AUTHORIZATION': "jonne"
         }
     
-        data = '{"user_nickname":"jonne", "email":"jolli@live.fi", "picture":"es-purkki.png", "description":"opettajien kauhu"}'
-        response = self.client.put('/tab_archive/users/jonne', data = data , content_type = 'application/json')
+        response = precond_user(self.client)
     
         #Here we try to post tablature
         data = '{"body":"10110101", "artist_id":"paula koivuniemi", "song_id":"kuka pelkaa paulaa", "user_nickname":"jonne"}'
@@ -414,16 +383,12 @@ class TestTablatures(unittest.TestCase):
         self.assertEqual(location, 'http://testserver/tab_archive/tablatures/1')
         
     def test_get(self):
+        response = precond_user_tablature(self.client)
+        
+        #Here we try to get list of tablatures
         extra = {
             'HTTP_AUTHORIZATION': "jonne"
         }
-    
-        data = '{"user_nickname":"jonne", "email":"jolli@live.fi", "picture":"es-purkki.png", "description":"opettajien kauhu"}'
-        response = self.client.put('/tab_archive/users/jonne', data = data , content_type = 'application/json')
-        
-        data = '{"body":"10110101", "artist_id":"paula koivuniemi", "song_id":"kuka pelkaa paulaa", "user_nickname":"jonne"}'
-        response = self.client.post('/tab_archive/tablatures', data = data , content_type = 'application/json', **extra)
-        #Here we try to get list of tablatures
         response = self.client.get('/tab_archive/tablatures', content_type = 'application/json', **extra)
         self.assertEqual(response.status_code, 200)
         
@@ -448,15 +413,7 @@ class TestComment(unittest.TestCase):
         db.create_comments_table("debug.db")  
         
     def test_get(self):
-        extra = {
-            'HTTP_AUTHORIZATION': "jonne"
-        }
-    
-        data = '{"user_nickname":"jonne", "email":"jolli@live.fi", "picture":"es-purkki.png", "description":"opettajien kauhu"}'
-        response = self.client.put('/tab_archive/users/jonne', data = data , content_type = 'application/json')
-    
-        data = '{"body":"10110101", "artist_id":"paula koivuniemi", "song_id":"kuka pelkaa paulaa", "user_nickname":"jonne"}'
-        response = self.client.post('/tab_archive/artists/paula koivuniemi/kuka pelkaa paulaa', data = data , content_type = 'application/json', **extra)
+        response = precond_user_tablature(self.client)
         
         location = response["Location"]
         tablature_id = location[location.rfind("/") + 1 :]
@@ -488,15 +445,7 @@ class TestComment(unittest.TestCase):
        
     def test_post(self):
         
-        extra = {
-            'HTTP_AUTHORIZATION': "jonne"
-        }
-    
-        data = '{"user_nickname":"jonne", "email":"jolli@live.fi", "picture":"es-purkki.png", "description":"opettajien kauhu"}'
-        response = self.client.put('/tab_archive/users/jonne', data = data , content_type = 'application/json')
-    
-        data = '{"body":"10110101", "artist_id":"paula koivuniemi", "song_id":"kuka pelkaa paulaa", "user_nickname":"jonne"}'
-        response = self.client.post('/tab_archive/artists/paula koivuniemi/kuka pelkaa paulaa', data = data , content_type = 'application/json', **extra)
+        response = precond_user_tablature(self.client)
        
         extra = {
             'HTTP_AUTHORIZATION': "erkki"
@@ -521,15 +470,7 @@ class TestComment(unittest.TestCase):
         self.assertEqual(location, 'http://testserver/tab_archive/tablatures/1/2')
         
     def test_delete(self):
-        extra = {
-            'HTTP_AUTHORIZATION': "jonne"
-        }
-    
-        data = '{"user_nickname":"jonne", "email":"jolli@live.fi", "picture":"es-purkki.png", "description":"opettajien kauhu"}'
-        response = self.client.put('/tab_archive/users/jonne', data = data , content_type = 'application/json')
-    
-        data = '{"body":"10110101", "artist_id":"paula koivuniemi", "song_id":"kuka pelkaa paulaa", "user_nickname":"jonne"}'
-        response = self.client.post('/tab_archive/artists/paula koivuniemi/kuka pelkaa paulaa', data = data , content_type = 'application/json', **extra)
+        response = precond_user_tablature(self.client)
        
         extra = {
             'HTTP_AUTHORIZATION': "erkki"
@@ -546,15 +487,7 @@ class TestComment(unittest.TestCase):
         self.assertEqual(response.status_code, 204)
         
     def test_put(self):
-        extra = {
-            'HTTP_AUTHORIZATION': "jonne"
-        }
-    
-        data = '{"user_nickname":"jonne", "email":"jolli@live.fi", "picture":"es-purkki.png", "description":"opettajien kauhu"}'
-        response = self.client.put('/tab_archive/users/jonne', data = data , content_type = 'application/json')
-    
-        data = '{"body":"10110101", "artist_id":"paula koivuniemi", "song_id":"kuka pelkaa paulaa", "user_nickname":"jonne"}'
-        response = self.client.post('/tab_archive/artists/paula koivuniemi/kuka pelkaa paulaa', data = data , content_type = 'application/json', **extra)
+        response = precond_user_tablature(self.client)
        
         extra = {
             'HTTP_AUTHORIZATION': "erkki"
@@ -587,17 +520,10 @@ class TestRating(unittest.TestCase):
         db.create_tablatures_table("debug.db")
         db.create_comments_table("debug.db")
         
+        
     def test_post(self):
         
-        extra = {
-            'HTTP_AUTHORIZATION': "jonne"
-        }
-    
-        data = '{"user_nickname":"jonne", "email":"jolli@live.fi", "picture":"es-purkki.png", "description":"opettajien kauhu"}'
-        response = self.client.put('/tab_archive/users/jonne', data = data , content_type = 'application/json')
-    
-        data = '{"body":"10110101", "artist_id":"paula koivuniemi", "song_id":"kuka pelkaa paulaa", "user_nickname":"jonne"}'
-        response = self.client.post('/tab_archive/artists/paula koivuniemi/kuka pelkaa paulaa', data = data , content_type = 'application/json', **extra)
+        response = precond_user_tablature(self.client)
         
         #Here we try to post rating to tablature
 
@@ -606,15 +532,7 @@ class TestRating(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         
     def test_get(self):
-        extra = {
-            'HTTP_AUTHORIZATION': "jonne"
-        }
-    
-        data = '{"user_nickname":"jonne", "email":"jolli@live.fi", "picture":"es-purkki.png", "description":"opettajien kauhu"}'
-        response = self.client.put('/tab_archive/users/jonne', data = data , content_type = 'application/json')
-    
-        data = '{"body":"10110101", "artist_id":"paula koivuniemi", "song_id":"kuka pelkaa paulaa", "user_nickname":"jonne"}'
-        response = self.client.post('/tab_archive/artists/paula koivuniemi/kuka pelkaa paulaa', data = data , content_type = 'application/json', **extra)
+        response = precond_user_tablature(self.client)
 
         data = '{"rating":5}'
         response = self.client.post('/tab_archive/tablatures/1/rating', data = data , content_type = 'application/json', )
@@ -628,6 +546,9 @@ class TestRating(unittest.TestCase):
         self.assertEqual(content["rating"], 5)
         self.assertEqual(content["rating_count"], 1)
         
+    def tearDown(self):
+        #Make sure that no data is retained between tests
+        db.drop_tables()
         
 class TestArtists(unittest.TestCase):
     def setUp(self):
@@ -640,15 +561,7 @@ class TestArtists(unittest.TestCase):
         db.create_comments_table("debug.db")
         
     def test_get(self):
-        extra = {
-            'HTTP_AUTHORIZATION': "jonne"
-        }
-    
-        data = '{"user_nickname":"jonne", "email":"jolli@live.fi", "picture":"es-purkki.png", "description":"opettajien kauhu"}'
-        response = self.client.put('/tab_archive/users/jonne', data = data , content_type = 'application/json')
-    
-        data = '{"body":"10110101", "artist_id":"paula koivuniemi", "song_id":"kuka pelkaa paulaa", "user_nickname":"jonne"}'
-        response = self.client.post('/tab_archive/artists/paula koivuniemi/kuka pelkaa paulaa', data = data , content_type = 'application/json', **extra)
+        response = precond_user_tablature(self.client)
         location = response["Location"]
         
         #Here we try to get list of artists

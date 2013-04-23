@@ -441,19 +441,17 @@ class Comment(APIView):
 
 class Rating(APIView):
     '''HUOM HOX MITES TÄMÄ'''
-    def get(self, request):
-        ratingmodel = database.get_rating()
+    def get(self, request, tablature_id):
+        ratingmodel = database.get_rating(tablature_id)
         if ratingmodel is None:
             return Response(status=status.HTTP_404_NOT_FOUND)        
         #Rating output looks: 
         #[{'rating':rating, 'link':{'rel':'self','href'=:'http://tab_archive/tablatures/tablature_id/rating'}}]
         
-        _rating = tablaturemodel.rating
-        _ratingurl = "http://localhost:8000/tab_archive/tablatures/" + tablature[tablature_id] + "/" + tablature[rating]
-        _ratingurl = reverse("rating", (_rating,), request=request)
+        
         rating = {}
-        rating['rating'] = _rating
-        rating['link'] = {'rel':'self', 'href':_ratingurl}
+        rating['rating'] = ratingmodel[0]
+        rating['rating_count'] = ratingmodel[1]
         
         response = Response(rating, status=status.HTTP_200_OK)
         return response    

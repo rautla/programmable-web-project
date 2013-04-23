@@ -735,8 +735,12 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
         '''
         
         keys_on = 'PRAGMA foreign_keys = ON'
-        query = 'INSERT INTO comments(comment_id,body,tablature_id,user_nickname,reply_to) VALUES(?,?,?,?,?)'
-        pvalue = (None,comment.body,comment.tablature_id,comment.user_nickname,comment.reply_to)
+        if comment.reply_to != "":
+            query = 'INSERT INTO comments(comment_id,body,tablature_id,user_nickname,reply_to) VALUES(?,?,?,?,?)'
+            pvalue = (None,comment.body,comment.tablature_id,comment.user_nickname,comment.reply_to)
+        else:
+            query = 'INSERT INTO comments(comment_id,body,tablature_id,user_nickname,reply_to) VALUES(?,?,?,?,?)'
+            pvalue = (None,comment.body,comment.tablature_id,comment.user_nickname,None)
         
         if not self.contains_user(comment.user_nickname):
             return None
