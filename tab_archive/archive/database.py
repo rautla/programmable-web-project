@@ -666,6 +666,35 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
                 #print row.keys()
                 
                 return CommentModel.create(row)
+                
+    def get_comments_by_user(self, user_nickname):
+        '''
+        Returns comments.
+        If comments doesn't exist return "None".
+        '''
+        
+        keys_on = 'PRAGMA foreign_keys = ON'
+        query = 'SELECT * FROM comments WHERE user_nickname = ?'
+        pvalue = (user_nickname,)
+        
+        #connects (and creates if necessary) to the database. gets a connection object
+        con = sqlite3.connect(self.database_name)
+        with con:
+            con.row_factory = sqlite3.Row
+            cur = con.cursor()
+            cur.execute(keys_on)        
+            #execute the statement
+            cur.execute(query, pvalue)
+            #just one result possible
+            rows = cur.fetchall()
+            comments = []
+            if rows is None:
+                return None
+            else:    
+                #print row.keys()
+                for row in rows:
+                    comments.appdend(CommentModel.create(row))
+            return comments
         
     def modify_comment(self, comment):
         '''

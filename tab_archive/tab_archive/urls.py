@@ -1,7 +1,7 @@
 ﻿# -*- coding: utf-8 -*-
 
 from django.conf.urls import patterns, include, url
-from archive.resources import Users, User, Artists, Artist, Song, Songs, Comment, Rating, Tablature, Tablatures
+from archive.resources import Users, User, Artists, Artist, Song, Songs, Comment, Rating, Tablature, Tablatures, UserComments, UserTablatures
 
 # Uncomment the next two lines to enable the admin:
 # from django.contrib import admin
@@ -9,8 +9,10 @@ from archive.resources import Users, User, Artists, Artist, Song, Songs, Comment
 
 urlpatterns = patterns('',
     url(r'^tab_archive/users$',Users.as_view(), name="users"),
-
+    
     url(r'^tab_archive/users/(?P<user_nickname>[\w\s]+)$', User.as_view(), name="user"),
+    url(r'^tab_archive/users/(?P<user_nickname>[\w\s]+)/comments$', UserComments.as_view(), name="user_comments"),
+    url(r'^tab_archive/users/(?P<user_nickname>[\w\s]+)/tablatures$', UserTablatures.as_view(), name="user_tablatures"),
     url(r'^tab_archive/artists$',Artists.as_view(), name="artists"),
     url(r'^tab_archive/artists/(?P<artist_id>[\w\s]+)$', Artist.as_view(),name="artist"),
     url(r'^tab_archive/songs$',Songs.as_view(), name="songs"),

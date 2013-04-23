@@ -88,7 +88,7 @@ class TestUser(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
      
         content = json.loads(response.content)
-        
+        print content
         self.assertEqual(content["user"]['picture'], "es-purkki.png")
         self.assertEqual(content["user"]['description'], "opettajien kauhu")
         self.assertEqual(content["user"]['email'], "jolli@live.fi")

@@ -12,7 +12,17 @@ from archive.models import UserModel, TablatureModel, CommentModel, ErrorModel
 
 
 class User(APIView):
+    '''
+    User model.
+    tab_archive/users/<user_nickname>
+    '''
+    
     def get (self, request, user_nickname):
+        '''
+        Get user information by user_nickname.
+        Email address requires authorization.
+        '''
+        
         authorization = ''  
         try:
             authorization = request.META["HTTP_AUTHORIZATION"]
@@ -24,6 +34,11 @@ class User(APIView):
             return self._readunauthorized(request, user_nickname) 
     
     def delete(self, request, user_nickname):
+        '''
+        Delete user by user_nickname.
+        Requires authorization.
+        Returns 401 on unauthorized.
+        '''
         authorization = ''
         try:
             authorization = request.META["HTTP_AUTHORIZATION"]
@@ -35,7 +50,10 @@ class User(APIView):
             return Response(status = 401) 
     
     def put(self, request, user_nickname):
-        
+        '''
+        Create or modify user.
+        Modify requires authorization.
+        '''
         
         authorization = ''
         try:
@@ -48,8 +66,13 @@ class User(APIView):
             return self._createuser(request, user_nickname)
     
     def _readunauthorized(self, request, user_nickname):
+        '''
+        Unauthorized user can't see email address.
+        Return 200 on success.
+        Return 404 if user doesn't exist.
+        '''
         #Use the database to extract a user information. Use the method 
-        #database.getUser(user_id) to obtain a UserModel
+        #database.get_user(user_nickname) to obtain a UserModel
         usermodel = database.get_user(user_nickname)
         #If the database returns None return 404 not Found
         if usermodel is None:
@@ -57,23 +80,25 @@ class User(APIView):
         #Get the url of the users resource
         uritousers = reverse("users", request=request)
         
-        #Create the response body output. The output is a dictionary with the 
-        #format provided in the method description
+        #Create the response body output. 
         output = {}
-        #Create the dictionaries for publicProfile, history and users. To avoid
-        #problems transform the registrationdata and description in string using the str() function
+        
         user = {'user_nickname':usermodel.user_nickname,
                        'picture':usermodel.picture,
                        'description':str(usermodel.description)}
         users = {'rel':'self', 'href':uritousers}
-        #Append to the output
-        #output['publicprofile'] = publicprofile
-        #output['users'] = users
+        
         output = {"users":users, "user":user}
+        output['comments'] = reverse("user_comments", (user_nickname,), request=request)
+        output['tablatures'] = reverse("user_tablatures", (user_nickname,), request=request)
+        
         return Response(output, status=status.HTTP_200_OK)
     
     def _readauthorized(self, request, user_nickname):
-        
+        '''
+        Authorized user or admin can see email.
+        Return 200 on success.
+        '''
         usermodel = database.get_user(user_nickname)
         
         if usermodel is None:
@@ -81,16 +106,24 @@ class User(APIView):
         #Get the url of the users resource
         uritousers = reverse("users", request=request)
         #Get the url of this user history resource
-        #Create the response body output. The output is a dictionary with the 
-        #format provided in the method description
+        #Create the response body output. 
         output = {}
-        #Create the dictionaries for userProfile, history and users
+
         users = {'rel':'self', 'href':uritousers}
         output['user'] = usermodel.serialize()
         output['users'] = users
+        output['comments'] = reverse("user_comments", (user_nickname,), request=request)
+        output['tablatures'] = reverse("user_tablatures", (user_nickname,), request=request)
+       
+            
         return Response(output, status=status.HTTP_200_OK)
         
     def _deleteauthorized(self, request, user_nickname):
+        '''
+        Authorized user can delete user if exists.
+        Return 404 if user doesn't exist.
+        Return 204 on success.
+        '''
         if database.delete_user(user_nickname) is not None:
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
@@ -99,6 +132,11 @@ class User(APIView):
             return Response(error, status=status.HTTP_404_NOT_FOUND)
     
     def _updateuser(self, request, user_nickname):
+        '''
+        Edit user.
+        Return 400 if request is invalid.
+        Return 204 on success.
+        '''
         usermodel = UserModel(user_nickname)
         if usermodel is None:
             return Response(status = status.HTTP_404_NOT_FOUND)
@@ -124,6 +162,11 @@ class User(APIView):
                         headers={"Location":url})
     
     def _createuser(self, request, user_nickname):
+        '''
+        Create new user.
+        Return 400 on bad request.
+        Return 204 on success.
+        '''
         if database.contains_user(user_nickname):
             return Response(status=status.HTTP_409_CONFLICT)
         usermodel = None
@@ -139,13 +182,24 @@ class User(APIView):
                         headers={"Location":url})
     
     def _isauthorized(self, user_nickname, authorization): 
+        '''
+        Check if user is authorized.
+        '''
         if authorization is not None and (authorization.lower() == "admin" or 
                                           authorization.lower() == user_nickname.lower()):
             return True
         return False
     
 class Users(APIView):
+    '''
+    List of users.
+    '''
+    
     def get (self, request):
+        '''
+        Return list of users.
+        Return 200.
+        '''
         #Get in an array the models of all the users
         usermodels = database.get_users()
         #Users output looks: 
@@ -165,20 +219,55 @@ class Users(APIView):
         response = Response(userlist, status=status.HTTP_200_OK)
         return response
     
+class UserComments(APIView):
+    '''
+    NOT IMPLEMENTED YET!
+    '''
+    def get(self, request, user_nickname):
+    
+        pass
+     #commentsmodel = database.get_comments_by_user(user_nickname)
+        #if commentsmodel != None:
+        #    for comment in commentsmodel:
+        #        comment_info = {"artist_id":comment.artist_id, "song_id":comment.song_id, "tablature_id":comment.tablature_id}
+        #        
+        #        commenturl = reverse("comment", (comment.comment_id,), request=request)
+        #        
+        #        comment_info['link'] = {'rel':'self', 'href':commenturl}
+        #       
+        #        comments.append(comment_info)
+        #    output['comments'] = comments
+    
+    
+class UserTablatures(APIView):
+    '''
+    NOT IMPLEMENTED YET!
+    '''
+    def get(self, request, user_nickname):
+    
+        pass
+    
 class Artist(APIView):
+    '''
+    One artist.
+    '''
+
     def get (self, request, artist_id):
+        '''
+        Get songs by artist.
+        '''
         #Get in an array the models of all the tablatures from songs of artist
         songmodels = database.get_songs(artist_id)
 
         #Serialize each one of the tablatures. An array of tablatures looks like:
-        #[{'title':'message_title, 'link':{'rel':'self','href'=:'http://tab_archive/tablatures/tablature_id'}},
-        #{'title':'message_title, 'link':{'rel':'self','href'=:'http://tab_archive/tablatures/tablature_id'}}]
+        #[{'song_id':song_id, 'link':{'rel':'self','href'=:'http://tab_archive/artists/artist_id/song_id'}},
+        #{'song_id':song_id, 'link':{'rel':'self','href'=:'http://tab_archive/artists/artist_id/song_id'}}]
         songs = []
         for songmodel in songmodels: 
             _artistid = songmodel[0]
             _songid = songmodel[1]
             _songurl = "http://localhost:8000/tab_archive/artists/"+_artistid + "/" +_songid
-            _songurl = reverse("song", (_artistid,_songid), request=request)         # <- bugged
+            _songurl = reverse("song", (_artistid,_songid), request=request)        
             song = {}
             song['song_id'] = _songid
             song['link'] = {'rel':'self', 'href':_songurl}
@@ -188,8 +277,17 @@ class Artist(APIView):
         return response
 
 class Artists(APIView):
-    def get (self, request):
-        #Get an array of all the artists
+    '''
+    List of artists.
+    '''
+
+    def get(self, request):
+        '''
+        Get list of artists.
+        Return 200.
+        '''
+    
+        #Get an array of all artists
         artistmodels = database.get_artists()
         #Artists output looks: 
         #[{'artist':artist_id, 'link':{'rel':'self','href'=:'http://tab_archive/artists/artist_id'}},
@@ -209,9 +307,18 @@ class Artists(APIView):
         return response
     
 class Song(APIView):
+    '''
+    Song contains tablatures made to represent it.
+    '''
+    
     def get(self, request, artist_id, song_id):
+        '''
+        Get list of tablatures by artist and song ids.
+        Returns 200.
+        '''
+        
         #Get in an array the models of all the tablatures
-        tablaturemodels = database.get_tablatures('', song_id)
+        tablaturemodels = database.get_tablatures(artist_id, song_id)
 
         #Serialize each one of the tablatures. An array of tablatures looks like:
         #[{'song':'song_id, 'link':{'rel':'self','href'=:'http://tab_archive/artists/artist_id/song_id'}},
@@ -235,7 +342,12 @@ class Song(APIView):
         return response
         
     def post(self, request, artist_id, song_id):
-    
+        '''
+        Add a new tablature.
+        Returns 400 on bad request.
+        Returns 401 on unauthorized user.
+        Returns 201 on successful creation.
+        '''
         if not request.DATA:
             error = ErrorModel('The artist_id, song_id and the body of the tablature\
                                cannot be empty').serialize()
@@ -260,19 +372,28 @@ class Song(APIView):
             return Response(status=status.HTTP_401_UNAUTHORIZED)
         
     def _createtablature(self, tablaturemodel, request):
-        
+        '''
+        Creates tablature.
+        '''
         tablature_id = database.add_tablature(tablaturemodel)
         url = reverse("tablature", (tablature_id,), request=request)
         return Response(status=status.HTTP_201_CREATED,
                         headers={"Location":url})    
     
     def _isauthorized(self, user_nickname, authorization): 
+        '''
+        Check that user is authorized.
+        '''
         if authorization is not None and (authorization.lower() == "admin" or 
                                           authorization.lower() == user_nickname.lower()):
             return True
         return False
 
 class Songs(APIView):
+    '''
+    List of songs.
+    Returns 200.
+    '''
     def get (self, request):
         #Get in an array the models of all the songs
         songmodels = database.get_songs("")
@@ -296,8 +417,16 @@ class Songs(APIView):
         return response
     
 class Comment(APIView):
+    '''
+    Get, modify and reply to comments.
+    '''
     #GET return the comment which comment id is comment_id
     def get (self, request, tablature_id, comment_id):
+        '''
+        Get comment.
+        Return 404 if comment doesn't exist.
+        Return 200 on success.
+        '''
         #Get the model
         commentmodel = database.get_comment(comment_id)
         if commentmodel is None:
@@ -308,10 +437,7 @@ class Comment(APIView):
         #Serialize and modify the result so the sender is linked to its url
         comment = {}
         comment["comment"] = commentmodel.serialize()
-        #print comment
-        #Modify the sender so it includes the URL of the sender:
-        #From sender:"Axel" => I create sender:{'nickname':'Axel','link':{'rel':'self','href'=:'http://tab_archive/users/Axel'}}
-        #senderurl = "http://localhost:8000/tab_archive/users/"+comment['sender']
+
         
         senderurl = reverse("user",(commentmodel.user_nickname,), request=request)
         comment['user'] = {'user_nickname':commentmodel.user_nickname, 'link':{'rel':'self','href':senderurl}}
@@ -326,6 +452,12 @@ class Comment(APIView):
         return Response(comment, status=status.HTTP_200_OK)    
     
     def delete(self, request, tablature_id, comment_id):
+        '''
+        Delete comment.
+        Requires authorization.
+        Returns 401 on authorized request.
+        Returns 404 if comment doesn't exist.
+        '''
         authorization = ''
         try:
             authorization = request.META["HTTP_AUTHORIZATION"]
@@ -343,6 +475,12 @@ class Comment(APIView):
             return Response(status=status.HTTP_401_UNAUTHORIZED)
         
     def _deletecomment(self, comment_id, request):
+        '''
+        Performs deletion.
+        Return 400 on bad request.
+        Return 204 on success.
+        '''
+        
         try:
             if database.delete_comment(comment_id):
                 return Response(None, status=status.HTTP_204_NO_CONTENT)
@@ -353,7 +491,11 @@ class Comment(APIView):
             return Response(error, status=status.HTTP_400_BAD_REQUEST)    
     
     def put(self, request, tablature_id, comment_id):
-       #request.DATA contains the request body already deserialized in a
+        '''
+        Modify comment.
+        Requires authorization.
+        '''
+        #request.DATA contains the request body already deserialized in a
         #python dictionary
         if not request.DATA:
             error = ErrorModel('The the body of the comment\
@@ -378,6 +520,11 @@ class Comment(APIView):
             
         
     def _modifycomment(self, comment, request):
+        '''
+        Performs actual modification.
+        Called when authorization check is passed.
+        Checks for bad request. (returns 400)
+        '''
         #Deserialize and modify the data in the comment.
         try:
             database.modify_comment(comment)
@@ -388,6 +535,9 @@ class Comment(APIView):
         return Response(None, status=status.HTTP_204_NO_CONTENT)     
     
     def post(self, request, tablature_id, comment_id):
+        '''
+        Post reply to an existing comment.
+        '''
         #request.DATA contains the request body already deserialized in
         #a python dictionary
         if not request.DATA:
@@ -420,19 +570,28 @@ class Comment(APIView):
             return Response(status=status.HTTP_401_UNAUTHORIZED)
         
     def _createreply(self, commentmodel, request):
+        '''
+        Create reply comment.
+        '''
         comment_id = database.add_comment(commentmodel)
 
         url = reverse("comment", (commentmodel.tablature_id, comment_id), request=request)
         return Response(status=status.HTTP_204_NO_CONTENT,
                         headers={"Location":url})
                         
-    def _isauthorized(self, user_nickname, authorization): 
+    def _isauthorized(self, user_nickname, authorization):
+        '''
+        Check if user is allowed to post reply.
+        '''
         if authorization is not None and (authorization.lower() == "admin" or 
                                           authorization.lower() == user_nickname.lower()):
             return True
         return False
         
     def _modifyisauthorized(self, comment, authorization): 
+        '''
+        Check if user is allowed to modify or delete comment.
+        '''
         if authorization is not None and (authorization.lower() == "admin" or 
                                           authorization.lower() == comment.user_nickname.lower()):
             return True
@@ -440,13 +599,18 @@ class Comment(APIView):
     
 
 class Rating(APIView):
-    '''HUOM HOX MITES TÄMÄ'''
+    '''
+    Get or modify rating.
+    '''
+    
     def get(self, request, tablature_id):
+        '''
+        Get rating of tablature.
+        '''
         ratingmodel = database.get_rating(tablature_id)
         if ratingmodel is None:
             return Response(status=status.HTTP_404_NOT_FOUND)        
-        #Rating output looks: 
-        #[{'rating':rating, 'link':{'rel':'self','href'=:'http://tab_archive/tablatures/tablature_id/rating'}}]
+        
         
         
         rating = {}
@@ -457,6 +621,11 @@ class Rating(APIView):
         return response    
     
     def post(self, request, tablature_id):
+        '''
+        Give your own rating to a tablature.
+        Rating is incremented by the value given and rating count is incremented by 1.
+        '''
+    
         #request.DATA contains the request body already deserialized in a
         #python dictionary
         if not request.DATA:
@@ -475,14 +644,21 @@ class Rating(APIView):
             rating = database.add_rating(tablature_id, newrating)
         except Exception:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        '''JOS EI TOIMI TÄÄLLÄ ON VIKA''' 
         
-        return Response(rating[0], status=status.HTTP_200_OK)
+        return Response((rating[0], rating[1]), status=status.HTTP_200_OK)
     
 
 class Tablature(APIView):
+    '''
+    Post comment to tablature, get, modify or delete tablature.
+    '''
+
     def get (self, request, tablature_id):
-    #GET return the tablature which tablature id is tablature_id
+        '''
+        Get tablature by id.
+        Returns 404 if doesn't exist or 200 on success.
+        '''
+        #GET return the tablature which tablature id is tablature_id
         #Get the model
         tablaturemodel = database.get_tablature(tablature_id)
         if tablaturemodel is None:
@@ -505,6 +681,11 @@ class Tablature(APIView):
         return Response(tablature, status=status.HTTP_200_OK)    
     
     def delete(self, request, tablature_id):
+        '''
+        Delete tablature.
+        Requires authorization.
+        If not authorized return 401.
+        '''
         authorization = ''
         try:
             authorization = request.META["HTTP_AUTHORIZATION"]
@@ -516,6 +697,12 @@ class Tablature(APIView):
             return Response(status=status.HTTP_401_UNAUTHORIZED)
     
     def _deletetablature(self, tablature_id):
+        '''
+        Perform deletion.
+        Return 404 if tablature doesn't exist.
+        Return 400 on bady request.
+        On successful deletion return 204.
+        '''
         try:
             if database.delete_tablature(tablature_id):
                 return Response(None, status=status.HTTP_204_NO_CONTENT)
@@ -529,6 +716,11 @@ class Tablature(APIView):
             return Response(error, status=status.HTTP_400_BAD_REQUEST)    
     
     def put(self, request, tablature_id):
+        '''
+        Modify tablature.
+        Requires authorization.
+        '''
+    
         #request.DATA contains the request body already deserialized in a
         #python dictionary
 
@@ -583,11 +775,20 @@ class Tablature(APIView):
             
             
     def _modifytablature(self, tablaturemodel, request):
+        '''
+        Performs modification.
+        '''
+        
         #Update the model to the database
         database.edit_tablature(tablaturemodel)
         return Response(status=status.HTTP_204_NO_CONTENT)    
     
     def post(self, request, tablature_id):
+        '''
+        Post a comment to tablature by id.
+        Requires authorization.
+        Returns 400 on bad request.
+        '''
         if not request.DATA:
             error = ErrorModel('The artist_id, song_id and the body of the tablature\
                                cannot be empty').serialize()
@@ -614,18 +815,28 @@ class Tablature(APIView):
         
         
     def _createcomment(self, commentmodel, request):
+        '''
+        Performs creation.
+        Returns 201.
+        '''
         comment_id = database.add_comment(commentmodel)
         url = reverse("comment", (commentmodel.tablature_id,comment_id,), request=request)
         return Response(status=status.HTTP_201_CREATED,
                         headers={"Location":url})      
                         
     def _isauthorized(self, user_nickname, authorization): 
+        '''
+        Check that user is allowed to post comment.
+        '''
         if authorization is not None and (authorization.lower() == "admin" or 
                                           authorization.lower() == user_nickname.lower()):
             return True
         return False
         
     def _modifyisauthorized(self, tablature_id, authorization): 
+        '''
+        Check that user is allowed to modify tablature.
+        '''
         tablaturemodel = database.get_tablature(tablature_id)
         user_nickname = tablaturemodel.user_nickname
         if authorization is not None and (authorization.lower() == "admin" or 
@@ -634,7 +845,15 @@ class Tablature(APIView):
         return False
 
 class Tablatures(APIView):
+    '''
+    Get list of tablatures or post a new.
+    '''
+    
     def get (self, request):
+        '''
+        Get list of tablatures.
+        Returns 200.
+        '''
         #Get in an array the models of all the tablatures
         tablaturemodels = database.get_tablatures('', '')
 
@@ -658,7 +877,10 @@ class Tablatures(APIView):
         return Response(songs, status=status.HTTP_200_OK)
     
     def post(self, request):
-    
+        '''
+        Post a tablature.
+        Requires authorized user.
+        '''
         if not request.DATA:
             error = ErrorModel('The artist_id, song_id and the body of the tablature\
                                cannot be empty').serialize()
@@ -683,13 +905,18 @@ class Tablatures(APIView):
             return Response(status=status.HTTP_401_UNAUTHORIZED)
         
     def _createtablature(self, tablaturemodel, request):
-        
+        '''
+        Performs creation.
+        '''
         tablature_id = database.add_tablature(tablaturemodel)
         url = reverse("tablature", (tablature_id,), request=request)
         return Response(status=status.HTTP_201_CREATED,
                         headers={"Location":url})    
     
     def _isauthorized(self, user_nickname, authorization): 
+        '''
+        Checks that user is authorized.
+        '''
         if authorization is not None and (authorization.lower() == "admin" or 
                                           authorization.lower() == user_nickname.lower()):
             return True
