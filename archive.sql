@@ -1,0 +1,15 @@
+PRAGMA foreign_keys=OFF;
+BEGIN TRANSACTION;
+CREATE TABLE "users" ("user_nickname" TEXT PRIMARY KEY  NOT NULL  UNIQUE , "email" TEXT, "picture" TEXT, "description" );
+INSERT INTO "users" VALUES('jonne','jolli@live.fi','es-purkki.png','opettajien kauhu');
+INSERT INTO "users" VALUES('erkki','erkki@pertti.fi','kissakuva.png','maan viljeljia');
+CREATE TABLE "tablatures" ("body" TEXT, "tablature_id" INTEGER PRIMARY KEY  AUTOINCREMENT  NOT NULL  UNIQUE , "rating" INTEGER, "artist_id" TEXT, "song_id" TEXT, "user_nickname" TEXT, "rating_count" INTEGER, FOREIGN KEY(user_nickname) REFERENCES users(user_nickname) ON DELETE CASCADE );
+INSERT INTO "tablatures" VALUES('10110101',1,0,'Metallica','kuuntelen tomppaa','jonne',0);
+INSERT INTO "tablatures" VALUES('10110101',2,0,'paula koivuniemi','kuuntelen tomppaa','jonne',0);
+CREATE TABLE "comments" ("comment_id" INTEGER PRIMARY KEY  AUTOINCREMENT  NOT NULL  UNIQUE , "body" TEXT, "tablature_id" INTEGER REFERENCES tablatures ON DELETE CASCADE, "user_nickname" TEXT REFERENCES users ON DELETE CASCADE, "reply_to" INTEGER REFERENCES comments ON DELETE CASCADE );
+INSERT INTO "comments" VALUES(1,'onpa hyva, tykkaan!',1,'erkki',NULL);
+INSERT INTO "comments" VALUES(2,'niin munstaki!!',1,'jonne',1);
+DELETE FROM sqlite_sequence;
+INSERT INTO "sqlite_sequence" VALUES('tablatures',2);
+INSERT INTO "sqlite_sequence" VALUES('comments',2);
+COMMIT;
