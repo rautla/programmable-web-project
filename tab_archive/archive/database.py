@@ -2,9 +2,6 @@
 
 from exceptions import NotImplementedError
 import re
-from datetime import datetime
-import time
-
 import sqlite3
 import sys
 

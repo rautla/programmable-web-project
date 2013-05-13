@@ -2,7 +2,7 @@
 
 from django.conf.urls import patterns, include, url
 from archive.resources import Users, User, Artists, Artist, Song, Songs, Comment, Rating, Tablature, Tablatures, UserComments, UserTablatures, TablatureComments
-
+import re
 # Uncomment the next two lines to enable the admin:
 # from django.contrib import admin
 # admin.autodiscover()
