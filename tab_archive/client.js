@@ -486,7 +486,7 @@ function deleteComment(apiurl) {
 function modifyComment(apiurl, commentData) {
     $.ajax({
         url: apiurl, //The URL of the resource
-        type: "DELETE", //The resource method
+        type: "PUT", //The resource method
         contentType: CONTENT_TYPE, //The mime type of the request body
         data: commentData, //The body of the HTTP request
         processData: false, //Do not transform the data in key-value
@@ -506,43 +506,215 @@ function modifyComment(apiurl, commentData) {
     });
 }
 
-function replyComment() {
-
+function replyComment(apiurl, commentData) {
+    $.ajax({
+        url: apiurl, //The URL of the resource
+        type: "POST", //The resource method
+        contentType: CONTENT_TYPE, //The mime type of the request body
+        data: commentData, //The body of the HTTP request
+        processData: false, //Do not transform the data in key-value
+        dataType:RESPONSE_FORMAT, //The format expected in the 
+        headers: {"Accept": "application/json"}// An object containing //headers
+    }).done(function (data, textStatus, jqXHR){
+        //code to be executed when response is //received. Data is an object. jqXHR is the //XMLHttpRequest object
+		//console.log("done");
+        if (DEBUG) {
+			console.log ("RECEIVED RESPONSE: data:",data,"; textStatus:",textStatus)
+		}
+    }).fail(function (jqXHR, textStatus, errorThrown){
+        //code to be executed when response has an //error status code or response is malformed
+        if (DEBUG) {
+			console.log ("RECEIVED ERROR: textStatus:",textStatus, ";error:",errorThrown)
+		}
+    });
 }
 
 
-function getRating() {
+function getRating(apiurl) {
+    $.ajax({
+        url: apiurl, //The URL of the resource
+        type: "GET", //The resource method
+        contentType: CONTENT_TYPE, //The mime type of the request body
+        data: commentData, //The body of the HTTP request
+        processData: false, //Do not transform the data in key-value
+        dataType:RESPONSE_FORMAT, //The format expected in the 
+        headers: {"Accept": "application/json"}// An object containing //headers
+    }).done(function (data, textStatus, jqXHR){
+        //code to be executed when response is //received. Data is an object. jqXHR is the //XMLHttpRequest object
+		//console.log("done");
+        if (DEBUG) {
+			console.log ("RECEIVED RESPONSE: data:",data,"; textStatus:",textStatus)
+		}
+    }).fail(function (jqXHR, textStatus, errorThrown){
+        //code to be executed when response has an //error status code or response is malformed
+        if (DEBUG) {
+			console.log ("RECEIVED ERROR: textStatus:",textStatus, ";error:",errorThrown)
+		}
+    });
 
 }
 
-function addRating() {
-
+function addRating(apiurl, ratingData) {
+    $.ajax({
+        url: apiurl, //The URL of the resource
+        type: "POST", //The resource method
+        contentType: CONTENT_TYPE, //The mime type of the request body
+        data: ratingData, //The body of the HTTP request
+        processData: false, //Do not transform the data in key-value
+        dataType:RESPONSE_FORMAT, //The format expected in the 
+        headers: {"Accept": "application/json"}// An object containing //headers
+    }).done(function (data, textStatus, jqXHR){
+        //code to be executed when response is //received. Data is an object. jqXHR is the //XMLHttpRequest object
+		//console.log("done");
+        if (DEBUG) {
+			console.log ("RECEIVED RESPONSE: data:",data,"; textStatus:",textStatus)
+		}
+    }).fail(function (jqXHR, textStatus, errorThrown){
+        //code to be executed when response has an //error status code or response is malformed
+        if (DEBUG) {
+			console.log ("RECEIVED ERROR: textStatus:",textStatus, ";error:",errorThrown)
+		}
+    });
 }
 
 
-function getTablature() {
-
+function getTablature(apiurl, commentData) {
+    $.ajax({
+        url: apiurl, //The URL of the resource
+        type: "POST", //The resource method
+        contentType: CONTENT_TYPE, //The mime type of the request body
+        data: commentData, //The body of the HTTP request
+        processData: false, //Do not transform the data in key-value
+        dataType:RESPONSE_FORMAT, //The format expected in the 
+        headers: {"Accept": "application/json"}// An object containing //headers
+    }).done(function (data, textStatus, jqXHR){
+        //code to be executed when response is //received. Data is an object. jqXHR is the //XMLHttpRequest object
+		//console.log("done");
+        if (DEBUG) {
+			console.log ("RECEIVED RESPONSE: data:",data,"; textStatus:",textStatus)
+		}
+    }).fail(function (jqXHR, textStatus, errorThrown){
+        //code to be executed when response has an //error status code or response is malformed
+        if (DEBUG) {
+			console.log ("RECEIVED ERROR: textStatus:",textStatus, ";error:",errorThrown)
+		}
+    });
 }
 
-function deleteTablature() {
-
+function deleteTablature(apiurl) {
+    $.ajax({
+        url: apiurl, //The URL of the resource
+        type: "DELETE", //The resource method
+        contentType: CONTENT_TYPE, //The mime type of the request body
+        data: null, //The body of the HTTP request
+        processData: false, //Do not transform the data in key-value
+        dataType:RESPONSE_FORMAT, //The format expected in the 
+        headers: {"Accept": "application/json"}// An object containing //headers
+    }).done(function (data, textStatus, jqXHR){
+        //code to be executed when response is //received. Data is an object. jqXHR is the //XMLHttpRequest object
+		//console.log("done");
+        if (DEBUG) {
+			console.log ("RECEIVED RESPONSE: data:",data,"; textStatus:",textStatus)
+		}
+    }).fail(function (jqXHR, textStatus, errorThrown){
+        //code to be executed when response has an //error status code or response is malformed
+        if (DEBUG) {
+			console.log ("RECEIVED ERROR: textStatus:",textStatus, ";error:",errorThrown)
+		}
+    });
 }
 
-function editTablature() {
-
+function editTablature(apiurl, tablatureData) {
+    $.ajax({
+        url: apiurl, //The URL of the resource
+        type: "PUT", //The resource method
+        contentType: CONTENT_TYPE, //The mime type of the request body
+        data: tablatureData, //The body of the HTTP request
+        processData: false, //Do not transform the data in key-value
+        dataType:RESPONSE_FORMAT, //The format expected in the 
+        headers: {"Accept": "application/json"}// An object containing //headers
+    }).done(function (data, textStatus, jqXHR){
+        //code to be executed when response is //received. Data is an object. jqXHR is the //XMLHttpRequest object
+		//console.log("done");
+        if (DEBUG) {
+			console.log ("RECEIVED RESPONSE: data:",data,"; textStatus:",textStatus)
+		}
+    }).fail(function (jqXHR, textStatus, errorThrown){
+        //code to be executed when response has an //error status code or response is malformed
+        if (DEBUG) {
+			console.log ("RECEIVED ERROR: textStatus:",textStatus, ";error:",errorThrown)
+		}
+    });
 }
 
-function commentTablature() {
-
+function commentTablature(apiurl, commentData) {
+    $.ajax({
+        url: apiurl, //The URL of the resource
+        type: "POST", //The resource method
+        contentType: CONTENT_TYPE, //The mime type of the request body
+        data: commentData, //The body of the HTTP request
+        processData: false, //Do not transform the data in key-value
+        dataType:RESPONSE_FORMAT, //The format expected in the 
+        headers: {"Accept": "application/json"}// An object containing //headers
+    }).done(function (data, textStatus, jqXHR){
+        //code to be executed when response is //received. Data is an object. jqXHR is the //XMLHttpRequest object
+		//console.log("done");
+        if (DEBUG) {
+			console.log ("RECEIVED RESPONSE: data:",data,"; textStatus:",textStatus)
+		}
+    }).fail(function (jqXHR, textStatus, errorThrown){
+        //code to be executed when response has an //error status code or response is malformed
+        if (DEBUG) {
+			console.log ("RECEIVED ERROR: textStatus:",textStatus, ";error:",errorThrown)
+		}
+    });
 }
 
 
-function getTablatures() {
-
+function getTablatures(apiurl) {
+    $.ajax({
+        url: apiurl, //The URL of the resource
+        type: "GET", //The resource method
+        contentType: CONTENT_TYPE, //The mime type of the request body
+        data: null, //The body of the HTTP request
+        processData: false, //Do not transform the data in key-value
+        dataType:RESPONSE_FORMAT, //The format expected in the 
+        headers: {"Accept": "application/json"}// An object containing //headers
+    }).done(function (data, textStatus, jqXHR){
+        //code to be executed when response is //received. Data is an object. jqXHR is the //XMLHttpRequest object
+		//console.log("done");
+        if (DEBUG) {
+			console.log ("RECEIVED RESPONSE: data:",data,"; textStatus:",textStatus)
+		}
+    }).fail(function (jqXHR, textStatus, errorThrown){
+        //code to be executed when response has an //error status code or response is malformed
+        if (DEBUG) {
+			console.log ("RECEIVED ERROR: textStatus:",textStatus, ";error:",errorThrown)
+		}
+    });
 }
 
-function addTablatures() {
-
+function addTablatures(apiurl, tablatureData) {
+    $.ajax({
+        url: apiurl, //The URL of the resource
+        type: "POST", //The resource method
+        contentType: CONTENT_TYPE, //The mime type of the request body
+        data: null, //The body of the HTTP request
+        processData: false, //Do not transform the data in key-value
+        dataType:RESPONSE_FORMAT, //The format expected in the 
+        headers: {"Accept": "application/json"}// An object containing //headers
+    }).done(function (data, textStatus, jqXHR){
+        //code to be executed when response is //received. Data is an object. jqXHR is the //XMLHttpRequest object
+		//console.log("done");
+        if (DEBUG) {
+			console.log ("RECEIVED RESPONSE: data:",data,"; textStatus:",textStatus)
+		}
+    }).fail(function (jqXHR, textStatus, errorThrown){
+        //code to be executed when response has an //error status code or response is malformed
+        if (DEBUG) {
+			console.log ("RECEIVED ERROR: textStatus:",textStatus, ";error:",errorThrown)
+		}
+    });
 }
 
 /**** END RESTFUL CLIENT****/
