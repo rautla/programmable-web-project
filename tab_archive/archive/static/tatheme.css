@@ -1,0 +1,113 @@
+html{overflow-y:scroll;}
+
+body{
+font-size:12px;
+color:#000000;
+background-color:#F6F4F0;
+margin:0px;
+}
+
+body,p,h1,h2,h3,h4,table,td,th,ul,ol,textarea,input{
+font-family:verdana,helvetica,arial,sans-serif;
+}
+
+h1{
+font-size:240%;
+text-align:center;
+}
+
+h2{
+font-size:180%;
+margin-top:10px;
+margin-bottom:10px;
+font-weight:normal
+}
+
+h1,h2{
+background-color:transparent;
+color:#000000;
+}
+
+#top{
+width:1098px;margin:auto;
+}
+
+#topLogo{
+height:50px;padding-bottom:10px;text-align:center;float:center;
+}
+
+#topBar{
+padding-bottom:5px;
+}
+
+#page{
+border-left:1px solid #d3d3d3;border-right:1px solid #d3d3d3;border-top:1px solid #d3d3d3;background-color:#ffffff;
+}
+
+#main{
+width:723px;float:left;margin:7px;margin-bottom:0px;overflow:hidden;background-color:#ffffff;
+}
+
+#leftcolumn{
+width:170px;float:left;margin-top:5px;margin-right:4px;margin-left:10px;padding-top:5px;background-color:#ffffff;
+}
+
+#leftcolumn h2{font-size:15px;font-weight:normal;}
+
+#leftcolumn a:link,#leftcolumn a:visited,#leftcolumn a:hover,#leftcolumn a:active{
+	background-color:#F6F4F0;color:#000000;text-decoration:none;display:block;padding:2px;border:1px solid #e5e5e5;margin-top:1px;border-radius:2px;
+}
+#leftcolumn a:hover,#leftcolumn a:active{
+	background-color:#ffffff;
+}
+
+#leftcolumn .expandingMenuHeader{
+	width:152px;cursor:pointer;background-color:#F6F4F0;color:#000000;text-decoration:none;margin-left:12px;margin-top:1px;margin-bottom:0px;padding:2px;border:1px solid #e5e5e5;border-radius:2px;	
+}
+#leftcolumn .expandingMenuHeader:hover{
+	background-color:#ffffff;
+}
+
+#leftcolumn div.expandingMenuSelected a:link, #leftcolumn div.expandingMenuSelected a:visited
+{
+background-color:#ffffff;
+border:1px solid #e5e5e5;
+margin-bottom:0px;
+}
+
+#leftcolumn div.expandingMenuItem a:link, #leftcolumn div.expandingMenuItem a:visited,#leftcolumn div.expandingMenuItem a:hover, #leftcolumn div.expandingMenuItem a:active
+{
+margin-bottom:0px;
+}
+
+#leftcolumn div.expandingMenuSelected a:hover, #leftcolumn div.expandingMenuSelected a:active
+{
+text-decoration:underline;
+}
+
+#leftcolumn div.expandingMenuSelected .expandingMenuHeader
+{
+background-color:transparent;
+border:1px solid transparent;
+}
+
+#leftcolumn div.expandingMenuSelected .expandingMenuItem
+{
+width:160px;
+padding-left:5px;
+margin-bottom:3px;
+}
+
+h2.left
+{
+color:#404040;
+background-color:#ffffff;
+font-size:120%;
+margin-bottom:4px;
+padding-bottom:0px;
+margin-top:0px;
+padding-top:0px;
+font-weight:bold;
+}
+
+span.left_h2 {color:#8AC007;}
