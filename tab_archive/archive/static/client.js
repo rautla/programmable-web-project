@@ -16,6 +16,8 @@ $(function(){
     $("#Artists").on("click", handleArtists);
     $("#Songs").on("click", handleSongs);
     $("#Tablatures").on("click", handleTablatures);
+    
+    $('#search').bind('keypress', handleSearch);
 
 	//TODO 2: Add corresponding click handlers for #deleteMessage button and #user_list li element
 	//Since these elements are generated dynamically, you must use delegated events.
@@ -223,7 +225,7 @@ function getUsers(apiurl) {
     }).fail(function (jqXHR, textStatus, errorThrown){
         //code to be executed when response has an //error status code or response is malformed
         if (DEBUG) {
-			console.log ("RECEIVED ERROR: textStatus:",textStatus, ";error:",errorThrown)
+            console.log("RECEIVED ERROR: textStatus:", textStatus, ";error:", errorThrown);
 		}
     });
 }
@@ -727,8 +729,13 @@ function addTablatures(apiurl, tablatureData) {
 /**** BUTTON HANDLERS ****/
 function handleUsers(event) {
 	if (DEBUG) {
-		console.log ("Triggered handleUsers")
+		console.log("Triggered handleUsers");
 	}
+    
+    var url = $("#Users").attr("href");
+    console.log(url);
+	getUsers(url);
+    
     return false;
 }
 
@@ -736,6 +743,11 @@ function handleArtists(event) {
 	if (DEBUG) {
 		console.log ("Triggered handleArtists")
 	}
+    
+    var url = $("#Artists").attr("href");
+    console.log(url);
+	getUsers(url);
+    
     return false;
 }
 
@@ -743,6 +755,11 @@ function handleSongs(event) {
 	if (DEBUG) {
 		console.log ("Triggered handleSongs")
 	}
+    
+    var url = $("#Songs").attr("href");
+    console.log(url);
+	getUsers(url);
+    
     return false;
 }
 
@@ -750,5 +767,18 @@ function handleTablatures(event) {
 	if (DEBUG) {
 		console.log ("Triggered handleTablatures")
 	}
+    
+    var url = $("#Tablatures").attr("href");
+    console.log(url);
+	getUsers(url);
+    
+    return false;
+}
+
+function handleSearch(event) {
+    if(event.keyCode==13){ // Enter pressed
+        console.log ("Triggered handleSearch")
+    }
+    
     return false;
 }
