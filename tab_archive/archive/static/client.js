@@ -777,7 +777,22 @@ function handleTablatures(event) {
 
 function handleSearch(event) {
     if(event.keyCode==13){ // Enter pressed
-        console.log ("Triggered handleSearch")
+        if (DEBUG) {
+            console.log ("Triggered handleSearch");
+        }
+    }
+    
+    if ($(":radio:checked").val() == "Song") {
+        if (DEBUG) {
+            console.log("Song search");
+        }
+    
+    }
+    
+    if ($(":radio:checked").val() == "Artist") {
+        if (DEBUG) {
+            console.log("Artist search");
+        }
     }
     
     return false;

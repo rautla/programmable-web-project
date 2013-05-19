@@ -19,15 +19,15 @@
     </div>
     <div id="topBar">
         <p style="padding-left:10px;text-align:left;float:left;">Home/Artists</p>
-        <form style="padding-right:10px;text-align:right;float:right;" name="input" method="get">
-        <input type="text" id="search" name="search" value="Search" style="margin-left:20px;">        
-        <input style="position:relative;bottom:10px;" type="radio" name="artist/song" value="Song">Song<br>
-        <input style="position:relative;bottom:10px;" type="radio" name="artist/song" value="Artist">Artist
+        <form id="searchForm" style="padding-right:10px;text-align:right;float:right;" name="input" method="get">
+            <input type="text" id="selectArtist" name="selectArtist" value="Search" style="margin-left:20px;">        
+            <input id="selectSong" style="position:relative;bottom:10px;" type="radio" name="selectSong" value="Song">Song<br>
+            <input style="position:relative;bottom:10px;" type="radio" name="searchselect" value="Artist">Artist
         </form>
-        <form style="text-align:right;float:right;" name="input" method="get">
-        <input type="text" name="nickname" value="Nickname">
-        <input type="password" name="pwd" value="Password">
-        <input type="submit" value="Login">
+            <form style="text-align:right;float:right;" name="input" method="get">
+            <input type="text" name="nickname" value="Nickname">
+            <input type="password" name="pwd" value="Password">
+            <input type="submit" value="Login">
         </form>
         <a style="font-size:16px;padding-right:10px;text-align:right;float:right;" href="//">Register</a>
     </div>   
