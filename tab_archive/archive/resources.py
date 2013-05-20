@@ -281,7 +281,7 @@ class Artist(APIView):
         Get songs by artist.
         '''
         #Get in an array the models of all the tablatures from songs of artist
-        songmodels = database.get_songs(artist_id)
+        songmodels = database.get_songs(artist_id, None)
         if songmodels == None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -314,7 +314,33 @@ class Artists(APIView):
         '''
     
         #Get an array of all artists
-        artistmodels = database.get_artists()
+        artistmodels = database.get_artists(None)
+        #Artists output looks: 
+        #[{'artist':artist_id, 'link':{'rel':'self','href'=:'http://tab_archive/artists/artist_id'}},
+        #{{'artist':artist_id, 'link':{'rel':'self','href'=:'http://tab_archive/artists/artist_id'}}]
+        if artistmodels == None:        
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        artists = []
+        for artistmodel in artistmodels:
+            _artistid = artistmodel
+            _artisturl = "http://localhost:8000/tab_archive/artists/"+_artistid
+            _artisturl = reverse("artist",(_artistid,), request=request)
+            artist = {}
+            artist['artist_id'] = _artistid
+            artist['link'] = {'rel':'self', 'href':_artisturl}
+            artists.append(artist)
+            
+        response = Response(artists, status=status.HTTP_200_OK)
+        return response
+        
+    def post(self, request):
+        '''
+        Get list of artists containing keyword in the artist_id.
+        Return 200.
+        '''
+    
+        #Get an array of all artists
+        artistmodels = database.get_artists(request.DATA["keyword"])
         #Artists output looks: 
         #[{'artist':artist_id, 'link':{'rel':'self','href'=:'http://tab_archive/artists/artist_id'}},
         #{{'artist':artist_id, 'link':{'rel':'self','href'=:'http://tab_archive/artists/artist_id'}}]
@@ -429,7 +455,7 @@ class Songs(APIView):
     '''
     def get (self, request):
         #Get in an array the models of all the songs
-        songmodels = database.get_songs("")
+        songmodels = database.get_songs("", None)
         if songmodels == None:
             return Response(status=status.HTTP_404_NOT_FOUND)
         
@@ -443,10 +469,45 @@ class Songs(APIView):
             _songid = songmodel[1]
             _songurl = "http://localhost:8000/tab_archive/artists/%s/%s" %(_artistid ,_songid)
             _songurl = reverse("song", (_artistid, _songid,), request=request)
-            song = {}
-            song['song_id'] = _songid
-            song['artist_id'] = _artistid
-            song['link'] = {'rel':'self', 'href':_songurl}
+            song = {"song":{}, "artist":{}}
+            song["song"]['song_id'] = _songid
+            song["artist"]['artist_id'] = _artistid
+            _artisturl = reverse("artist", (_artistid,), request=request)
+            song["artist"]['link'] = {'rel':'self', 'href':_artisturl}
+            song["song"]['link'] = {'rel':'self', 'href':_songurl}
+            songlist.append(song)
+        songs["songs"] = songlist
+        response = Response(songlist, status=status.HTTP_200_OK)
+        return response
+        
+        
+    '''
+    Find songs containing keyword in song_id.
+    Returns 200.
+    '''    
+    def post (self, request):
+        #Get in an array the models of all the songs
+        songmodels = database.get_songs("", request.DATA["keyword"])
+        if songmodels == None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        
+        
+        #Users output looks: 
+        #[{'song':song_id, 'link':{'rel':'self','href'=:'http://tab_archive/artists/artist_id/song_id'}},
+        #{{'song':song_id, 'link':{'rel':'self','href'=:'http://tab_archive/artists/artist_id/song_id'}}]
+        songs = {}
+        songlist = []
+        for songmodel in songmodels:
+            _artistid = songmodel[0]
+            _songid = songmodel[1]
+            _songurl = "http://localhost:8000/tab_archive/artists/%s/%s" %(_artistid ,_songid)
+            _songurl = reverse("song", (_artistid, _songid,), request=request)
+            song = {"song":{}, "artist":{}}
+            song["song"]['song_id'] = _songid
+            song["artist"]['artist_id'] = _artistid
+            _artisturl = reverse("artist", (_artistid,), request=request)
+            song["artist"]['link'] = {'rel':'self', 'href':_artisturl}
+            song["song"]['link'] = {'rel':'self', 'href':_songurl}
             songlist.append(song)
         songs["songs"] = songlist
         response = Response(songlist, status=status.HTTP_200_OK)
@@ -911,16 +972,24 @@ class Tablatures(APIView):
         #{'title':'message_title, 'link':{'rel':'self','href'=:'http://tab_archive/tablatures/tablature_id'}}]
         songs = []
         for tablaturemodel in tablaturemodels: 
-            song = {}
-            song["artist_id"] = tablaturemodel.artist_id
-            song["song_id"] = tablaturemodel.song_id
-            
+            song = {"artist":{}, "song":{}, "tablature":{}}
+            _artisturl = reverse("artist", (tablaturemodel.artist_id,), request=request)
+            _songurl = reverse("song", (tablaturemodel.artist_id, tablaturemodel.song_id,), request=request)
+            song["artist"]["artist_id"] = tablaturemodel.artist_id
+            song["artist"]["link"] = {'rel':'self', 'href':_artisturl}
+            song["song"]["song_id"] = tablaturemodel.song_id
+            song["song"]["link"] = {'rel':'self', 'href':_songurl}
             _tablatureid = tablaturemodel.tablature_id
             _tablatureurl = "http://localhost:8000/tab_archive/tablatures/"+str(_tablatureid)
             _tablatureurl = reverse("tablature", (_tablatureid,), request=request)
             tablature = {}
             tablature['tablature_id'] = _tablatureid
+            tablature['rating'] = tablaturemodel.rating
+            tablature['rating_count'] = tablaturemodel.rating_count
             tablature['link'] = {'rel':'self', 'href':_tablatureurl}
+            tablature['user'] = {'user_nickname' : tablaturemodel.user_nickname}
+            _userurl = reverse("user", (tablaturemodel.user_nickname,), request=request)
+            tablature['user']['link'] = {'rel':'self', 'href':_userurl}
             song["tablature"] = tablature
             songs.append(song)
         return Response(songs, status=status.HTTP_200_OK)

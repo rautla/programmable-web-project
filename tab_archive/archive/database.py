@@ -352,19 +352,24 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
         return self.get_user(user_nickname) is not None    
     
     #TABLATURE
-    def get_songs(self, artist_id):
+    def get_songs(self, artist_id, keyword):
         '''
         Return list of songs by artist.
         If artist parameter is left empty return all songs.
+        If keyword is not None uses the keyword to find matching.
         Return "None" if artist or songs not found.
         '''
         
         keys_on = 'PRAGMA foreign_keys = ON'
         if artist_id == '':
             query = 'SELECT DISTINCT artist_id, song_id FROM tablatures'
+            if (keyword != None):
+                query += " WHERE song_id LIKE '%" + keyword + "%'"
         else:
             query = 'SELECT DISTINCT artist_id, song_id FROM tablatures WHERE artist_id = ?'
             pvalue = (artist_id,)
+            if (keyword != None):
+                query += " AND song_id LIKE '%" + keyword + "%'"
         
         #connects (and creates if necessary) to the database. gets a connection object
         con = sqlite3.connect(self.database_name)
@@ -388,13 +393,17 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
             return songs
 
         
-    def get_artists(self):
+    def get_artists(self, keyword):
         '''
         Return list of unique artists.
+        If keyword is provided uses keyword to find matching artists.
         '''
         
         keys_on = 'PRAGMA foreign_keys = ON'
+        
         query = 'SELECT DISTINCT artist_id FROM tablatures'
+        if (keyword != None):
+            query += " WHERE artist_id LIKE '%" + keyword + "%'"
         
         #artist_id = None
         

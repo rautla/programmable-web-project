@@ -29,6 +29,8 @@ $(function(){
         // Direct and delegated events from http://api.jquery.com/on/
         //$("#messages").on("click", "#deleteMessage", handleDeleteMessage);
         //$("#user_list").on("click", "li", handleGetUser);
+        
+    $("#main").on("click", "td", handleClickTable);
 
     //TODO‎: get something to show on page load (in our case this might be artists)    
     
@@ -229,7 +231,7 @@ function getUsers(apiurl) {
         r[++j] =  '<table><thead><tr><th>Users</th></tr></thead><tbody>'; 
         for (var i in data) {
             var d = data[i];
-            r[++j] = '<tr><td>';
+            r[++j] = '<tr><td class="user">';
             r[++j] = '<a href="';
             r[++j] = data[i].link.href;
             r[++j] = '" rel="';
@@ -362,7 +364,7 @@ function getArtists(apiurl) {
         r[++j] =  '<table><thead><tr><th>Artists</th></tr></thead><tbody>'; 
         for (var i in data) {
             var d = data[i];
-            r[++j] = '<tr><td>';
+            r[++j] = '<tr><td class="artist">';
             r[++j] = '<a href="';
             r[++j] = data[i].link.href;
             r[++j] = '" rel="';
@@ -382,6 +384,44 @@ function getArtists(apiurl) {
     });
 }
 
+function findArtists(apiurl, searchData) {
+    $.ajax({
+        url: apiurl, //The URL of the resource
+        type: "POST", //The resource method
+        contentType: CONTENT_TYPE, //The mime type of the request body
+        data: searchData, //The body of the HTTP request
+        processData: false, //Do not transform the data in key-value
+        dataType:RESPONSE_FORMAT, //The format expected in the 
+        headers: {"Accept": "application/json"}// An object containing //headers
+    }).done(function (data, textStatus, jqXHR){
+        if (DEBUG) {
+			console.log ("RECEIVED RESPONSE: data:",data,"; textStatus:",textStatus)
+		}
+        
+        var r = new Array();
+        var j = -1;
+        r[++j] =  '<table><thead><tr><th>Artists</th></tr></thead><tbody>'; 
+        for (var i in data) {
+            var d = data[i];
+            r[++j] = '<tr><td class="artist">';
+            r[++j] = '<a href="';
+            r[++j] = data[i].link.href;
+            r[++j] = '" rel="';
+            r[++j] = data[i].link.rel;
+            r[++j] = '" >';
+            r[++j] = data[i].artist_id;
+            r[++j] = '</a></td></tr>';
+        }
+        r[++j] = '</tbody></table>';
+        $('#main').html(r.join(''));
+        
+    }).fail(function (jqXHR, textStatus, errorThrown){
+        //code to be executed when response has an //error status code or response is malformed
+        if (DEBUG) {
+			console.log ("RECEIVED ERROR: textStatus:",textStatus, ";error:",errorThrown)
+		}
+    });
+}
 
 function getSong(apiurl) {
     $.ajax({
@@ -428,23 +468,23 @@ function getSongs(apiurl) {
         r[++j] =  '<table><thead><tr><th>Artist</th><th>Song</th></tr></thead><tbody>'; 
         for (var i in data) {
             var d = data[i];
-            r[++j] = '<tr><td>';
-            /*r[++j] = '<a href="';
-            r[++j] = data[i].link.href;
-            r[++j] = '" rel="';
-            r[++j] = data[i].link.rel;
-            r[++j] = '" >';
-            r[++j] = data[i].artist_id;
-            r[++j] = '</a></td>';*/
-            r[++j] = data[i].artist_id;
-            r[++j] = '</td>';
-            r[++j] = '<td>';
+            r[++j] = '<tr><td class="artist">';
             r[++j] = '<a href="';
-            r[++j] = data[i].link.href;
+            r[++j] = data[i]["artist"].link.href;
             r[++j] = '" rel="';
-            r[++j] = data[i].link.rel;
+            r[++j] = data[i]["artist"].link.rel;
             r[++j] = '" >';
-            r[++j] = data[i].song_id;
+            r[++j] = data[i]["artist"].artist_id;
+            r[++j] = '</a></td>';
+            //r[++j] = data[i].artist_id;
+            //r[++j] = '</td>';
+            r[++j] = '<td class="song">';
+            r[++j] = '<a href="';
+            r[++j] = data[i]["song"].link.href;
+            r[++j] = '" rel="';
+            r[++j] = data[i]["song"].link.rel;
+            r[++j] = '" >';
+            r[++j] = data[i]["song"].song_id;
             r[++j] = '</a></td></tr>';
         }
         r[++j] = '</tbody></table>';
@@ -458,6 +498,56 @@ function getSongs(apiurl) {
     });
 }
 
+function findSongs(apiurl, searchData) {
+    $.ajax({
+        url: apiurl, //The URL of the resource
+        type: "POST", //The resource method
+        contentType: CONTENT_TYPE, //The mime type of the request body
+        data: searchData, //The body of the HTTP request
+        processData: false, //Do not transform the data in key-value
+        dataType:RESPONSE_FORMAT, //The format expected in the 
+        headers: {"Accept": "application/json"}// An object containing //headers
+    }).done(function (data, textStatus, jqXHR){
+        //code to be executed when response is //received. Data is an object. jqXHR is the //XMLHttpRequest object
+		//console.log("done");
+        if (DEBUG) {
+			console.log ("RECEIVED RESPONSE: data:",data,"; textStatus:",textStatus)
+		}
+        
+        var r = new Array();
+        var j = -1;
+        r[++j] =  '<table><thead><tr><th>Artist</th><th>Song</th></tr></thead><tbody>'; 
+        for (var i in data) {
+            var d = data[i];
+            r[++j] = '<tr><td class="artist">';
+            r[++j] = '<a href="';
+            r[++j] = data[i]["artist"].link.href;
+            r[++j] = '" rel="';
+            r[++j] = data[i]["artist"].link.rel;
+            r[++j] = '" >';
+            r[++j] = data[i]["artist"].artist_id;
+            r[++j] = '</a></td>';
+            //r[++j] = data[i].artist_id;
+            //r[++j] = '</td>';
+            r[++j] = '<td class="song">';
+            r[++j] = '<a href="';
+            r[++j] = data[i]["song"].link.href;
+            r[++j] = '" rel="';
+            r[++j] = data[i]["song"].link.rel;
+            r[++j] = '" >';
+            r[++j] = data[i]["song"].song_id;
+            r[++j] = '</a></td></tr>';
+        }
+        r[++j] = '</tbody></table>';
+        $('#main').html(r.join(''));
+        
+    }).fail(function (jqXHR, textStatus, errorThrown){
+        //code to be executed when response has an //error status code or response is malformed
+        if (DEBUG) {
+			console.log ("RECEIVED ERROR: textStatus:",textStatus, ";error:",errorThrown)
+		}
+    });
+}
 
 function addTablature(apiurl, tablatureData) {
     $.ajax({
@@ -500,29 +590,51 @@ function getTablatures(apiurl) {
         
         var r = new Array();
         var j = -1;
-        r[++j] =  '<table><thead><tr><th>Artist</th><th>Song</th><th>Tablature</th><th>User</th></tr></thead><tbody>'; 
+        r[++j] =  '<table><thead><tr><th>Artist</th><th>Song</th><th>Tablature</th><th>User</th><th>Rating</th></tr></thead><tbody>'; 
         for (var i in data) {
             var d = data[i];
-            r[++j] = '<tr><td>';
-            /*r[++j] = '<a href="';
-            r[++j] = data[i].link.href;
+            r[++j] = '<tr><td class="artist">';
+            r[++j] = '<a href="';
+            r[++j] = data[i]["artist"].link.href;
             r[++j] = '" rel="';
-            r[++j] = data[i].link.rel;
+            r[++j] = data[i]["artist"].link.rel;
             r[++j] = '" >';
-            r[++j] = data[i].artist_id;
-            r[++j] = '</a></td>';*/
-            r[++j] = data[i].artist_id;
-            r[++j] = '</td>';
-            r[++j] = '<td>';
-            r[++j] = data[i].song_id;
-            r[++j] = '</td>';
-            r[++j] = '<td>';
+            r[++j] = data[i]["artist"].artist_id;
+            r[++j] = '</a></td>';
+            //r[++j] = data[i].artist_id;
+            //r[++j] = '</td>';
+            if (data[i].tablature.rating_count > 0) {
+                var rating = data[i].tablature.rating/data[i].tablature.rating_count;
+            } else {
+                var rating = "-";
+            }
+            
+            r[++j] = '<td class="song">';
+            r[++j] = '<a href="';
+            r[++j] = data[i]["song"].link.href;
+            r[++j] = '" rel="';
+            r[++j] = data[i]["song"].link.rel;
+            r[++j] = '" >';
+            r[++j] = data[i]["song"].song_id;
+            r[++j] = '</a></td>';
+            r[++j] = '<td class="tablature">';
             r[++j] = '<a href="';
             r[++j] = data[i].tablature.link.href;
             r[++j] = '" rel="';
             r[++j] = data[i].tablature.link.rel;
             r[++j] = '" >';
             r[++j] = data[i].tablature.tablature_id;
+            r[++j] = '</a></td>';
+            r[++j] = '<td class="user">';
+            r[++j] = '<a href="';
+            r[++j] = data[i].tablature.user.link.href;
+            r[++j] = '" rel="';
+            r[++j] = data[i].tablature.user.link.rel;
+            r[++j] = '" >';
+            r[++j] = data[i].tablature.user.user_nickname;
+            r[++j] = '<td class="rating">';
+            r[++j] = rating;
+            r[++j] = '</td>';
             r[++j] = '</a></td></tr>';
         }
         r[++j] = '</tbody></table>';
@@ -845,6 +957,20 @@ function handleArtists(event) {
     return false;
 }
 
+function handleClickTable(event) {
+	if (DEBUG) {
+		console.log ("Triggered handleGetArtist")
+	}
+    var url = $(this).children("a").attr("href");
+    var column = $(this).attr("class");
+    console.log(url + " " + column);
+    //var url = $("#Artists").attr("href");
+    //console.log(url);
+	//getArtists(url);
+    
+    return false;
+}
+
 function handleSongs(event) {
 	if (DEBUG) {
 		console.log ("Triggered handleSongs")
@@ -879,7 +1005,10 @@ function handleSearch(event) {
         if (DEBUG) {
             console.log("Song search");
             //var url = "/tab_archive/songs
-            getSongs(url);
+            var url = "/tab_archive/songs"
+            var keyword = $("#search").val();
+            var searchData = {"keyword":keyword};
+            findSongs(url, JSON.stringify(searchData));
         }
     
     }
@@ -887,8 +1016,10 @@ function handleSearch(event) {
     if ($(":radio:checked").val() == "Artist") {
         if (DEBUG) {
             console.log("Artist search");
-            var url = "/tab_archive/artists/" + $("#search").val();
-            getArtists(url);
+            var url = "/tab_archive/artists"
+            var keyword = $("#search").val();
+            var searchData = {"keyword":keyword};
+            findArtists(url, JSON.stringify(searchData));
             
         }
     }
