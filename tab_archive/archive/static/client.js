@@ -16,8 +16,8 @@ $(function(){
     $("#Artists").on("click", handleArtists);
     $("#Songs").on("click", handleSongs);
     $("#Tablatures").on("click", handleTablatures);
-    
-    $('#search').bind('keypress', handleSearch);
+    $("#searchForm").submit(handleSearch);
+    //$('#search').bind('keypress', handleSearch);
 
 	//TODO 2: Add corresponding click handlers for #deleteMessage button and #user_list li element
 	//Since these elements are generated dynamically, you must use delegated events.
@@ -222,6 +222,25 @@ function getUsers(apiurl) {
         if (DEBUG) {
 			console.log ("RECEIVED RESPONSE: data:",data,"; textStatus:",textStatus)
 		}
+        
+        var r = new Array();
+        //var j = -1, recordId;
+        var j = -1;
+        r[++j] =  '<table><thead><tr><th>Users</th></tr></thead><tbody>'; 
+        for (var i in data) {
+            var d = data[i];
+            r[++j] = '<tr><td>';
+            r[++j] = '<a href="';
+            r[++j] = data[i].link.href;
+            r[++j] = '" rel="';
+            r[++j] = data[i].link.rel;
+            r[++j] = '" >';
+            r[++j] = data[i].user_nickname;
+            r[++j] = '</a></td></tr>';
+        }
+        r[++j] = '</tbody></table>';
+        $('#main').html(r.join(''));
+        
     }).fail(function (jqXHR, textStatus, errorThrown){
         //code to be executed when response has an //error status code or response is malformed
         if (DEBUG) {
@@ -334,11 +353,27 @@ function getArtists(apiurl) {
         dataType:RESPONSE_FORMAT, //The format expected in the 
         headers: {"Accept": "application/json"}// An object containing //headers
     }).done(function (data, textStatus, jqXHR){
-        //code to be executed when response is //received. Data is an object. jqXHR is the //XMLHttpRequest object
-		//console.log("done");
         if (DEBUG) {
 			console.log ("RECEIVED RESPONSE: data:",data,"; textStatus:",textStatus)
 		}
+        
+        var r = new Array();
+        var j = -1;
+        r[++j] =  '<table><thead><tr><th>Artists</th></tr></thead><tbody>'; 
+        for (var i in data) {
+            var d = data[i];
+            r[++j] = '<tr><td>';
+            r[++j] = '<a href="';
+            r[++j] = data[i].link.href;
+            r[++j] = '" rel="';
+            r[++j] = data[i].link.rel;
+            r[++j] = '" >';
+            r[++j] = data[i].artist_id;
+            r[++j] = '</a></td></tr>';
+        }
+        r[++j] = '</tbody></table>';
+        $('#main').html(r.join(''));
+        
     }).fail(function (jqXHR, textStatus, errorThrown){
         //code to be executed when response has an //error status code or response is malformed
         if (DEBUG) {
@@ -387,6 +422,34 @@ function getSongs(apiurl) {
         if (DEBUG) {
 			console.log ("RECEIVED RESPONSE: data:",data,"; textStatus:",textStatus)
 		}
+        
+        var r = new Array();
+        var j = -1;
+        r[++j] =  '<table><thead><tr><th>Artist</th><th>Song</th></tr></thead><tbody>'; 
+        for (var i in data) {
+            var d = data[i];
+            r[++j] = '<tr><td>';
+            /*r[++j] = '<a href="';
+            r[++j] = data[i].link.href;
+            r[++j] = '" rel="';
+            r[++j] = data[i].link.rel;
+            r[++j] = '" >';
+            r[++j] = data[i].artist_id;
+            r[++j] = '</a></td>';*/
+            r[++j] = data[i].artist_id;
+            r[++j] = '</td>';
+            r[++j] = '<td>';
+            r[++j] = '<a href="';
+            r[++j] = data[i].link.href;
+            r[++j] = '" rel="';
+            r[++j] = data[i].link.rel;
+            r[++j] = '" >';
+            r[++j] = data[i].song_id;
+            r[++j] = '</a></td></tr>';
+        }
+        r[++j] = '</tbody></table>';
+        $('#main').html(r.join(''));
+        
     }).fail(function (jqXHR, textStatus, errorThrown){
         //code to be executed when response has an //error status code or response is malformed
         if (DEBUG) {
@@ -434,6 +497,37 @@ function getTablatures(apiurl) {
         if (DEBUG) {
 			console.log ("RECEIVED RESPONSE: data:",data,"; textStatus:",textStatus)
 		}
+        
+        var r = new Array();
+        var j = -1;
+        r[++j] =  '<table><thead><tr><th>Artist</th><th>Song</th><th>Tablature</th><th>User</th></tr></thead><tbody>'; 
+        for (var i in data) {
+            var d = data[i];
+            r[++j] = '<tr><td>';
+            /*r[++j] = '<a href="';
+            r[++j] = data[i].link.href;
+            r[++j] = '" rel="';
+            r[++j] = data[i].link.rel;
+            r[++j] = '" >';
+            r[++j] = data[i].artist_id;
+            r[++j] = '</a></td>';*/
+            r[++j] = data[i].artist_id;
+            r[++j] = '</td>';
+            r[++j] = '<td>';
+            r[++j] = data[i].song_id;
+            r[++j] = '</td>';
+            r[++j] = '<td>';
+            r[++j] = '<a href="';
+            r[++j] = data[i].tablature.link.href;
+            r[++j] = '" rel="';
+            r[++j] = data[i].tablature.link.rel;
+            r[++j] = '" >';
+            r[++j] = data[i].tablature.tablature_id;
+            r[++j] = '</a></td></tr>';
+        }
+        r[++j] = '</tbody></table>';
+        $('#main').html(r.join(''));
+        
     }).fail(function (jqXHR, textStatus, errorThrown){
         //code to be executed when response has an //error status code or response is malformed
         if (DEBUG) {
@@ -677,7 +771,7 @@ function commentTablature(apiurl, commentData) {
 }
 
 
-function getTablatures(apiurl) {
+/*function getTablatures(apiurl) {
     $.ajax({
         url: apiurl, //The URL of the resource
         type: "GET", //The resource method
@@ -698,7 +792,7 @@ function getTablatures(apiurl) {
 			console.log ("RECEIVED ERROR: textStatus:",textStatus, ";error:",errorThrown)
 		}
     });
-}
+}*/
 
 function addTablatures(apiurl, tablatureData) {
     $.ajax({
@@ -746,7 +840,7 @@ function handleArtists(event) {
     
     var url = $("#Artists").attr("href");
     console.log(url);
-	getUsers(url);
+	getArtists(url);
     
     return false;
 }
@@ -758,7 +852,7 @@ function handleSongs(event) {
     
     var url = $("#Songs").attr("href");
     console.log(url);
-	getUsers(url);
+	getSongs(url);
     
     return false;
 }
@@ -770,30 +864,36 @@ function handleTablatures(event) {
     
     var url = $("#Tablatures").attr("href");
     console.log(url);
-	getUsers(url);
+	getTablatures(url);
     
     return false;
 }
 
 function handleSearch(event) {
-    if(event.keyCode==13){ // Enter pressed
-        if (DEBUG) {
-            console.log ("Triggered handleSearch");
-        }
+    
+    if (DEBUG) {
+        console.log ("Triggered handleSearch");
     }
     
     if ($(":radio:checked").val() == "Song") {
         if (DEBUG) {
             console.log("Song search");
+            //var url = "/tab_archive/songs
+            getSongs(url);
         }
     
     }
-    
+
     if ($(":radio:checked").val() == "Artist") {
         if (DEBUG) {
             console.log("Artist search");
+            var url = "/tab_archive/artists/" + $("#search").val();
+            getArtists(url);
+            
         }
     }
+        
+    
     
     return false;
 }
