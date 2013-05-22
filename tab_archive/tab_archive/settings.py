@@ -62,7 +62,7 @@ STATIC_ROOT = ''
 
 # URL prefix for static files.
 # Example: "http://media.lawrence.com/static/"
-STATIC_URL = '/static/'
+STATIC_URL = '/archive/client/'
 
 # Additional locations of static files
 STATICFILES_DIRS = (
@@ -111,8 +111,8 @@ TEMPLATE_DIRS = (
 )
 
 INSTALLED_APPS = (
-    #'django.contrib.auth',
-    #'django.contrib.contenttypes',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
     #'django.contrib.sessions',
     #'django.contrib.sites',
     #'django.contrib.messages',
