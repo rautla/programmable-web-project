@@ -17,6 +17,7 @@ $(function(){
     $("#Songs").on("click", handleSongs);
     $("#Tablatures").on("click", handleTablatures);
     $("#searchForm").submit(handleSearch);
+    $("#reglink").on("click", handleRegister);
     //$('#search').bind('keypress', handleSearch);
 
 	//TODO 2: Add corresponding click handlers for #deleteMessage button and #user_list li element
@@ -93,6 +94,7 @@ var DEBUG = true,
 function getUser(apiurl) {
     //TODO 1: Send the AJAX to retrieve the user information. Do not implement the handlers yet, just show some DEBUG text in the console. 
 	//TODO 3: Implement the handlers successful and failures responses accordding to the function documentation.
+    console.log("is this the correct url?:" + apiurl);
     $.ajax({
         url: apiurl, //The URL of the resource
         type: "GET", //The resource method
@@ -100,7 +102,7 @@ function getUser(apiurl) {
         data: null, //The body of the HTTP request
         processData: false, //Do not transform the data in key-value
         dataType:RESPONSE_FORMAT, //The format expected in the 
-        headers: {"Authorization":"admin", "Accept": "application/json"}// An object containing //headers
+        headers: {"Accept": "application/json"}// An object containing //headers
     }).done(function (data, textStatus, jqXHR){
         //code to be executed when response is //received. Data is an object. jqXHR is the //XMLHttpRequest object
 		//console.log("done");
@@ -128,13 +130,24 @@ function getUser(apiurl) {
         getUserHistory(userHistory);
         
         $("#mainContent").show();*/
-                
+        
+        var email = data.user.email;
+        if (email == undefined) {
+            $("#Userprofile").find("#Email").hide();
+        } else {
+            $("#Userprofile").find("#Email").show();
+        }
+        $("#Userprofile").find("#Nickname").val(data.user.user_nickname);
+        $("#Userprofile").find("#Email").val(data.user.email);
+        $("#Userprofile").find("#Description").val(data.user.description);        
+        $("#Userprofile").find("#Picture").val(data.user.picture);
+        
     }).fail(function (jqXHR, textStatus, errorThrown){
         //code to be executed when response has an //error status code or response is malformed
         if (DEBUG) {
 			console.log ("RECEIVED ERROR: textStatus:",textStatus, ";error:",errorThrown)
 		}
-        alert("User information could not be retrieved.");
+        //alert("User information could not be retrieved.");
         /*$("#user_list li").removeClass("selected");
         $("#mainContent").hide();*/
     });
@@ -934,11 +947,15 @@ function addTablatures(apiurl, tablatureData) {
 
 /**** BUTTON HANDLERS ****/
 function handleUsers(event) {
-	if (DEBUG) {
+    $("#Table").show();
+	$("#Userprofile").hide();
+    if (DEBUG) {
 		console.log("Triggered handleUsers");
 	}
     
     var url = $("#Users").attr("href");
+    //$("#breadcrumb").html(url);
+    breadcrumbs(url);
     console.log(url);
 	getUsers(url);
     
@@ -946,11 +963,15 @@ function handleUsers(event) {
 }
 
 function handleArtists(event) {
-	if (DEBUG) {
+    $("#Table").show();
+	$("#Userprofile").hide();
+    if (DEBUG) {
 		console.log ("Triggered handleArtists")
 	}
     
     var url = $("#Artists").attr("href");
+    //$("#breadcrumb").html(url);
+    breadcrumbs(url);
     console.log(url);
 	getArtists(url);
     
@@ -958,11 +979,17 @@ function handleArtists(event) {
 }
 
 function handleClickTable(event) {
+    $("#Table").show();
 	if (DEBUG) {
-		console.log ("Triggered handleGetArtist")
+		console.log ("Triggered handleClickTable")
 	}
     var url = $(this).children("a").attr("href");
+    //$("#breadcrumb").html(url);
+    breadcrumbs(url);
     var column = $(this).attr("class");
+    if (column == "user") {
+        handleUser(url);
+    }
     console.log(url + " " + column);
     //var url = $("#Artists").attr("href");
     //console.log(url);
@@ -971,12 +998,25 @@ function handleClickTable(event) {
     return false;
 }
 
+function handleUser(url) {
+    $("#Table").hide();
+    $("#Userprofile").show();
+    
+    getUser(url);
+    
+    return false;
+}
+
 function handleSongs(event) {
+    $("#Table").show();
+    $("#Userprofile").hide();
 	if (DEBUG) {
-		console.log ("Triggered handleSongs")
+		console.log ("Triggered handleSongs");
 	}
     
     var url = $("#Songs").attr("href");
+    //$("#breadcrumb").html(url);
+    breadcrumbs(url);
     console.log(url);
 	getSongs(url);
     
@@ -984,19 +1024,69 @@ function handleSongs(event) {
 }
 
 function handleTablatures(event) {
-	if (DEBUG) {
+    $("#Table").show()
+	$("#Userprofile").hide();
+    if (DEBUG) {
 		console.log ("Triggered handleTablatures")
 	}
     
     var url = $("#Tablatures").attr("href");
+    //$("#breadcrumb").html(url);
+    breadcrumbs(url);
     console.log(url);
 	getTablatures(url);
     
     return false;
 }
 
-function handleSearch(event) {
+function handleRegister(event) {
+    $("#Table").hide();
+    clearUserForm();
+    $("#Userprofile").show();
+    if (DEBUG) {
+        console.log ("Triggered handleRegister");
+    }
     
+    return false;
+}    
+
+function clearUserForm() {
+    
+    $("#Userprofile").find("#Email").show();
+    
+    $("#Userprofile").find("#Nickname").val("Nickname");
+    $("#Userprofile").find("#Email").val("Email");
+    $("#Userprofile").find("#Description").val("Description");        
+    $("#Userprofile").find("#Picture").val("Picture");
+}
+
+function breadcrumbs(url) {
+    var legs = url.split("/");
+    var homeIndex = legs.indexOf("tab_archive");
+    homeIndex;
+    console.log(legs);
+    console.log("homeIndex: " + homeIndex);
+    var crumb = [];
+    for (var i = homeIndex; i < legs.length; i++) {
+        var link = "";
+        for (var j = homeIndex; j <= i; j++) {
+            link += "/" + legs[j]; 
+            console.log("i: " + i + " j: " + j + " legs len: " + legs.length);
+        }
+        console.log("link: " + link);
+        if (i == homeIndex) {
+            crumb[i] = '<a href="' + "/tab_archive/artists" + '" >' + legs[i] + "</a>";
+        } else {
+            crumb[i] = '<a href="' + link + '" >' + legs[i] + "</a>";
+        }
+    }
+    console.log(crumb);
+    $("#breadcrumb").html(crumb.reverse().join(" "));
+}
+
+function handleSearch(event) {
+    $("#Table").show()
+    $("#Userprofile").hide();
     if (DEBUG) {
         console.log ("Triggered handleSearch");
     }
@@ -1006,6 +1096,7 @@ function handleSearch(event) {
             console.log("Song search");
             //var url = "/tab_archive/songs
             var url = "/tab_archive/songs"
+            $("#breadcrumb").html(url);
             var keyword = $("#search").val();
             var searchData = {"keyword":keyword};
             findSongs(url, JSON.stringify(searchData));
@@ -1017,14 +1108,13 @@ function handleSearch(event) {
         if (DEBUG) {
             console.log("Artist search");
             var url = "/tab_archive/artists"
+            $("#breadcrumb").html(url);
             var keyword = $("#search").val();
             var searchData = {"keyword":keyword};
             findArtists(url, JSON.stringify(searchData));
             
         }
     }
-        
-    
     
     return false;
 }
