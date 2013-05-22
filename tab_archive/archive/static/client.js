@@ -30,7 +30,7 @@ $(function(){
         //$("#messages").on("click", "#deleteMessage", handleDeleteMessage);
         //$("#user_list").on("click", "li", handleGetUser);
         
-    $("#main").on("click", "td", handleClickTable);
+    $("#Table").on("click", "td", handleClickTable);
 
     //TODO‎: get something to show on page load (in our case this might be artists)    
     
@@ -241,7 +241,7 @@ function getUsers(apiurl) {
             r[++j] = '</a></td></tr>';
         }
         r[++j] = '</tbody></table>';
-        $('#main').html(r.join(''));
+        $('#Table').html(r.join(''));
         
     }).fail(function (jqXHR, textStatus, errorThrown){
         //code to be executed when response has an //error status code or response is malformed
@@ -374,7 +374,7 @@ function getArtists(apiurl) {
             r[++j] = '</a></td></tr>';
         }
         r[++j] = '</tbody></table>';
-        $('#main').html(r.join(''));
+        $('#Table').html(r.join(''));
         
     }).fail(function (jqXHR, textStatus, errorThrown){
         //code to be executed when response has an //error status code or response is malformed
@@ -413,7 +413,7 @@ function findArtists(apiurl, searchData) {
             r[++j] = '</a></td></tr>';
         }
         r[++j] = '</tbody></table>';
-        $('#main').html(r.join(''));
+        $('#Table').html(r.join(''));
         
     }).fail(function (jqXHR, textStatus, errorThrown){
         //code to be executed when response has an //error status code or response is malformed
@@ -488,7 +488,7 @@ function getSongs(apiurl) {
             r[++j] = '</a></td></tr>';
         }
         r[++j] = '</tbody></table>';
-        $('#main').html(r.join(''));
+        $('#Table').html(r.join(''));
         
     }).fail(function (jqXHR, textStatus, errorThrown){
         //code to be executed when response has an //error status code or response is malformed
@@ -539,7 +539,7 @@ function findSongs(apiurl, searchData) {
             r[++j] = '</a></td></tr>';
         }
         r[++j] = '</tbody></table>';
-        $('#main').html(r.join(''));
+        $('#Table').html(r.join(''));
         
     }).fail(function (jqXHR, textStatus, errorThrown){
         //code to be executed when response has an //error status code or response is malformed
@@ -638,7 +638,7 @@ function getTablatures(apiurl) {
             r[++j] = '</a></td></tr>';
         }
         r[++j] = '</tbody></table>';
-        $('#main').html(r.join(''));
+        $('#Table').html(r.join(''));
         
     }).fail(function (jqXHR, textStatus, errorThrown){
         //code to be executed when response has an //error status code or response is malformed

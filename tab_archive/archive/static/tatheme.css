@@ -90,20 +90,20 @@ width:400px;
 float:right;
 }
 
-.Table{
+table{
 margin-top:4px;
 }
 
-.Table table{
+table{
 border-collapse:collapse;
 width:723px;
 }
 
-.Table table, th, td{
+table, th, td{
 border: 1px solid;
 }
 
-.Table th{
+table th{
 background:darkgrey;
 font-size:125%;
 }
