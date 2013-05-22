@@ -17,6 +17,7 @@ $(function(){
     $("#Songs").on("click", handleSongs);
     $("#Tablatures").on("click", handleTablatures);
     $("#searchForm").submit(handleSearch);
+    $("#reglink").on("click", handleRegister);
     //$('#search').bind('keypress', handleSearch);
 
 	//TODO 2: Add corresponding click handlers for #deleteMessage button and #user_list li element
@@ -953,7 +954,8 @@ function handleUsers(event) {
 	}
     
     var url = $("#Users").attr("href");
-    $("#breadcrumb").html(url);
+    //$("#breadcrumb").html(url);
+    breadcrumbs(url);
     console.log(url);
 	getUsers(url);
     
@@ -968,7 +970,8 @@ function handleArtists(event) {
 	}
     
     var url = $("#Artists").attr("href");
-    $("#breadcrumb").html(url);
+    //$("#breadcrumb").html(url);
+    breadcrumbs(url);
     console.log(url);
 	getArtists(url);
     
@@ -981,7 +984,8 @@ function handleClickTable(event) {
 		console.log ("Triggered handleClickTable")
 	}
     var url = $(this).children("a").attr("href");
-    $("#breadcrumb").html(url);
+    //$("#breadcrumb").html(url);
+    breadcrumbs(url);
     var column = $(this).attr("class");
     if (column == "user") {
         handleUser(url);
@@ -1011,7 +1015,8 @@ function handleSongs(event) {
 	}
     
     var url = $("#Songs").attr("href");
-    $("#breadcrumb").html(url);
+    //$("#breadcrumb").html(url);
+    breadcrumbs(url);
     console.log(url);
 	getSongs(url);
     
@@ -1026,11 +1031,57 @@ function handleTablatures(event) {
 	}
     
     var url = $("#Tablatures").attr("href");
-    $("#breadcrumb").html(url);
+    //$("#breadcrumb").html(url);
+    breadcrumbs(url);
     console.log(url);
 	getTablatures(url);
     
     return false;
+}
+
+function handleRegister(event) {
+    $("#Table").hide();
+    clearUserForm();
+    $("#Userprofile").show();
+    if (DEBUG) {
+        console.log ("Triggered handleRegister");
+    }
+    
+    return false;
+}    
+
+function clearUserForm() {
+    
+    $("#Userprofile").find("#Email").show();
+    
+    $("#Userprofile").find("#Nickname").val("Nickname");
+    $("#Userprofile").find("#Email").val("Email");
+    $("#Userprofile").find("#Description").val("Description");        
+    $("#Userprofile").find("#Picture").val("Picture");
+}
+
+function breadcrumbs(url) {
+    var legs = url.split("/");
+    var homeIndex = legs.indexOf("tab_archive");
+    homeIndex;
+    console.log(legs);
+    console.log("homeIndex: " + homeIndex);
+    var crumb = [];
+    for (var i = homeIndex; i < legs.length; i++) {
+        var link = "";
+        for (var j = homeIndex; j <= i; j++) {
+            link += "/" + legs[j]; 
+            console.log("i: " + i + " j: " + j + " legs len: " + legs.length);
+        }
+        console.log("link: " + link);
+        if (i == homeIndex) {
+            crumb[i] = '<a href="' + "/tab_archive/artists" + '" >' + legs[i] + "</a>";
+        } else {
+            crumb[i] = '<a href="' + link + '" >' + legs[i] + "</a>";
+        }
+    }
+    console.log(crumb);
+    $("#breadcrumb").html(crumb.reverse().join(" "));
 }
 
 function handleSearch(event) {
@@ -1064,8 +1115,6 @@ function handleSearch(event) {
             
         }
     }
-        
-    
     
     return false;
 }
