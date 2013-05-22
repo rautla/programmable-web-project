@@ -40,12 +40,72 @@ height:50px;padding-bottom:10px;text-align:center;float:center;
 padding-bottom:5px;
 }
 
+#topBar a{
+font-size:16px;padding-right:10px;text-align:right;float:right;
+}
+
+#topBar form{
+text-align:right;float:right;
+}
+
+.search{
+position:relative;bottom:10px;
+}
+
+label.search{
+bottom:12px;
+}
+
+.breadcrumb{
+padding-left:10px;text-align:left;float:left;
+}
+
 #page{
 border-left:1px solid #d3d3d3;border-right:1px solid #d3d3d3;border-top:1px solid #d3d3d3;background-color:#ffffff;
 }
 
 #main{
 width:723px;float:left;margin:7px;margin-bottom:0px;overflow:hidden;background-color:#ffffff;
+}
+
+#Userprofile{
+margin-top:4px;
+}
+
+#Userprofile img{
+float:left;
+border:1px solid;
+}
+
+#Userprofile p{
+/*display:inline;*/
+width:400px;
+float:right;
+margin-bottom:0px;
+}
+
+#Userprofile a{
+/*display:inline;*/
+width:400px;
+float:right;
+}
+
+.Table{
+margin-top:4px;
+}
+
+.Table table{
+border-collapse:collapse;
+width:723px;
+}
+
+.Table table, th, td{
+border: 1px solid;
+}
+
+.Table th{
+background:darkgrey;
+font-size:125%;
 }
 
 #leftcolumn{

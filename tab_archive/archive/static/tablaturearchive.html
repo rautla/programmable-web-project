@@ -18,18 +18,20 @@
         <h1>Tablature archive</h1>
     </div>
     <div id="topBar">
-        <p style="padding-left:10px;text-align:left;float:left;">Home/Artists</p>
-        <form id="searchForm" style="padding-right:10px;text-align:right;float:right;" name="input" >
-            <input type="text" id="search">          
-            <input style="position:relative;bottom:10px;" type="radio" name="searchselect" value="Song">Song<br>
-            <input style="position:relative;bottom:10px;" type="radio" name="searchselect" value="Artist" checked>Artist
+        <p id="breadcrumb" class="breadcrumb">Home/Artists/</p>
+        <form id="searchForm" style="padding-right:10px;" name="input">
+            <input type="text" id="search" style="margin-left:20px;">        
+            <label for="song" class="search">song</label>
+            <input id="song" class="search" type="radio" name="searchselect" value="Song"><br>
+            <label for="song" class="search">artist</label>
+            <input id="artist" class="search" type="radio" name="searchselect" value="Artist" checked>
         </form>
-        <form style="text-align:right;float:right;" name="input" method="get">
+        <form name="input" method="get">
             <input type="text" name="nickname" value="Nickname">
             <input type="password" name="pwd" value="Password">
             <input type="submit" value="Login">
         </form>
-        <a style="font-size:16px;padding-right:10px;text-align:right;float:right;" href="//">Register</a>
+        <a href="//">Register</a>
     </div>   
     <div style="clear:both;"></div>    
     <div id="page">
@@ -40,17 +42,83 @@
             <a id="Artists" target="_top" href="/tab_archive/artists" >Artists</a>
             <a id="Songs" target="_top" href="/tab_archive/songs" >Songs</a>
             <a id="Tablatures" target="_top" href="/tab_archive/tablatures" >Tablatures</a>
-            <a style="color:blue;" target="_top" href="">Create new tablature</a>
+            <a id="Newtablature" style="color:blue;" target="_top" href="">Create new tablature</a>
             <br>            
         </div>
-            <div id="main">
-                <table border="1">
-                <tr>
-                <td>This space is supposed to change accordingly</td>
-                </tr>
-                </table>
-            </div>
-            <div style="clear:both;"></div>
+                <div id="main">
+                    <div class="Table" id="Userspage" hidden>
+                        <table id="Usertable">
+                            <th>
+                            User
+                            </th>
+                        </table>
+                    </div>                    
+                    <div class="Table" id="Artistspage" hidden>
+                        <table id="Artisttable">
+                            <th>
+                            Artist
+                            </th>
+                        </table>
+                    </div>
+                    <div class="Table" id="Songspage" hidden>
+                        <table id="Songtable">
+                            <th>
+                            Artist
+                            </th>
+                            <th>
+                            Song
+                            </th>                           
+                        </table>
+                    </div>
+                    <div class="Table" id="Tablaturespage" hidden>
+                        <table id="Tablaturetable">
+                            <th>
+                            Artist
+                            </th>
+                            <th>
+                            Song
+                            </th>
+                            <th style="width:125px;">
+                            Tablature id
+                            </th>
+                            <th style="width:20px;">
+                            Rating
+                            </th>
+                            <th style="width:125px;">
+                            Uploader
+                            </th>
+                            <!--tr><td>Apinoman</td><td>Laulu</td><td>1234</td><td>5</td><td>Keijo</td></tr-->
+                        </table>
+                    </div>
+                    <div id="Userprofile" hidden>
+                        <form action="#" id="Userdata">
+                            <img id="Picture" width="256" height="256">
+                            <a style="float:none;" href="#">Edit</a>
+                            <p id="Username" style="font-size:200%;">
+                            Nickname
+                            <p id="Email">
+                            your@email.com
+                            </p>
+                            <a href="#">Edit</a>
+                            </p>
+                            <p id="Description" style="border:1px solid;">
+                            Description
+                            </p>
+                            <a href="#">Edit</a>
+                            <p></p><p></p>
+                            <a href="#">Tablatures</a>
+                            <p></p>
+                            <a href="#">Comments</a>
+                        </form>
+                    </div>                    
+                    <div id="Tablaturedata">
+                        
+                    </div>
+                    <div id="Commentspage">
+                        
+                    </div>
+                </div>
+                <div style="clear:both;"></div>
         </div>
 </div>
 
