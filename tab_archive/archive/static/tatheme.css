@@ -111,13 +111,16 @@ float:right;
 }
 
 table{
+margin-top:4px;
+}
+
+table{
 border-collapse:collapse;
 width:723px;
 }
 
 table, th, td{
 border: 1px solid;
-text-align:center;
 }
 
 table th{

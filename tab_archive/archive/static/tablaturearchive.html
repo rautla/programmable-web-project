@@ -8,10 +8,10 @@
 <meta name="keywords" content="Tablature, Tablatures, Tab, Tabs, Tab archive, Tablature archive">
 <meta name="description" content="Tablature archive">
 
-<link rel="stylesheet" type="text/css" href="tatheme.css">
-	<script type="text/javascript" src="jquery.js"></script>
-	<script type="text/javascript" src="client.js"></script>
-</head>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="client.js"></script>
+<link rel="stylesheet" type="text/css" href="tatheme.css"></head>
+	
 <body>
 
 <div id="top">
@@ -24,10 +24,10 @@
             <input type="text" id="search" style="margin-left:20px;">        
             <label for="song" class="search">song</label>
             <input id="song" class="search" type="radio" name="searchselect" value="Song"><br>
-            <label for="artist" class="search">artist</label>
+            <label for="song" class="search">artist</label>
             <input id="artist" class="search" type="radio" name="searchselect" value="Artist" checked>
         </form>
-        <form name="input" method="get">
+        <form id="login" name="input">
             <input type="text" name="nickname" value="Nickname">
             <input type="password" name="pwd" value="Password">
             <input type="submit" value="Login">
@@ -78,8 +78,7 @@
                             <p></p>
                             <a href="#">Comments</a>
                         </form>
-                    </div>                    
-                    
+                    </div>                                        
                     <!--TABLATURE PAGE-->
                     <div id="Tablaturepage" hidden>
                         <form action="#" id="Tablaturedata">
