@@ -93,41 +93,21 @@ float:right;
 }
 
 table{
+margin-top:4px;
+}
+
+table{
 border-collapse:collapse;
 width:723px;
 }
 
 table, th, td{
 border: 1px solid;
-text-align:center;
 }
 
 table th{
 background:darkgrey;
 font-size:125%;
-}
-
-#Tablaturepage{
-margin-top:2px;
-}
-
-#Tablaturepage p{
-float:left;
-width:721px;
-margin-top:0px;
-margin-bottom:0px;
-}
-
-#Tablaturepage label, #Tablaturepage input, #Tablaturepage button{
-float:right;
-position:relative;
-right:20px;
-}
-
-#Tablaturepage textarea{
-width:717px;
-max-height:infinite;
-height:800px;
 }
 
 #leftcolumn{

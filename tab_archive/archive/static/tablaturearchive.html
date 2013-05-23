@@ -23,10 +23,10 @@
             <input type="text" id="search" style="margin-left:20px;">        
             <label for="song" class="search">song</label>
             <input id="song" class="search" type="radio" name="searchselect" value="Song"><br>
-            <label for="artist" class="search">artist</label>
+            <label for="song" class="search">artist</label>
             <input id="artist" class="search" type="radio" name="searchselect" value="Artist" checked>
         </form>
-        <form name="input" method="get">
+        <form id="login" name="input">
             <input type="text" name="nickname" value="Nickname">
             <input type="password" name="pwd" value="Password">
             <input type="submit" value="Login">
@@ -60,16 +60,7 @@
                             <input type="text" name="email" id="Email" value="your@email.com"><br>
                             </p>
                             <p>
-                            <textarea cols="40" rows="10"></textarea>
-                            </p>
-                            <p>
-                            <input type="text" name="password" id="Password" value="Password"></input>
-                            </p>
-                            <p>
-                            <input type="text" name="password2" id="Password2" value="Re-type your password"></input>
-                            </p>                            
-                            <p>
-                            <button id="Applybutton">Apply</button>
+                            <input type="text" name="description" id="Description" value="Description"><br>
                             </p>
                             <p></p><p></p>
                             <a href="#">Tablatures</a>
@@ -77,34 +68,8 @@
                             <a href="#">Comments</a>
                         </form>
                     </div>                    
-                    <div id="Tablaturepage">
-                        <form action="#" id="Tablaturedata">
-                            <p>
-                            Uploader:
-                            <a href="#Uploader"></a>
-                            <br>
-                            <a href="#Artist"></a>
-                            >
-                            <a href="#Song"></a>
-                            >
-                            <span id="Tablatureid"></span>
-                            <textarea type="text" name="tablature" id="Tablature" value="Your tablature"></textarea>
-                            <span>Rating:<a href="#Rating">5</a></span>
-                            <a href="#Delete" style="float:right;">Delete</a>
-                            <a href="#Comments" style="float:right;margin-right:20px;">Comments</a>
-                            <button id="Ratebutton" style="margin-left:10px;">Rate</button>
-                            <label for="five">5</label>
-                            <input type="radio" name="rating" id="five"/>
-                            <label for="four">4</label>
-                            <input type="radio" name="rating" id="four"/>
-                            <label for="three">3</label>
-                            <input type="radio" name="rating" id="three"/>
-                            <label for="two">2</label>
-                            <input type="radio" name="rating" id="two"/>
-                            <label for="one">1</label>
-                            <input type="radio" name="rating" id="one"/>
-                            </p>
-                        </form>
+                    <div id="Tablaturedata">
+                        
                     </div>
                     <div id="Commentspage">
                         
