@@ -18,6 +18,8 @@ $(function(){
     $("#Tablatures").on("click", handleTablatures);
     $("#searchForm").submit(handleSearch);
     $("#reglink").on("click", handleRegister);
+    $("#login").submit(handleLogin);
+    $("#Userdata").submit(handleUserData);
     //$('#search').bind('keypress', handleSearch);
 
 	//TODO 2: Add corresponding click handlers for #deleteMessage button and #user_list li element
@@ -433,6 +435,8 @@ function findArtists(apiurl, searchData) {
         if (DEBUG) {
 			console.log ("RECEIVED ERROR: textStatus:",textStatus, ";error:",errorThrown)
 		}
+		
+		$('#Table').html('<p style="font-size:200%;text-align:center;">Not found</p>');
     });
 }
 
@@ -559,6 +563,7 @@ function findSongs(apiurl, searchData) {
         if (DEBUG) {
 			console.log ("RECEIVED ERROR: textStatus:",textStatus, ";error:",errorThrown)
 		}
+		$('#Table').html('<p style="font-size:200%;text-align:center;">Not found</p>');
     });
 }
 
@@ -942,6 +947,29 @@ function addTablatures(apiurl, tablatureData) {
     });
 }
 
+function login(credentials) {
+    $.ajax({
+        url: "http://localhost:8000/tab_archive/login", //The URL of the resource
+        type: "GET", //The resource method
+        contentType: CONTENT_TYPE, //The mime type of the request body
+        data: null, //The body of the HTTP request
+        processData: false, //Do not transform the data in key-value
+        dataType:RESPONSE_FORMAT, //The format expected in the 
+        headers: {"Accept": "application/json", "username" : credentials.username, "password" : credentials.password }// An object containing //headers
+    }).done(function (data, textStatus, jqXHR){
+        //code to be executed when response is //received. Data is an object. jqXHR is the //XMLHttpRequest object
+		//console.log("done");
+        if (DEBUG) {
+			console.log ("RECEIVED RESPONSE: data:",data,"; textStatus:",textStatus)
+		}
+    }).fail(function (jqXHR, textStatus, errorThrown){
+        //code to be executed when response has an //error status code or response is malformed
+        if (DEBUG) {
+			console.log ("RECEIVED ERROR: textStatus:",textStatus, ";error:",errorThrown)
+		}
+    });
+}
+
 /**** END RESTFUL CLIENT****/
 
 
@@ -1027,7 +1055,7 @@ function handleTablatures(event) {
     $("#Table").show()
 	$("#Userprofile").hide();
     if (DEBUG) {
-		console.log ("Triggered handleTablatures")
+		console.log ("Triggered handleTablatures");
 	}
     
     var url = $("#Tablatures").attr("href");
@@ -1064,16 +1092,12 @@ function breadcrumbs(url) {
     var legs = url.split("/");
     var homeIndex = legs.indexOf("tab_archive");
     homeIndex;
-    console.log(legs);
-    console.log("homeIndex: " + homeIndex);
     var crumb = [];
     for (var i = homeIndex; i < legs.length; i++) {
         var link = "";
         for (var j = homeIndex; j <= i; j++) {
             link += "/" + legs[j]; 
-            console.log("i: " + i + " j: " + j + " legs len: " + legs.length);
         }
-        console.log("link: " + link);
         if (i == homeIndex) {
             crumb[i] = '<a href="' + "/tab_archive/artists" + '" >' + legs[i] + "</a>";
         } else {
@@ -1085,7 +1109,7 @@ function breadcrumbs(url) {
 }
 
 function handleSearch(event) {
-    $("#Table").show()
+    $("#Table").show();
     $("#Userprofile").hide();
     if (DEBUG) {
         console.log ("Triggered handleSearch");
@@ -1094,26 +1118,61 @@ function handleSearch(event) {
     if ($(":radio:checked").val() == "Song") {
         if (DEBUG) {
             console.log("Song search");
-            //var url = "/tab_archive/songs
-            var url = "/tab_archive/songs"
-            $("#breadcrumb").html(url);
-            var keyword = $("#search").val();
-            var searchData = {"keyword":keyword};
-            findSongs(url, JSON.stringify(searchData));
+            //var url = "/tab_archive/songs            
         }
-    
+        var url = "/tab_archive/songs"
+        $("#breadcrumb").html(url);
+        var keyword = $("#search").val();
+        var searchData = {"keyword":keyword};
+        findSongs(url, JSON.stringify(searchData));    
     }
 
     if ($(":radio:checked").val() == "Artist") {
         if (DEBUG) {
-            console.log("Artist search");
-            var url = "/tab_archive/artists"
-            $("#breadcrumb").html(url);
-            var keyword = $("#search").val();
-            var searchData = {"keyword":keyword};
-            findArtists(url, JSON.stringify(searchData));
-            
+            console.log("Artist search");            
         }
+        var url = "/tab_archive/artists"
+        $("#breadcrumb").html(url);
+        var keyword = $("#search").val();
+        var searchData = {"keyword":keyword};
+        findArtists(url, JSON.stringify(searchData));
+    }
+    
+    return false;
+}
+
+function handleLogin(event) {
+    if (DEBUG) {
+       console.log("Triggered handleLogin");            
+    }
+    var credentials = {"username":$("#login input[type=text]").val(), "password":$("#login input[type=password]").val()};
+    //login(JSON.stringify(credentials));
+    login(credentials);
+    return false;
+}
+
+function handleUserData(event) {
+    if (DEBUG) {
+       console.log("Triggered handleUserData");            
+    }
+    var password = $("#Userdata input[name=password]").val();
+    var password2 = $("#Userdata input[name=password2]").val();
+    var nickname = $("#Userdata input[name=nickname]").val();
+    if (password == password2) {
+        var userData = {"picture" : $("#Userdata input[name=picture]").val(),
+                        "password" : password,
+                        "description" : $("#Userdata textarea").val(),
+                        "email" : $("#Userdata input[name=email]").val()
+                        };
+        var url = "/tab_archive/users/" + nickname;
+        console.log(url);
+        createUser(url, JSON.stringify(userData));
+        
+        var credentials = {"username":nickname, "password":password};
+        login(credentials);
+        
+    } else {
+        alert("Passwords don't match");
     }
     
     return false;
