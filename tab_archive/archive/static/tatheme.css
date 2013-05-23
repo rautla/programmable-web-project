@@ -29,11 +29,14 @@ color:#000000;
 }
 
 #top{
-width:1098px;margin:auto;
+width:1098px;
+margin:auto;
 }
 
 #topLogo{
-height:50px;padding-bottom:10px;text-align:center;float:center;
+height:50px;
+padding-bottom:10px;
+text-align:center;
 }
 
 #topBar{
@@ -41,15 +44,20 @@ padding-bottom:5px;
 }
 
 #topBar a{
-font-size:16px;padding-right:10px;text-align:right;float:right;
+font-size:16px;
+padding-right:10px;
+text-align:right;
+float:right;
 }
 
 #topBar form{
-text-align:right;float:right;
+text-align:right;
+float:right;
 }
 
 .search{
-position:relative;bottom:10px;
+position:relative;
+bottom:10px;
 }
 
 label.search{
@@ -57,15 +65,25 @@ bottom:12px;
 }
 
 .breadcrumb{
-padding-left:10px;text-align:left;float:left;
+padding-left:10px;
+text-align:left;
+float:left;
 }
 
 #page{
-border-left:1px solid #d3d3d3;border-right:1px solid #d3d3d3;border-top:1px solid #d3d3d3;background-color:#ffffff;
+border-left:1px solid #d3d3d3;
+border-right:1px solid #d3d3d3;
+border-top:1px solid #d3d3d3;
+background-color:#ffffff;
 }
 
 #main{
-width:723px;float:left;margin:7px;margin-bottom:0px;overflow:hidden;background-color:#ffffff;
+width:723px;
+float:left;
+margin:7px;
+margin-bottom:0px;
+overflow:hidden;
+background-color:#ffffff;
 }
 
 #Userprofile{
@@ -126,7 +144,7 @@ right:20px;
 
 #Tablaturepage textarea{
 width:717px;
-max-height:infinite;
+/*max-height:infinite;*/
 height:800px;
 }
 
