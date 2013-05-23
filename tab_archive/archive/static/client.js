@@ -434,6 +434,8 @@ function findArtists(apiurl, searchData) {
         if (DEBUG) {
 			console.log ("RECEIVED ERROR: textStatus:",textStatus, ";error:",errorThrown)
 		}
+		
+		$('#Table').html('<p style="font-size:200%;text-align:center;">Not found</p>');
     });
 }
 
@@ -560,6 +562,7 @@ function findSongs(apiurl, searchData) {
         if (DEBUG) {
 			console.log ("RECEIVED ERROR: textStatus:",textStatus, ";error:",errorThrown)
 		}
+		$('#Table').html('<p style="font-size:200%;text-align:center;">Not found</p>');
     });
 }
 
@@ -1105,7 +1108,7 @@ function breadcrumbs(url) {
 }
 
 function handleSearch(event) {
-    $("#Table").show()
+    $("#Table").show();
     $("#Userprofile").hide();
     if (DEBUG) {
         console.log ("Triggered handleSearch");
