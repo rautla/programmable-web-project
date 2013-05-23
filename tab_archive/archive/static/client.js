@@ -19,6 +19,7 @@ $(function(){
     $("#searchForm").submit(handleSearch);
     $("#reglink").on("click", handleRegister);
     $("#login").submit(handleLogin);
+    $("#Userdata").submit(handleUserData);
     //$('#search').bind('keypress', handleSearch);
 
 	//TODO 2: Add corresponding click handlers for #deleteMessage button and #user_list li element
@@ -1051,7 +1052,7 @@ function handleTablatures(event) {
     $("#Table").show()
 	$("#Userprofile").hide();
     if (DEBUG) {
-		console.log ("Triggered handleTablatures")
+		console.log ("Triggered handleTablatures");
 	}
     
     var url = $("#Tablatures").attr("href");
@@ -1141,8 +1142,35 @@ function handleLogin(event) {
     if (DEBUG) {
        console.log("Triggered handleLogin");            
     }
-    var credentials = {"username":$("#login input[type=text]").val(), "password":$("#login input[type=password]").val()}
+    var credentials = {"username":$("#login input[type=text]").val(), "password":$("#login input[type=password]").val()};
     //login(JSON.stringify(credentials));
     login(credentials);
+    return false;
+}
+
+function handleUserData(event) {
+    if (DEBUG) {
+       console.log("Triggered handleUserData");            
+    }
+    var password = $("#Userdata input[name=password]").val();
+    var password2 = $("#Userdata input[name=password2]").val();
+    var nickname = $("#Userdata input[name=nickname]").val();
+    if (password == password2) {
+        var userData = {"picture" : $("#Userdata input[name=picture]").val(),
+                        "password" : password,
+                        "description" : $("#Userdata textarea").val(),
+                        "email" : $("#Userdata input[name=email]").val()
+                        };
+        var url = "/tab_archive/users/" + nickname;
+        console.log(url);
+        createUser(url, JSON.stringify(userData));
+        
+        var credentials = {"username":nickname, "password":password};
+        login(credentials);
+        
+    } else {
+        alert("Passwords don't match");
+    }
+    
     return false;
 }

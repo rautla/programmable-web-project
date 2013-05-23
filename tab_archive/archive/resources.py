@@ -9,7 +9,7 @@ from rest_framework.reverse import reverse
 from django.contrib.auth import authenticate, login
 from archive.database import database
 from archive.models import UserModel, TablatureModel, CommentModel, ErrorModel
-
+from django.contrib.auth.models import User
 
 class User(APIView):
     '''
@@ -57,11 +57,15 @@ class User(APIView):
         Create or modify user.
         Modify requires authorization.
         '''
-        
+        print "     herpderp        "
         authorization = ''
         try:
+            print " herp "   
+            print "authorization = " + request.user.username
             authorization = request.user.username #request.META["HTTP_AUTHORIZATION"]
         except KeyError:
+            print " derp "
+            print "keyerror"
             pass
         if self._isauthorized(user_nickname, authorization):
             return self._updateuser(request, user_nickname) 
@@ -191,6 +195,8 @@ class User(APIView):
             traceback.print_exc()
             return Response(status=status.HTTP_400_BAD_REQUEST)
         database.add_user(usermodel)
+        user = User.objects.create_user(usermodel.user_nickname, usermodel.email, request.DATA.get('password', None))
+        user.save()
         url = reverse("user", (user_nickname,), request=request)
         return Response(status=status.HTTP_204_NO_CONTENT,
                         headers={"Location":url})
