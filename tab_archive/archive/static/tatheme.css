@@ -130,6 +130,64 @@ max-height:infinite;
 height:800px;
 }
 
+#Tablaturepage #Comment{
+float:right;
+position:relative;
+right:100px;
+width:500px;
+height:150px;
+}
+
+#Tablaturepage #Reply{
+float:right;
+width:500px;
+height:150px;
+}
+
+#Tablaturepage img{
+border:1px solid black;
+width:64px;
+height:64px;
+}
+
+ul#User{
+float:left;
+margin:0 auto;
+padding:0;
+list-style-type:none;
+width:100px;
+}
+
+ul#User li{
+float:left;
+margin:5px;
+}
+
+ul#User li a{
+text-align:center;
+margin:5px 0;
+}
+
+ul#Userreply{
+float:left;
+margin:0 auto;
+padding:0;
+list-style-type:none;
+width:100px;
+position:relative;
+left:100px;
+}
+
+ul#Userreply li{
+float:left;
+margin:5px;
+}
+
+ul#Userreply li a{
+text-align:center;
+margin:5px 0;
+}
+
 #leftcolumn{
 width:170px;float:left;margin-top:5px;margin-right:4px;margin-left:10px;padding-top:5px;background-color:#ffffff;
 }

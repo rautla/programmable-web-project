@@ -50,26 +50,27 @@
                         
                     </div>                    
                     
+                    <!--USER PROFILE/REGISTER PAGE-->
                     <div id="Userprofile" hidden>
                         <form action="#" id="Userdata">
                             <input name="picture" id="Picture" type="text"><br>
                             <p id="Username" style="font-size:200%;">
-                            <input type="text" name="nickname" id="Nickname" value="Nickname"><br>
+                                <input type="text" name="nickname" id="Nickname" value="Nickname"><br>
                             </p>
                             <p>
-                            <input type="text" name="email" id="Email" value="your@email.com"><br>
+                                <input type="text" name="email" id="Email" value="your@email.com"><br>
                             </p>
                             <p>
-                            <textarea cols="40" rows="10"></textarea>
+                                <textarea cols="40" rows="10">Description</textarea>
                             </p>
                             <p>
-                            <input type="text" name="password" id="Password" value="Password"></input>
+                                <input type="text" name="password" id="Password" value="Password"></input>
                             </p>
                             <p>
-                            <input type="text" name="password2" id="Password2" value="Re-type your password"></input>
+                                <input type="text" name="password2" id="Password2" value="Re-type your password"></input>
                             </p>                            
                             <p>
-                            <button id="Applybutton">Apply</button>
+                                <button id="Applybutton">Apply</button>
                             </p>
                             <p></p><p></p>
                             <a href="#">Tablatures</a>
@@ -77,37 +78,75 @@
                             <a href="#">Comments</a>
                         </form>
                     </div>                    
-                    <div id="Tablaturepage">
+                    
+                    <!--TABLATURE PAGE-->
+                    <div id="Tablaturepage" hidden>
                         <form action="#" id="Tablaturedata">
                             <p>
-                            Uploader:
-                            <a href="#Uploader"></a>
-                            <br>
-                            <a href="#Artist"></a>
-                            >
-                            <a href="#Song"></a>
-                            >
-                            <span id="Tablatureid"></span>
-                            <textarea type="text" name="tablature" id="Tablature" value="Your tablature"></textarea>
-                            <span>Rating:<a href="#Rating">5</a></span>
-                            <a href="#Delete" style="float:right;">Delete</a>
-                            <a href="#Comments" style="float:right;margin-right:20px;">Comments</a>
-                            <button id="Ratebutton" style="margin-left:10px;">Rate</button>
-                            <label for="five">5</label>
-                            <input type="radio" name="rating" id="five"/>
-                            <label for="four">4</label>
-                            <input type="radio" name="rating" id="four"/>
-                            <label for="three">3</label>
-                            <input type="radio" name="rating" id="three"/>
-                            <label for="two">2</label>
-                            <input type="radio" name="rating" id="two"/>
-                            <label for="one">1</label>
-                            <input type="radio" name="rating" id="one"/>
+                                Uploader:
+                                <a href="#Uploader"></a>
+                                <br>
+                                <a href="#Artist"></a>
+                                >
+                                <a href="#Song"></a>
+                                >
+                                <span id="Tablatureid"></span>
+                                <textarea type="text" name="tablature" id="Tablature">Your tablature</textarea>
+                                <span>Rating:<a href="#Rating">5</a></span>
+                                <a href="#Delete" style="float:right;">Delete</a>
+                                <a href="#Comments" style="float:right;margin-right:20px;">Comments</a>
+                                <button id="Ratebutton" style="margin-left:10px;">Rate</button>
+                                <label for="five">5</label>
+                                <input type="radio" name="rating" id="five"/>
+                                <label for="four">4</label>
+                                <input type="radio" name="rating" id="four"/>
+                                <label for="three">3</label>
+                                <input type="radio" name="rating" id="three"/>
+                                <label for="two">2</label>
+                                <input type="radio" name="rating" id="two"/>
+                                <label for="one">1</label>
+                                <input type="radio" name="rating" id="one"/>
+                                <br><br><br><br><br>
+                                <!--NEW COMMENT-->
+                                <span id="Commentnew">
+                                    <ul id="User">
+                                        <li>
+                                            <a href="#Picture">
+                                                <img src="#" width="64" height="64"/>
+                                            </a>
+                                            <p><a href="#Nickname"></a></p>
+                                        </li>
+                                    </ul>
+                                    <textarea type="text" name="comment" id="Comment">Comment</textarea>
+                                    <p style="margin-left:117px;">
+                                        <a href="#Reply">Reply
+                                        </a>
+                                        |
+                                        <a href="#Newcomment">New comment
+                                        </a>
+                                    </p>
+                                </span>
+                                <!--REPLY-->
+                                <span id="Commentreply">
+                                    <ul id="Userreply">
+                                        <li>
+                                            <a href="#Picture">
+                                                <img src="#" width="64" height="64"/>
+                                            </a>
+                                            <p><a href="#Nickname"></a></p>
+                                        </li>
+                                    </ul>
+                                    <textarea type="text" name="reply" id="Reply">Comment</textarea>
+                                    <p style="margin-left:217px;">
+                                        <a href="#Reply">Reply
+                                        </a>
+                                        |
+                                        <a href="#Newcomment">New comment
+                                        </a>
+                                    </p>
+                                </span>
                             </p>
                         </form>
-                    </div>
-                    <div id="Commentspage">
-                        
                     </div>
                 </div>
                 <div style="clear:both;"></div>
