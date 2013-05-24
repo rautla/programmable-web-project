@@ -170,6 +170,9 @@ class User(APIView):
             usermodel.nickname = user_nickname
             usermodel.description = description
             usermodel.email = email
+            u = AuthUser.objects.get(username__exact=user_nickname)
+            u.set_password(request.DATA.get("password", None))
+            u.save()
         except Exception as e:
             print "Could not add the data "+ str(e)
             traceback.print_exc()
@@ -450,10 +453,10 @@ class Song(APIView):
         Creates tablature.
         '''
         tablature_id = database.add_tablature(tablaturemodel)
-        print "tablature added"
         url = reverse("tablature", (tablature_id,), request=request)
-        print "url reversed"
-        return Response(status=status.HTTP_201_CREATED,)    
+        location = {"Location":url}
+        return Response(location, status=status.HTTP_201_CREATED,
+                        headers={"Location":url, "Content-type":"application/json"})    
     
     def _isauthorized(self, user_nickname, authorization): 
         '''

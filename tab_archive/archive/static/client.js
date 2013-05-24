@@ -45,6 +45,10 @@ $(function(){
     
         //Retrieve list of users from the server
         //getUsers();
+    $("#Table").show();
+    $("#leftcolumn").find("#Newtablature").hide();
+    getArtists("/tab_archive/artists");
+    handleLogout();
 })
 
 //True or False
@@ -58,51 +62,10 @@ var DEBUG = true,
 /**** START RESTFUL CLIENT****/
 
 
-    /*function getUsers() {
-        //http://localhost:8000/forum/users
-        var arr = [APP_URL, "users"]
-        var apiurl = arr.join("/")
-        $.ajax({
-            url: apiurl,
-            dataType:RESPONSE_FORMAT
-        }).always(function(){
-            //Remove old list of users, clear the form data hide the content information(no selected)
-            $("#user_list").empty();
-            clearUserInfo();
-            $("#mainContent").hide();
-
-        }).done(function (data, textStatus, jqXHR){
-            if (DEBUG) {
-                console.log ("RECEIVED RESPONSE: data:",data,"; textStatus:",textStatus)
-            }
-            
-            if (RESPONSE_FORMAT === "json") {
-                for (var i=0; i < data.length; i++){
-                    var user = data[i];
-                    appendUserToList(user.link.href, user.nickname);
-                }
-            }
-
-            else if (RESPONSE_FORMAT === "xml"){
-
-            }
-
-
-        }).fail(function (jqXHR, textStatus, errorThrown){
-            if (DEBUG) {
-                console.log ("RECEIVED ERROR: textStatus:",textStatus, ";error:",errorThrown)
-            }
-            //Inform user about the error using an alert message.
-            alert ("Could not fetch the list of users.  Please, try again");
-
-        });
-    }*/
-
-
 function getUser(apiurl) {
     //TODO 1: Send the AJAX to retrieve the user information. Do not implement the handlers yet, just show some DEBUG text in the console. 
 	//TODO 3: Implement the handlers successful and failures responses accordding to the function documentation.
-    console.log("is this the correct url?:" + apiurl);
+    
     $.ajax({
         url: apiurl, //The URL of the resource
         type: "GET", //The resource method
@@ -118,26 +81,6 @@ function getUser(apiurl) {
 			console.log ("RECEIVED RESPONSE: data:",data,"; textStatus:",textStatus)
 		}
         
-        /*var user = data.userprofile;
-        
-        
-        $("#userData").find("#firstname").val(user.name.firstname);
-        $("#userData").find("#lastname").val(user.name.lastname);
-        $("#userData").find("#age").val(user.age);
-        $("#userData").find("#gender").val(user.gender);
-        $("#userData").find("#residence").val(user.residence);
-        $("#userData").find("#email").val(user.email);
-        $("#userData").find("#website").val(user.website);
-        $("#userData").find("#picture").val(user.picture);
-        $("#userData").find("#registrationdate").val(user.registrationdate);
-        $("#userData").attr("action", apiurl);
-        
-        $("#userData").find("#nickname").val(user.nickname);
-        
-        var userHistory = data.history.href;
-        getUserHistory(userHistory);
-        
-        $("#mainContent").show();*/
         
         var email = data.user.email;
         if (email == undefined) {
@@ -147,6 +90,7 @@ function getUser(apiurl) {
         }
         $("#Userprofile").find("#Nickname").val(data.user.user_nickname);
         $("#Userprofile").find("#Email").val(data.user.email);
+        $("#Userprofile textarea").val(data.user.description);
         $("#Userprofile").find("#Description").val(data.user.description);        
         $("#Userprofile").find("#Picture").val(data.user.picture);
         
@@ -216,7 +160,7 @@ function createUser(apiurl, userData, credentials) {
         processData: false, //Do not transform the data in key-value
         dataType:RESPONSE_FORMAT, //The format expected in the 
         headers: {"Accept": "application/json"}// An object containing //headers
-    }).done(function (data, textStatus, jqXHR){
+    }).done(function (data, textStatus, jqXHR) {
         //code to be executed when response is //received. Data is an object. jqXHR is the //XMLHttpRequest object
 		//console.log("done");
         if (DEBUG) {
@@ -226,6 +170,7 @@ function createUser(apiurl, userData, credentials) {
         $("#reglink").hide();
         $("#logout").show();
         login(credentials);
+        alert("Created.");
     }).fail(function (jqXHR, textStatus, errorThrown){
         //code to be executed when response has an //error status code or response is malformed
         if (DEBUG) {
@@ -597,9 +542,7 @@ function addTablature(apiurl, tablatureData) {
     }).fail(function (jqXHR, textStatus, errorThrown){
         //code to be executed when response has an //error status code or response is malformed
         if (DEBUG) {
-            console.log("this here is the fail");
 			console.log ("RECEIVED ERROR: textStatus:",textStatus, ";error:",errorThrown)
-            console.log("another fail here");
 		}
     });
 }
@@ -979,12 +922,20 @@ function login(credentials) {
 			console.log ("RECEIVED RESPONSE: data:",data,"; textStatus:",textStatus)
 		}
         logged_user = credentials.username;
-
+        console.log(logged_user);
+        if (logged_user == undefined) { 
+        } else {
+            $("#leftcolumn").find("#Newtablature").show();
+        }
     }).fail(function (jqXHR, textStatus, errorThrown){
         //code to be executed when response has an //error status code or response is malformed
         if (DEBUG) {
 			console.log ("RECEIVED ERROR: textStatus:",textStatus, ";error:",errorThrown)
 		}
+        
+        $("#login").show();
+        $("#logout").hide();
+        $("#reglink").show();
     });
 }
 
@@ -1047,19 +998,30 @@ function handleClickTable(event) {
 }
 
 function handleUser(url) {
+    clearUserForm();
     $("#Table").hide();
     $("#Tablaturepage").hide();
     $("#Userprofile").show();
     
-    if (logged_user != $("#Userprofile input[name=nickname]").val()) {
+    var nickname = url;
+    nickname = nickname.split("/");
+    nickname = nickname[nickname.length-1];
+    
+    if (logged_user != nickname) {
+        console.log(logged_user);
+        console.log(nickname);
+        console.log("if");
         $("#Userprofile input[name=password]").hide();
         $("#Userprofile input[name=password2]").hide();
+        $("#Userprofile p[name=password]").hide();
+        $("#Userprofile p[name=password2]").hide();
         $("#Applybutton").hide();
         
         $("#Userprofile input[name=nickname]").attr("readonly", "readonly");
         $("#Userprofile textarea").attr("readonly", "readonly");
         $("#Userprofile input[name=picture]").attr("readonly", "readonly");
     } else {
+        console.log("else");
         $("#Userprofile input[name=password]").show();
         $("#Userprofile input[name=password2]").show();
         $("#Applybutton").show();
@@ -1138,21 +1100,28 @@ function handleAddTablature(event) {
     
     var url = '/tab_archive/artists/' + artist + '/' + song
     
-    console.log("this here is url: " + url);
     
     data = {"body":body, "user_nickname":logged_user}
     
-    console.log("before call");
     addTablature(url, JSON.stringify(data));
-    console.log("after call");
     
     return false;
 }
 
 function handleRegister(event) {
+    
+    $("#Userprofile input[name=password]").show();
+    $("#Userprofile input[name=password2]").show();
+    $("#Applybutton").show();
+        
+    $("#Userprofile input[name=nickname]").removeAttr("readonly");
+    $("#Userprofile textarea").removeAttr("readonly");
+    $("#Userprofile input[name=picture]").removeAttr("readonly");
+
     $("#Table").hide();
     clearUserForm();
     $("#Userprofile").show();
+    $("#Tablaturepage").hide();
     if (DEBUG) {
         console.log ("Triggered handleRegister");
     }
@@ -1203,7 +1172,7 @@ function handleSearch(event) {
             //var url = "/tab_archive/songs            
         }
         var url = "/tab_archive/songs"
-        $("#breadcrumb").html(url);
+        breadcrumbs(url);
         var keyword = $("#search").val();
         var searchData = {"keyword":keyword};
         findSongs(url, JSON.stringify(searchData));    
@@ -1214,7 +1183,7 @@ function handleSearch(event) {
             console.log("Artist search");            
         }
         var url = "/tab_archive/artists"
-        $("#breadcrumb").html(url);
+        breadcrumbs(url);
         var keyword = $("#search").val();
         var searchData = {"keyword":keyword};
         findArtists(url, JSON.stringify(searchData));
@@ -1244,6 +1213,7 @@ function handleUserData(event) {
     var password2 = $("#Userdata input[name=password2]").val();
     var nickname = $("#Userdata input[name=nickname]").val();
     if (password == password2) {
+        
         var userData = {"picture" : $("#Userdata input[name=picture]").val(),
                         "password" : password,
                         "description" : $("#Userdata textarea").val(),
@@ -1253,7 +1223,15 @@ function handleUserData(event) {
         console.log(url);
         
         var credentials = {"username":nickname, "password":password};
-        createUser(url, JSON.stringify(userData), credentials);    
+        
+        if (nickname == logged_user) {
+            editUser(url, JSON.stringify(userData));    
+            
+        } else {
+            createUser(url, JSON.stringify(userData), credentials);    
+            
+        }
+        
         
     } else {
         alert("Passwords don't match");
@@ -1271,5 +1249,6 @@ function handleLogout(event) {
     $("#login").show();
     $("#logout").hide();
     $("#reglink").show();
+    $("#leftcolumn").find("#Newtablature").hide();
 }
 
