@@ -219,6 +219,9 @@ function createUser(apiurl, userData, credentials) {
         if (DEBUG) {
 			console.log ("RECEIVED RESPONSE: data:",data,"; textStatus:",textStatus)
 		}
+        $("#login").hide();
+        $("#reglink").hide();
+        $("#logout").show();
         login(credentials);
     }).fail(function (jqXHR, textStatus, errorThrown){
         //code to be executed when response has an //error status code or response is malformed
@@ -400,6 +403,7 @@ function getArtists(apiurl) {
         if (DEBUG) {
 			console.log ("RECEIVED ERROR: textStatus:",textStatus, ";error:",errorThrown)
 		}
+        $('#Table').html('<p style="font-size:200%;text-align:center;">Not found</p>');
     });
 }
 
@@ -516,6 +520,7 @@ function getSongs(apiurl) {
         if (DEBUG) {
 			console.log ("RECEIVED ERROR: textStatus:",textStatus, ";error:",errorThrown)
 		}
+        $('#Table').html('<p style="font-size:200%;text-align:center;">Not found</p>');
     });
 }
 
@@ -667,6 +672,8 @@ function getTablatures(apiurl) {
         if (DEBUG) {
 			console.log ("RECEIVED ERROR: textStatus:",textStatus, ";error:",errorThrown)
 		}
+        
+        $('#Table').html('<p style="font-size:200%;text-align:center;">Not found</p>');
     });
 }
 
@@ -1035,6 +1042,24 @@ function handleClickTable(event) {
 function handleUser(url) {
     $("#Table").hide();
     $("#Userprofile").show();
+    
+    if (logged_user != $("#Userprofile input[name=nickname]").val()) {
+        $("#Userprofile input[name=password]").hide();
+        $("#Userprofile input[name=password2]").hide();
+        $("#Applybutton").hide();
+        
+        $("#Userprofile input[name=nickname]").attr("readonly", "readonly");
+        $("#Userprofile textarea").attr("readonly", "readonly");
+        $("#Userprofile input[name=picture]").attr("readonly", "readonly");
+    } else {
+        $("#Userprofile input[name=password]").show();
+        $("#Userprofile input[name=password2]").show();
+        $("#Applybutton").show();
+        
+        $("#Userprofile input[name=nickname]").removeAttr("readonly");
+        $("#Userprofile textarea").removeAttr("readonly");
+        $("#Userprofile input[name=picture]").removeAttr("readonly");
+    }
     
     getUser(url);
     
