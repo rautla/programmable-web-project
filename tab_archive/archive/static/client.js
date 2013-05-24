@@ -1,4 +1,6 @@
 //This method is executed when the webpage is loaded.
+var logged_user = "";
+
 $(function(){
 
 	//TODO 2: Add corresponding click handler to buttons.
@@ -19,6 +21,7 @@ $(function(){
     $("#searchForm").submit(handleSearch);
     $("#reglink").on("click", handleRegister);
     $("#login").submit(handleLogin);
+    $("#logout").on("click", handleLogout);
     $("#Userdata").submit(handleUserData);
     //$('#search').bind('keypress', handleSearch);
 
@@ -201,7 +204,7 @@ function editUser(apiurl, userData) {
     });
 }
 
-function createUser(apiurl, userData) {
+function createUser(apiurl, userData, credentials) {
     $.ajax({
         url: apiurl, //The URL of the resource
         type: "PUT", //The resource method
@@ -216,6 +219,7 @@ function createUser(apiurl, userData) {
         if (DEBUG) {
 			console.log ("RECEIVED RESPONSE: data:",data,"; textStatus:",textStatus)
 		}
+        login(credentials);
     }).fail(function (jqXHR, textStatus, errorThrown){
         //code to be executed when response has an //error status code or response is malformed
         if (DEBUG) {
@@ -962,6 +966,8 @@ function login(credentials) {
         if (DEBUG) {
 			console.log ("RECEIVED RESPONSE: data:",data,"; textStatus:",textStatus)
 		}
+        logged_user = credentials.username;
+
     }).fail(function (jqXHR, textStatus, errorThrown){
         //code to be executed when response has an //error status code or response is malformed
         if (DEBUG) {
@@ -1148,6 +1154,9 @@ function handleLogin(event) {
     var credentials = {"username":$("#login input[type=text]").val(), "password":$("#login input[type=password]").val()};
     //login(JSON.stringify(credentials));
     login(credentials);
+    $("#login").hide();
+    $("#reglink").hide();
+    $("#logout").show();
     return false;
 }
 
@@ -1166,14 +1175,24 @@ function handleUserData(event) {
                         };
         var url = "/tab_archive/users/" + nickname;
         console.log(url);
-        createUser(url, JSON.stringify(userData));
         
         var credentials = {"username":nickname, "password":password};
-        login(credentials);
+        createUser(url, JSON.stringify(userData), credentials);    
         
     } else {
         alert("Passwords don't match");
     }
     
     return false;
+}
+
+function handleLogout(event) {
+    if (DEBUG) {
+       console.log("Triggered handleLogout");            
+    }
+    login({});
+    logged_user = ""
+    $("#login").show();
+    $("#logout").hide();
+    $("#reglink").show();
 }

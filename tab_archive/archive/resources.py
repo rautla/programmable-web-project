@@ -6,10 +6,10 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.reverse import reverse
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from archive.database import database
 from archive.models import UserModel, TablatureModel, CommentModel, ErrorModel
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User as AuthUser
 
 class User(APIView):
     '''
@@ -195,7 +195,7 @@ class User(APIView):
             traceback.print_exc()
             return Response(status=status.HTTP_400_BAD_REQUEST)
         database.add_user(usermodel)
-        user = User.objects.create_user(usermodel.user_nickname, usermodel.email, request.DATA.get('password', None))
+        user = AuthUser.objects.create_user(usermodel.user_nickname, usermodel.email, request.DATA.get('password', None))
         user.save()
         url = reverse("user", (user_nickname,), request=request)
         return Response(status=status.HTTP_204_NO_CONTENT,
@@ -1075,24 +1075,27 @@ class Login(APIView):
         
         #return Response(status = 204)
         #print request["HTTP_USERNAME"]
-
-        print request.META["HTTP_USERNAME"]
-        print request.META["HTTP_PASSWORD"]
         
-        username = request.META["HTTP_USERNAME"]
-        password = request.META["HTTP_PASSWORD"]
-        user = authenticate(username=username, password=password)
-        if user is not None:
-            if user.is_active:
-                login(request, user)
-                # Redirect to a success page.
-                print "Great success!"
-                return Response(status = 204) 
+        try:
+            print request.META["HTTP_USERNAME"]
+            print request.META["HTTP_PASSWORD"]
+            username = request.META["HTTP_USERNAME"]
+            password = request.META["HTTP_PASSWORD"]
+            user = authenticate(username=username, password=password)
+            if user is not None:
+                if user.is_active:
+                    login(request, user)
+                    # Redirect to a success page.
+                    print "Great success!"
+                    return Response(status = 204) 
+                else:
+                    # Return a 'disabled account' error message
+                    print "This is an error message!"
+                    return Response(status = 403) 
             else:
-                # Return a 'disabled account' error message
-                print "This is an error message!"
-                return Response(status = 403) 
-        else:
-            # Return an 'invalid login' error message.
-            print "Invalid login!"
-            return Response(status = 401) 
+                # Return an 'invalid login' error message.
+                print "Invalid login!"
+                return Response(status = 401) 
+        except KeyError:
+            logout(request)
+            return Response(status = 204)
