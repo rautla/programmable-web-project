@@ -156,13 +156,15 @@ margin-left:20px;
 
 #Tablaturepage #Addtablature{
 float:right;
-right:-3px
+right:0px
 }
 
 #Tablaturepage textarea{
 width:717px;
 /*max-height:infinite;*/
 height:800px;
+font-size:12px;
+font-family:courier;
 }
 
 #Tablaturepage #Comment{
