@@ -149,6 +149,16 @@ position:relative;
 right:20px;
 }
 
+#Tablaturepage #Artistname, #Tablaturepage #Songname{
+float:left;
+margin-left:20px;
+}
+
+#Tablaturepage #Addtablature{
+float:right;
+right:-3px
+}
+
 #Tablaturepage textarea{
 width:717px;
 /*max-height:infinite;*/
