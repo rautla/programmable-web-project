@@ -23,6 +23,8 @@ $(function(){
     $("#login").submit(handleLogin);
     $("#logout").on("click", handleLogout);
     $("#Userdata").submit(handleUserData);
+    $("#Ratebutton").on("click", handleRating);
+    $("#postComment").on("click", handleComment);
     $("#Newtablature").on("click", handleNewTablature);
     $("#Addtablature").on("click", handleAddTablature);
     
@@ -804,11 +806,13 @@ function addRating(apiurl, ratingData) {
         if (DEBUG) {
 			console.log ("RECEIVED RESPONSE: data:",data,"; textStatus:",textStatus)
 		}
+        $("#rating a").html(data[0] / data[1]);
     }).fail(function (jqXHR, textStatus, errorThrown){
         //code to be executed when response has an //error status code or response is malformed
         if (DEBUG) {
 			console.log ("RECEIVED ERROR: textStatus:",textStatus, ";error:",errorThrown)
 		}
+        
     });
 }
 
@@ -834,6 +838,7 @@ function getTablature(apiurl) {
         $("#Tablaturepage").find("#artist").attr("href", "/tab_archive/artists/"+data.artist_id);
         $("#Tablaturepage").find("#song").html(data.song_id);
         $("#Tablaturepage").find("#song").attr("href", "/tab_archive/artists/"+data.artist_id+"/"+data.song_id);
+        $("#Tablaturepage").find("#Tablatureid").html(data.tablature_id);
         $("#Tablaturepage").find("#uploader").attr("href", data.link.href);
         if (data.rating_count == 0) {
             $("#rating a").html("-");
@@ -1064,7 +1069,6 @@ function handleClickTable(event) {
     return false;
 }
 
-<<<<<<< HEAD
 function handleTablature(url) {
     $("#Table").hide();
 	$("#Userprofile").hide();
@@ -1073,6 +1077,13 @@ function handleTablature(url) {
 		console.log ("Triggered handleTablature")
 	}
     
+    console.log("my logged user: " + logged_user);
+    
+    if (logged_user == undefined) {
+        $("#newComment").hide();
+    } else {
+        $("#newComment").show();
+    }
     
     breadcrumbs(url);
     console.log(url);
@@ -1088,8 +1099,12 @@ function handleTablature(url) {
     $("#rating").show();
     $("#delete").show();
     $("#comments").show();
+    $("#commentSection").show();
     $("#tabinfo").show();
-=======
+    
+    
+}
+    
 function handleArtist(url) {
     $("#Userprofile").hide();
     $("#Tablaturepage").hide();
@@ -1118,7 +1133,6 @@ function handleSong(url) {
     breadcrumbs(url);
     console.log(url);
 	getSong(url);
->>>>>>> 0fac5eb04b02f6be150709fbd28ffb339218886b
     
     return false;
 }
@@ -1217,6 +1231,7 @@ function handleNewTablature(event) {
     $("#delete").hide();
     $("#comments").hide();
     $("#tabinfo").hide();
+    $("#commentSection").hide();
     return false;
 }
 
@@ -1266,7 +1281,7 @@ function clearUserForm() {
     
     $("#Userprofile").find("#Nickname").val("Nickname");
     $("#Userprofile").find("#Email").val("Email");
-    $("#Userprofile").find("#Description").val("Description");        
+    $("#Userprofile textarea").val("Description");        
     $("#Userprofile").find("#Picture").val("Picture");
 }
 
@@ -1385,3 +1400,23 @@ function handleLogout(event) {
     $("#leftcolumn").find("#Newtablature").hide();
 }
 
+function handleRating(event) {
+    if (DEBUG) {
+        console.log("Triggered handleRating");
+    }
+    
+    var rating = parseInt($("#Tablaturepage").find(":radio:checked").val());
+    var url = "/tab_archive/tablatures/" + $("#Tablaturepage").find("#Tablatureid").html() + "/rating";
+    addRating(url, JSON.stringify({"rating":rating}))
+    
+    return false;
+}
+
+function handleComment(event) {
+    if (DEBUG) {
+        console.log("Triggered handleComment");
+    }
+    var comment = parseInt($("#commentSection").find("#Comment").val());
+    var url = "/tab_archive/tablatures/" + $("#Tablaturepage").find("#Tablatureid").html();
+    commentTablature(url, JSON.stringify({"body":comment, "user_nickname":logged_user}));
+}

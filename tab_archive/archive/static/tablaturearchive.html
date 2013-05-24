@@ -108,20 +108,20 @@
                                 <div id="rate">
                                     <button id="Ratebutton" style="margin-left:10px;">Rate</button>
                                     <label for="five">5</label>
-                                    <input type="radio" name="rating" id="five"/>
+                                    <input type="radio" name="rating" id="five" value=5 />
                                     <label for="four">4</label>
-                                    <input type="radio" name="rating" id="four"/>
+                                    <input type="radio" name="rating" id="four" value=4 />
                                     <label for="three">3</label>
-                                    <input type="radio" name="rating" id="three"/>
+                                    <input type="radio" name="rating" id="three" value=3 />
                                     <label for="two">2</label>
-                                    <input type="radio" name="rating" id="two"/>
+                                    <input type="radio" name="rating" id="two" value=2 />
                                     <label for="one">1</label>
-                                    <input type="radio" name="rating" id="one"/>
+                                    <input type="radio" name="rating" id="one" value=1 />
                                 </div>
                                 <br><br><br><br><br>
                             </p>    
                             <!--NEW COMMENT-->
-                            <span id="Commentnew">
+                            <!--<span id="Commentnew">
                                 <ul id="User">
                                     <li>
                                         <a href="#Picture">
@@ -138,9 +138,9 @@
                                     <a href="#Newcomment">New comment
                                     </a>
                                 </p>
-                            </span>
+                            </span>-->
                             <!--REPLY-->
-                            <span id="Commentreply">
+                            <!--<span id="Commentreply">
                                 <ul id="Userreply">
                                     <li>
                                         <a href="#Picture">
@@ -157,8 +157,16 @@
                                     <a href="#Newcomment">New comment
                                     </a>
                                 </p>
-                            </span>
+                            </span>-->
                         </form>
+                        <div id="commentSection">
+                            <div id="newComment">
+                                <p>
+                                <textarea type="text" name="comment" id="Comment">Comment</textarea>
+                                </p>
+                                <input type="button" name="Comment" value="Comment" id="postComment">
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div style="clear:both;"></div>

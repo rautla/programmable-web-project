@@ -746,6 +746,7 @@ class Rating(APIView):
     
         #request.DATA contains the request body already deserialized in a
         #python dictionary
+        print "herpderp!!!!!!!!!!"
         if not request.DATA:
             error = ErrorModel('The artist_id, song_id and body of the tablature\
                                cannot be empty').serialize()
@@ -948,7 +949,8 @@ class Tablature(APIView):
         '''
         comment_id = database.add_comment(commentmodel)
         url = reverse("comment", (commentmodel.tablature_id,comment_id,), request=request)
-        return Response(status=status.HTTP_201_CREATED,
+        location = {"Location":url}
+        return Response(location, status=status.HTTP_201_CREATED,
                         headers={"Location":url})      
                         
     def _isauthorized(self, user_nickname, authorization): 
