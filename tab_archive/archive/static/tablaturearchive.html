@@ -84,33 +84,37 @@
                     <div id="Tablaturepage" hidden>
                         <form action="#" id="Tablaturedata">
                             <p>
+                                <div id="tabinfo">
                                 Uploader:
                                 <a href="#Uploader"></a>
                                 <br>
                                 <a href="#Artist"></a>
-                                >
+                                &gt;
                                 <a href="#Song"></a>
-                                >
+                                &gt;
                                 <span id="Tablatureid"></span>
+                                </div>
                                 <textarea type="text" name="tablature" id="Tablature">Your tablature</textarea>
                                 <input type="text" name="artistname" id="Artistname" value="Artist name"/>
                                 <input type="text" name="songname" id="Songname" value="Song name"/>
                                 <button id="Addtablature">Upload tablature</button>
-                                <br><br>
-                                <span>Rating:<a href="#Rating">5</a></span>
-                                <a href="#Delete" style="float:right;">Delete</a>
-                                <a href="#Comments" style="float:right;margin-right:20px;">Comments</a>
-                                <button id="Ratebutton" style="margin-left:10px;">Rate</button>
-                                <label for="five">5</label>
-                                <input type="radio" name="rating" id="five"/>
-                                <label for="four">4</label>
-                                <input type="radio" name="rating" id="four"/>
-                                <label for="three">3</label>
-                                <input type="radio" name="rating" id="three"/>
-                                <label for="two">2</label>
-                                <input type="radio" name="rating" id="two"/>
-                                <label for="one">1</label>
-                                <input type="radio" name="rating" id="one"/>
+                                <br><br><br>
+                                <span id="rating">Rating:<a href="#Rating">5</a></span>
+                                <a href="#Delete" id="delete" style="float:right;">Delete</a>
+                                <a href="#Comments" id="comments" style="float:right;margin-right:20px;">Comments</a>
+                                <div id="rate">
+                                    <button id="Ratebutton" style="margin-left:10px;">Rate</button>
+                                    <label for="five">5</label>
+                                    <input type="radio" name="rating" id="five"/>
+                                    <label for="four">4</label>
+                                    <input type="radio" name="rating" id="four"/>
+                                    <label for="three">3</label>
+                                    <input type="radio" name="rating" id="three"/>
+                                    <label for="two">2</label>
+                                    <input type="radio" name="rating" id="two"/>
+                                    <label for="one">1</label>
+                                    <input type="radio" name="rating" id="one"/>
+                                </div>
                                 <br><br><br><br><br>
                             </p>    
                             <!--NEW COMMENT-->

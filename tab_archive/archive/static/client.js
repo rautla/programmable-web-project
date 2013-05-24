@@ -23,6 +23,9 @@ $(function(){
     $("#login").submit(handleLogin);
     $("#logout").on("click", handleLogout);
     $("#Userdata").submit(handleUserData);
+    $("#Newtablature").on("click", handleNewTablature);
+    $("#Addtablature").on("click", handleAddTablature);
+    
     //$('#search').bind('keypress', handleSearch);
 
 	//TODO 2: Add corresponding click handlers for #deleteMessage button and #user_list li element
@@ -594,7 +597,9 @@ function addTablature(apiurl, tablatureData) {
     }).fail(function (jqXHR, textStatus, errorThrown){
         //code to be executed when response has an //error status code or response is malformed
         if (DEBUG) {
+            console.log("this here is the fail");
 			console.log ("RECEIVED ERROR: textStatus:",textStatus, ";error:",errorThrown)
+            console.log("another fail here");
 		}
     });
 }
@@ -990,6 +995,7 @@ function login(credentials) {
 function handleUsers(event) {
     $("#Table").show();
 	$("#Userprofile").hide();
+    $("#Tablaturepage").hide();
     if (DEBUG) {
 		console.log("Triggered handleUsers");
 	}
@@ -1006,6 +1012,7 @@ function handleUsers(event) {
 function handleArtists(event) {
     $("#Table").show();
 	$("#Userprofile").hide();
+    $("#Tablaturepage").hide();
     if (DEBUG) {
 		console.log ("Triggered handleArtists")
 	}
@@ -1041,6 +1048,7 @@ function handleClickTable(event) {
 
 function handleUser(url) {
     $("#Table").hide();
+    $("#Tablaturepage").hide();
     $("#Userprofile").show();
     
     if (logged_user != $("#Userprofile input[name=nickname]").val()) {
@@ -1069,6 +1077,7 @@ function handleUser(url) {
 function handleSongs(event) {
     $("#Table").show();
     $("#Userprofile").hide();
+    $("#Tablaturepage").hide();
 	if (DEBUG) {
 		console.log ("Triggered handleSongs");
 	}
@@ -1085,6 +1094,7 @@ function handleSongs(event) {
 function handleTablatures(event) {
     $("#Table").show()
 	$("#Userprofile").hide();
+    $("#Tablaturepage").hide();
     if (DEBUG) {
 		console.log ("Triggered handleTablatures");
 	}
@@ -1094,6 +1104,47 @@ function handleTablatures(event) {
     breadcrumbs(url);
     console.log(url);
 	getTablatures(url);
+    
+    return false;
+}
+
+function handleNewTablature(event) {
+    $("#Table").hide()
+	$("#Userprofile").hide();
+    $("#Tablaturepage").show();
+    
+    if (DEBUG) {
+       console.log("Triggered handleNewTablature");            
+    }
+    
+    $("#Commentnew").hide();
+    $("#Commentreply").hide();
+    $("#rate").hide();
+    $("#rating").hide();
+    $("#delete").hide();
+    $("#comments").hide();
+    $("#tabinfo").hide();
+    return false;
+}
+
+function handleAddTablature(event) {
+    if (DEBUG) {
+       console.log("Triggered handleAddTablature");            
+    }
+    
+    var artist = $("#Tablaturepage").find("#Artistname").val();
+    var song = $("#Tablaturepage").find("#Songname").val();
+    var body = $("#Tablaturepage").find("#Tablature").val();
+    
+    var url = '/tab_archive/artists/' + artist + '/' + song
+    
+    console.log("this here is url: " + url);
+    
+    data = {"body":body, "user_nickname":logged_user}
+    
+    console.log("before call");
+    addTablature(url, JSON.stringify(data));
+    console.log("after call");
     
     return false;
 }
@@ -1221,3 +1272,4 @@ function handleLogout(event) {
     $("#logout").hide();
     $("#reglink").show();
 }
+

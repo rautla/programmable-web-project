@@ -27,6 +27,7 @@ class User(APIView):
         
         authorization = ''  
         try:
+            
             authorization = request.user.username #request.META["HTTP_AUTHORIZATION"]
             
         except KeyError:
@@ -367,7 +368,7 @@ class Artists(APIView):
             
         response = Response(artists, status=status.HTTP_200_OK)
         return response
-    
+
 class Song(APIView):
     '''
     Song contains tablatures made to represent it.
@@ -412,8 +413,10 @@ class Song(APIView):
         Returns 401 on unauthorized user.
         Returns 201 on successful creation.
         '''
+
+        
         if not request.DATA:
-            error = ErrorModel('The artist_id, song_id and the body of the tablature\
+            error = ErrorModel('The body of the tablature\
                                cannot be empty').serialize()
             return Response(error, status=status.HTTP_400_BAD_REQUEST)
         tablaturemodel = None
@@ -424,13 +427,16 @@ class Song(APIView):
                 request.DATA["song_id"] = song_id
             tablaturemodel = TablatureModel(None, raw_data=request.DATA)
             user_nickname = tablaturemodel.user_nickname
+            if (user_nickname == None):
+                error = ErrorModel('Nickname of user cannot be None.').serialize()
+                return Response(status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             print "Could not add the data " + str(e)
             traceback.print_exc()
             return Response(status = 400)
-        
         authorization = ''
         try:
+            
             authorization = request.user.username #request.META["HTTP_AUTHORIZATION"]
         except KeyError:
             pass
@@ -444,9 +450,10 @@ class Song(APIView):
         Creates tablature.
         '''
         tablature_id = database.add_tablature(tablaturemodel)
+        print "tablature added"
         url = reverse("tablature", (tablature_id,), request=request)
-        return Response(status=status.HTTP_201_CREATED,
-                        headers={"Location":url})    
+        print "url reversed"
+        return Response(status=status.HTTP_201_CREATED,)    
     
     def _isauthorized(self, user_nickname, authorization): 
         '''
@@ -454,7 +461,9 @@ class Song(APIView):
         '''
         if authorization is not None and (authorization.lower() == "admin" or 
                                           authorization.lower() == user_nickname.lower()):
+            print "true"
             return True
+        print "false"
         return False
 
 class Songs(APIView):
@@ -1052,24 +1061,6 @@ class Tablatures(APIView):
         
 class Login(APIView):
     
-    def post(self, request):
-        username = request.POST['username']
-        password = request.POST['password']
-        user = authenticate(username=username, password=password)
-        if user is not None:
-            if user.is_active:
-                login(request, user)
-                # Redirect to a success page.
-                print "Great success!"
-                return Response(status = 204) 
-            else:
-                # Return a 'disabled account' error message
-                print "This is an error message!"
-                return Response(status = 403) 
-        else:
-            # Return an 'invalid login' error message.
-            print "Invalid login!"
-            return Response(status = 401) 
             
     def get(self, request):
         
