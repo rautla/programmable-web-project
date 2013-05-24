@@ -767,12 +767,12 @@ function addRating(apiurl, ratingData) {
 }
 
 
-function getTablature(apiurl, commentData) {
+function getTablature(apiurl) {
     $.ajax({
         url: apiurl, //The URL of the resource
-        type: "POST", //The resource method
+        type: "GET", //The resource method
         contentType: CONTENT_TYPE, //The mime type of the request body
-        data: commentData, //The body of the HTTP request
+        data: null, //The body of the HTTP request
         processData: false, //Do not transform the data in key-value
         dataType:RESPONSE_FORMAT, //The format expected in the 
         headers: {"Accept": "application/json"}// An object containing //headers
@@ -780,8 +780,21 @@ function getTablature(apiurl, commentData) {
         //code to be executed when response is //received. Data is an object. jqXHR is the //XMLHttpRequest object
 		//console.log("done");
         if (DEBUG) {
-			console.log ("RECEIVED RESPONSE: data:",data,"; textStatus:",textStatus)
+			console.log ("RECEIVED RESPONSE: data:",data,"; textStatus:",textStatus);
 		}
+        $("#Tablaturepage").find("#Tablature").val(data.body);
+        $("#Tablaturepage").find("#uploader").html(data.user_nickname);
+        $("#Tablaturepage").find("#artist").html(data.artist_id);
+        $("#Tablaturepage").find("#artist").attr("href", "/tab_archive/artists/"+data.artist_id);
+        $("#Tablaturepage").find("#song").html(data.song_id);
+        $("#Tablaturepage").find("#song").attr("href", "/tab_archive/artists/"+data.artist_id+"/"+data.song_id);
+        $("#Tablaturepage").find("#uploader").attr("href", data.link.href);
+        if (data.rating_count == 0) {
+            $("#rating a").html("-");
+        } else {
+            $("#rating a").html(data.rating / data.rating_count);
+        }
+        
     }).fail(function (jqXHR, textStatus, errorThrown){
         //code to be executed when response has an //error status code or response is malformed
         if (DEBUG) {
@@ -988,11 +1001,41 @@ function handleClickTable(event) {
     var column = $(this).attr("class");
     if (column == "user") {
         handleUser(url);
+    } else if (column == "tablature") {
+        handleTablature(url);
     }
     console.log(url + " " + column);
     //var url = $("#Artists").attr("href");
     //console.log(url);
 	//getArtists(url);
+    
+    return false;
+}
+
+function handleTablature(url) {
+    $("#Table").hide();
+	$("#Userprofile").hide();
+    $("#Tablaturepage").show();
+    if (DEBUG) {
+		console.log ("Triggered handleTablature")
+	}
+    
+    
+    breadcrumbs(url);
+    console.log(url);
+	getTablature(url);
+    
+    $("#Tablaturepage").find("#Artistname").hide();
+    $("#Tablaturepage").find("#Songname").hide();
+    $("#Tablaturepage").find("#Addtablature").hide();
+    
+    $("#Commentnew").show();
+    $("#Commentreply").show();
+    $("#rate").show();
+    $("#rating").show();
+    $("#delete").show();
+    $("#comments").show();
+    $("#tabinfo").show();
     
     return false;
 }
@@ -1078,6 +1121,11 @@ function handleNewTablature(event) {
     if (DEBUG) {
        console.log("Triggered handleNewTablature");            
     }
+    
+    
+    $("#Tablaturepage").find("#Artistname").show();
+    $("#Tablaturepage").find("#Songname").show();
+    $("#Tablaturepage").find("#Addtablature").show();
     
     $("#Commentnew").hide();
     $("#Commentreply").hide();
