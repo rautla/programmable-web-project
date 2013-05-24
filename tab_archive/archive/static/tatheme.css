@@ -44,7 +44,7 @@ padding-bottom:5px;
 }
 
 #topBar a{
-font-size:16px;
+font-size:12px;
 padding-right:10px;
 text-align:right;
 float:right;
@@ -70,6 +70,7 @@ bottom:12px;
 
 .breadcrumb{
 padding-left:10px;
+font-size:12px;
 text-align:left;
 float:left;
 }

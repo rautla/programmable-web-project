@@ -362,6 +362,26 @@ function getArtist(apiurl) {
         if (DEBUG) {
 			console.log ("RECEIVED RESPONSE: data:",data,"; textStatus:",textStatus)
 		}
+		var r = new Array();
+        var j = -1;
+        var a = apiurl.split('/');
+		a = a[a.length - 1];
+		a = a.replace(/%20/g,' ');
+		r[++j] =  '<table><thead><tr><th>'+ a +'</th></tr></thead><tbody>'; 
+        for (var i in data) {
+            var d = data[i];
+            r[++j] = '<tr><td class="song">';
+            r[++j] = '<a href="';
+            r[++j] = data[i].link.href;
+            r[++j] = '" rel="';
+            r[++j] = data[i].link.rel;
+            r[++j] = '" >';
+            r[++j] = data[i].song_id;
+            r[++j] = '</a></td></tr>';
+        }
+        r[++j] = '</tbody></table>';
+        $('#Table').html(r.join(''));
+		
     }).fail(function (jqXHR, textStatus, errorThrown){
         //code to be executed when response has an //error status code or response is malformed
         if (DEBUG) {
@@ -466,6 +486,32 @@ function getSong(apiurl) {
         if (DEBUG) {
 			console.log ("RECEIVED RESPONSE: data:",data,"; textStatus:",textStatus)
 		}
+		var r = new Array();
+        var j = -1;
+		r[++j] =  '<table><thead><tr><th>'+ data.song_id +'</th><th>Rating</th></tr></thead><tbody>'; 
+        for (var i in data.tablatures) {
+            var d = data;
+            r[++j] = '<tr><td class="tablatureid">';
+            r[++j] = '<a href="';
+            r[++j] = data.tablatures[i]["link"].href;
+            r[++j] = '" rel="';
+            r[++j] = data.tablatures[i]["link"].rel;
+            r[++j] = '" >';
+            r[++j] = data.tablatures[i]["tablature_id"];
+            r[++j] = '</a></td>';
+			r[++j] = '<td class="rating">';
+            r[++j] = data.tablatures[i]["rating"];
+			/*r[++j] = '<td class="user">';
+            r[++j] = '<a href="';
+            r[++j] = data[i].link.href;
+            r[++j] = '" rel="';
+            r[++j] = data[i].link.rel;
+            r[++j] = '" >';
+            r[++j] = data[i].song_id;*/
+            r[++j] = '</td></tr>';
+        }
+        r[++j] = '</tbody></table>';
+        $('#Table').html(r.join(''));
     }).fail(function (jqXHR, textStatus, errorThrown){
         //code to be executed when response has an //error status code or response is malformed
         if (DEBUG) {
@@ -1038,10 +1084,48 @@ function handleClickTable(event) {
     if (column == "user") {
         handleUser(url);
     }
+	else if (column == "artist") {		
+		handleArtist(url);
+	}
+	else if (column == "song") {
+		handleSong(url);
+	}
     console.log(url + " " + column);
     //var url = $("#Artists").attr("href");
     //console.log(url);
 	//getArtists(url);
+    
+    return false;
+}
+
+function handleArtist(url) {
+    $("#Userprofile").hide();
+    $("#Tablaturepage").hide();
+    $("#Table").show();
+	if (DEBUG) {
+		console.log ("Triggered handleArtist");
+	}
+    
+    //$("#breadcrumb").html(url);
+    breadcrumbs(url);
+    console.log(url);
+	getArtist(url);
+    
+    return false;
+}
+
+function handleSong(url) {
+    $("#Userprofile").hide();
+    $("#Tablaturepage").hide();
+    $("#Table").show();
+	if (DEBUG) {
+		console.log ("Triggered handleArtist");
+	}
+    
+    //$("#breadcrumb").html(url);
+    breadcrumbs(url);
+    console.log(url);
+	getSong(url);
     
     return false;
 }
@@ -1171,7 +1255,9 @@ function clearUserForm() {
 }
 
 function breadcrumbs(url) {
-    var legs = url.split("/");
+    url = url.replace(/%20/g,' ');
+	console.log(url);
+	var legs = url.split("/");
     var homeIndex = legs.indexOf("tab_archive");
     homeIndex;
     var crumb = [];
@@ -1181,9 +1267,9 @@ function breadcrumbs(url) {
             link += "/" + legs[j]; 
         }
         if (i == homeIndex) {
-            crumb[i] = '<a href="' + "/tab_archive/artists" + '" >' + legs[i] + "</a>";
+            crumb[i] = '<a class="breadcrumb" href="' + "/tab_archive/artists" + '" >' + legs[i] + "</a>";
         } else {
-            crumb[i] = '<a href="' + link + '" >' + legs[i] + "</a>";
+            crumb[i] = '<a class="breadcrumb" href="' + link + '" >' + legs[i] + "</a>";
         }
     }
     console.log(crumb);
