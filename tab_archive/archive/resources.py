@@ -308,7 +308,8 @@ class UserComments(APIView):
     '''
     def get(self, request, user_nickname):
     
-        pass
+        return Response(status=405)
+        
      #commentsmodel = database.get_comments_by_user(user_nickname)
         #if commentsmodel != None:
         #    for comment in commentsmodel:
@@ -329,7 +330,7 @@ class UserTablatures(APIView):
     '''
     def get(self, request, user_nickname):
     
-        pass
+        return Response(status=405)
     
 class Artist(APIView):
     '''
