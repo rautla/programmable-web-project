@@ -2,6 +2,7 @@
 
 import traceback
 
+import sys
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -29,6 +30,12 @@ class User(APIView):
         try:
             
             authorization = request.user.username #request.META["HTTP_AUTHORIZATION"]
+
+            try:
+                if sys.argv[1] == "test":
+                    authorization = request.META["HTTP_AUTHORIZATION"]
+            except IndexError:
+                pass
             
         except KeyError:
             pass
@@ -46,6 +53,12 @@ class User(APIView):
         authorization = ''
         try:
             authorization = request.user.username #request.META["HTTP_AUTHORIZATION"]
+            try:
+                if sys.argv[1] == "test":
+                    authorization = request.META["HTTP_AUTHORIZATION"]
+            except IndexError:
+                pass
+                
         except KeyError:
             pass
         if self._isauthorized(user_nickname, authorization):
@@ -58,15 +71,15 @@ class User(APIView):
         Create or modify user.
         Modify requires authorization.
         '''
-        print "     herpderp        "
         authorization = ''
         try:
-            print " herp "   
-            print "authorization = " + request.user.username
             authorization = request.user.username #request.META["HTTP_AUTHORIZATION"]
+            try:
+                if sys.argv[1] == "test":
+                    authorization = request.META["HTTP_AUTHORIZATION"]
+            except IndexError:
+                pass
         except KeyError:
-            print " derp "
-            print "keyerror"
             pass
         if self._isauthorized(user_nickname, authorization):
             return self._updateuser(request, user_nickname) 
@@ -170,9 +183,14 @@ class User(APIView):
             usermodel.nickname = user_nickname
             usermodel.description = description
             usermodel.email = email
-            u = AuthUser.objects.get(username__exact=user_nickname)
-            u.set_password(request.DATA.get("password", None))
-            u.save()
+            try:
+                if sys.argv[1] != "test":
+                    u = AuthUser.objects.get(username__exact=user_nickname)
+                    u.set_password(request.DATA.get("password", None))
+                    u.save()
+            except IndexError:
+                pass
+            
         except Exception as e:
             print "Could not add the data "+ str(e)
             traceback.print_exc()
@@ -193,14 +211,22 @@ class User(APIView):
             return Response(status=status.HTTP_409_CONFLICT)
         usermodel = None
         try:
+            #print request.DATA
             usermodel = UserModel(user_nickname, raw_data=request.DATA)
         except Exception as e:
-            print "Could not add the data "+ str(e)
-            traceback.print_exc()
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            #print "Could not add the data "+ str(e)
+            #traceback.print_exc()
+            
+            error = ErrorModel('Invalid data.').serialize()
+            
+            return Response(error, status=status.HTTP_400_BAD_REQUEST)
         database.add_user(usermodel)
-        user = AuthUser.objects.create_user(usermodel.user_nickname, usermodel.email, request.DATA.get('password', None))
-        user.save()
+        try:
+            if sys.argv[1] != "test":
+                user = AuthUser.objects.create_user(usermodel.user_nickname, usermodel.email, request.DATA.get('password', None))
+                user.save()
+        except IndexError:
+            pass
         url = reverse("user", (user_nickname,), request=request)
         return Response(status=status.HTTP_204_NO_CONTENT,
                         headers={"Location":url})
@@ -248,11 +274,32 @@ class Users(APIView):
 
 class TablatureComments(APIView):
     '''
-    NOT IMPLEMENTED YET!
+    Get list of comments to a tablature
     '''
     def get(self, request, tablature_id):
-    
-        pass
+        
+        comment_models = database.get_tablaturecomments(tablature_id)
+        if comment_models == None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+            
+        comments = []
+        for comment_model in comment_models:
+            comment = {}
+            user_nickname = comment_model.user_nickname
+            userurl = "http://localhost:8000/tab_archive/users/" + user_nickname
+            userurl = reverse("user", (user_nickname,), request=request)
+            user = {'user_nickname' : user_nickname}
+            user["link"] = {'rel':'self', 'href':userurl}
+            comment_id = comment_model.comment_id
+            commenturl = reverse("comment", (tablature_id, comment_id,), request=request)
+            comment["link"] = {'rel':'self', 'href':commenturl}
+            comment["comment_id"] = comment_id
+            comment["user"] = user 
+            comment["body"] = comment_model.body
+            comments.append(comment)
+        return Response(comments, status=status.HTTP_200_OK)
+            
+        
     
     
 class UserComments(APIView):
@@ -311,7 +358,6 @@ class Artist(APIView):
             song['song_id'] = _songid
             song['link'] = {'rel':'self', 'href':_songurl}
             songs.append(song)
-        
         response = Response(songs, status=status.HTTP_200_OK)
         return response
 
@@ -441,6 +487,13 @@ class Song(APIView):
         try:
             
             authorization = request.user.username #request.META["HTTP_AUTHORIZATION"]
+            try:
+                if sys.argv[1] == "test":
+                    authorization = request.META["HTTP_AUTHORIZATION"]
+            except IndexError:
+                pass
+
+            
         except KeyError:
             pass
         if self._isauthorized(user_nickname, authorization):
@@ -454,8 +507,8 @@ class Song(APIView):
         '''
         tablature_id = database.add_tablature(tablaturemodel)
         url = reverse("tablature", (tablature_id,), request=request)
-        location = {"Location":url}
-        return Response(location, status=status.HTTP_201_CREATED,
+        #location = {"Location":url}
+        return Response(status=status.HTTP_201_CREATED,
                         headers={"Location":url, "Content-type":"application/json"})    
     
     def _isauthorized(self, user_nickname, authorization): 
@@ -464,9 +517,9 @@ class Song(APIView):
         '''
         if authorization is not None and (authorization.lower() == "admin" or 
                                           authorization.lower() == user_nickname.lower()):
-            print "true"
+            
             return True
-        print "false"
+        
         return False
 
 class Songs(APIView):
@@ -579,6 +632,11 @@ class Comment(APIView):
         authorization = ''
         try:
             authorization = request.user.username #request.META["HTTP_AUTHORIZATION"]
+            try:
+                if sys.argv[1] == "test":
+                    authorization = request.META["HTTP_AUTHORIZATION"]
+            except IndexError:
+                pass
         except KeyError:
             pass
             
@@ -618,7 +676,6 @@ class Comment(APIView):
         if not request.DATA:
             error = ErrorModel('The the body of the comment\
                                cannot be empty').serialize()
-            print "HERP"
             return Response(error, status=status.HTTP_400_BAD_REQUEST)
         if not database.contains_comment(comment_id):
             error = ErrorModel("The comment "+ comment_id+
@@ -629,6 +686,11 @@ class Comment(APIView):
         authorization = ''
         try:
             authorization = request.user.username #request.META["HTTP_AUTHORIZATION"]
+            try:
+                if sys.argv[1] == "test":
+                    authorization = request.META["HTTP_AUTHORIZATION"]
+            except IndexError:
+                pass
         except KeyError:
             pass
         if self._modifyisauthorized(commentmodel, authorization):
@@ -647,7 +709,6 @@ class Comment(APIView):
         try:
             database.modify_comment(comment)
         except Exception:
-            print "derp"
             return Response(status=status.HTTP_400_BAD_REQUEST)
         
         return Response(None, status=status.HTTP_204_NO_CONTENT)     
@@ -680,6 +741,11 @@ class Comment(APIView):
         authorization = ''
         try:
             authorization = request.user.username #request.META["HTTP_AUTHORIZATION"]
+            try:
+                if sys.argv[1] == "test":
+                    authorization = request.META["HTTP_AUTHORIZATION"]
+            except IndexError:
+                pass
         except KeyError:
             pass
         if self._isauthorized(commentmodel.user_nickname, authorization):
@@ -746,7 +812,6 @@ class Rating(APIView):
     
         #request.DATA contains the request body already deserialized in a
         #python dictionary
-        print "herpderp!!!!!!!!!!"
         if not request.DATA:
             error = ErrorModel('The artist_id, song_id and body of the tablature\
                                cannot be empty').serialize()
@@ -812,6 +877,11 @@ class Tablature(APIView):
         authorization = ''
         try:
             authorization = request.user.username #request.META["HTTP_AUTHORIZATION"]
+            try:
+                if sys.argv[1] == "test":
+                    authorization = request.META["HTTP_AUTHORIZATION"]
+            except IndexError:
+                pass
         except KeyError:
             pass
         if self._modifyisauthorized(tablature_id, authorization):
@@ -889,6 +959,11 @@ class Tablature(APIView):
         authorization = ''
         try:
             authorization = request.user.username #request.META["HTTP_AUTHORIZATION"]
+            try:
+                if sys.argv[1] == "test":
+                    authorization = request.META["HTTP_AUTHORIZATION"]
+            except IndexError:
+                pass
         except KeyError:
             pass
         if self._modifyisauthorized(tablature_id, authorization):
@@ -934,6 +1009,11 @@ class Tablature(APIView):
         authorization = ''
         try:
             authorization = request.user.username #request.META["HTTP_AUTHORIZATION"]
+            try:
+                if sys.argv[1] == "test":
+                    authorization = request.META["HTTP_AUTHORIZATION"]
+            except IndexError:
+                pass
         except KeyError:
             pass
         if self._isauthorized(user_nickname, authorization):
@@ -949,8 +1029,8 @@ class Tablature(APIView):
         '''
         comment_id = database.add_comment(commentmodel)
         url = reverse("comment", (commentmodel.tablature_id,comment_id,), request=request)
-        location = {"Location":url}
-        return Response(location, status=status.HTTP_201_CREATED,
+        #location = {"Location":url}
+        return Response(status=status.HTTP_201_CREATED,
                         headers={"Location":url})      
                         
     def _isauthorized(self, user_nickname, authorization): 
@@ -1038,6 +1118,11 @@ class Tablatures(APIView):
         authorization = ''
         try:
             authorization = request.user.username #request.META["HTTP_AUTHORIZATION"]
+            try:
+                if sys.argv[1] == "test":
+                    authorization = request.META["HTTP_AUTHORIZATION"]
+            except IndexError:
+                pass
         except KeyError:
             pass
         if self._isauthorized(user_nickname, authorization):
@@ -1073,8 +1158,8 @@ class Login(APIView):
         #print request["HTTP_USERNAME"]
         
         try:
-            print request.META["HTTP_USERNAME"]
-            print request.META["HTTP_PASSWORD"]
+            #print request.META["HTTP_USERNAME"]
+            #print request.META["HTTP_PASSWORD"]
             username = request.META["HTTP_USERNAME"]
             password = request.META["HTTP_PASSWORD"]
             user = authenticate(username=username, password=password)
@@ -1082,16 +1167,18 @@ class Login(APIView):
                 if user.is_active:
                     login(request, user)
                     # Redirect to a success page.
-                    print "Great success!"
+                    #print "Great success!"
                     return Response(status = 204) 
                 else:
                     # Return a 'disabled account' error message
-                    print "This is an error message!"
-                    return Response(status = 403) 
+                    #print "This is an error message!"
+                    error = ErrorModel('User is not active').serialize()
+                    return Response(error, status = 403) 
             else:
                 # Return an 'invalid login' error message.
-                print "Invalid login!"
-                return Response(status = 401) 
+                #print "Invalid login!"
+                error = ErrorModel('Invalid login!').serialize()
+                return Response(error, status = 401) 
         except KeyError:
             logout(request)
             return Response(status = 204)

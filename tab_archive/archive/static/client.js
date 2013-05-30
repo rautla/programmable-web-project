@@ -28,6 +28,13 @@ $(function(){
     $("#Newtablature").on("click", handleNewTablature);
     $("#Addtablature").on("click", handleAddTablature);
     
+    $("#tabartist").on("click", handleTabArtist);
+    $("#tabsong").on("click", handleTabSong);
+    $("#uploader").on("click", handleTabUploader);
+    
+    $("#delete").on("click", handleDeleteTablature);
+    
+    //$("#breadcrumb").on("click", handleBreadcrumb);
     //$('#search').bind('keypress', handleSearch);
 
 	//TODO 2: Add corresponding click handlers for #deleteMessage button and #user_list li element
@@ -42,7 +49,9 @@ $(function(){
         //$("#user_list").on("click", "li", handleGetUser);
         
     $("#Table").on("click", "td", handleClickTable);
-
+    $("#breadcrumb").on("click", "a", handleBreadcrumb);
+    $("#comments").on("click", "#commenter", handleCommenter);
+    $("#comments").on("click", "#deleteComment", handleDeleteComment);
     //TODO‎: get something to show on page load (in our case this might be artists)    
     
         //Retrieve list of users from the server
@@ -285,6 +294,27 @@ function getTablatureComments(apiurl) {
         if (DEBUG) {
 			console.log ("RECEIVED RESPONSE: data:",data,"; textStatus:",textStatus)
 		}
+        var r = new Array();
+       
+        var j = -1;
+        
+        for (var i in data) {
+            //r[++j] = '<ul id="User">';
+            //r[++j] = '<li><a href="#Picture"><img src="#" width="64" height="64"/></a><p>';
+            //r[++j] = '<a href="' + data[i].user.link.href +  '">' + data[i].user.user_nickname + '</a>';
+            //r[++j] = '</p></li></ul><textarea type="text" name="comment" id="Comment">' + data[i].body + '</textarea>';
+            r[++j] = '<p id="commenter">'
+            r[++j] = '<a href="' + data[i].user.link.href +  '">' + data[i].user.user_nickname + '</a>';
+            r[++j] = '<textarea type="text" name="comment" id="Comment">' + data[i].body + '</textarea>';
+            if (data[i].user.user_nickname == logged_user) {
+                r[++j] = '<p><a id="deleteComment" style="float:right" href="' + data[i].link.href + '">Delete</a></p>'; 
+            }
+            
+            r[++j] = '</p>';
+            
+            
+        }
+        $('#commentSection').find("#comments").html(r.join(''));
     }).fail(function (jqXHR, textStatus, errorThrown){
         //code to be executed when response has an //error status code or response is malformed
         if (DEBUG) {
@@ -438,7 +468,7 @@ function getSong(apiurl) {
 		r[++j] =  '<table><thead><tr><th>'+ data.song_id +'</th><th>Rating</th></tr></thead><tbody>'; 
         for (var i in data.tablatures) {
             var d = data;
-            r[++j] = '<tr><td class="tablatureid">';
+            r[++j] = '<tr><td class="tablature">';
             r[++j] = '<a href="';
             r[++j] = data.tablatures[i]["link"].href;
             r[++j] = '" rel="';
@@ -579,7 +609,7 @@ function addTablature(apiurl, tablatureData) {
         contentType: CONTENT_TYPE, //The mime type of the request body
         data: tablatureData, //The body of the HTTP request
         processData: false, //Do not transform the data in key-value
-        dataType:RESPONSE_FORMAT, //The format expected in the 
+        dataType: "text", //The format expected in the 
         headers: {"Accept": "application/json"}// An object containing //headers
     }).done(function (data, textStatus, jqXHR){
         //code to be executed when response is //received. Data is an object. jqXHR is the //XMLHttpRequest object
@@ -712,6 +742,7 @@ function deleteComment(apiurl) {
         if (DEBUG) {
 			console.log ("RECEIVED RESPONSE: data:",data,"; textStatus:",textStatus)
 		}
+        alert("Comment deleted.");
     }).fail(function (jqXHR, textStatus, errorThrown){
         //code to be executed when response has an //error status code or response is malformed
         if (DEBUG) {
@@ -834,12 +865,19 @@ function getTablature(apiurl) {
 		}
         $("#Tablaturepage").find("#Tablature").val(data.body);
         $("#Tablaturepage").find("#uploader").html(data.user_nickname);
-        $("#Tablaturepage").find("#artist").html(data.artist_id);
-        $("#Tablaturepage").find("#artist").attr("href", "/tab_archive/artists/"+data.artist_id);
-        $("#Tablaturepage").find("#song").html(data.song_id);
-        $("#Tablaturepage").find("#song").attr("href", "/tab_archive/artists/"+data.artist_id+"/"+data.song_id);
+        $("#Tablaturepage").find("#tabartist").html(data.artist_id);
+        $("#Tablaturepage").find("#tabartist").attr("href", "/tab_archive/artists/"+data.artist_id);
+        $("#Tablaturepage").find("#tabsong").html(data.song_id);
+        $("#Tablaturepage").find("#tabsong").attr("href", "/tab_archive/artists/"+data.artist_id+"/"+data.song_id);
         $("#Tablaturepage").find("#Tablatureid").html(data.tablature_id);
         $("#Tablaturepage").find("#uploader").attr("href", data.link.href);
+        
+        if (data.user_nickname == logged_user) {
+            $("#Tablaturedata").find("#delete").show();
+        } else {
+            $("#Tablaturedata").find("#delete").hide();
+        }
+        
         if (data.rating_count == 0) {
             $("#rating a").html("-");
         } else {
@@ -869,6 +907,7 @@ function deleteTablature(apiurl) {
         if (DEBUG) {
 			console.log ("RECEIVED RESPONSE: data:",data,"; textStatus:",textStatus)
 		}
+        alert("Tablature deleted.");
     }).fail(function (jqXHR, textStatus, errorThrown){
         //code to be executed when response has an //error status code or response is malformed
         if (DEBUG) {
@@ -907,7 +946,7 @@ function commentTablature(apiurl, commentData) {
         contentType: CONTENT_TYPE, //The mime type of the request body
         data: commentData, //The body of the HTTP request
         processData: false, //Do not transform the data in key-value
-        dataType:RESPONSE_FORMAT, //The format expected in the 
+        dataType: "text", //The format expected in the 
         headers: {"Accept": "application/json"}// An object containing //headers
     }).done(function (data, textStatus, jqXHR){
         //code to be executed when response is //received. Data is an object. jqXHR is the //XMLHttpRequest object
@@ -962,6 +1001,7 @@ function addTablatures(apiurl, tablatureData) {
         if (DEBUG) {
 			console.log ("RECEIVED RESPONSE: data:",data,"; textStatus:",textStatus)
 		}
+        console.log("Tablature created.");
     }).fail(function (jqXHR, textStatus, errorThrown){
         //code to be executed when response has an //error status code or response is malformed
         if (DEBUG) {
@@ -1083,11 +1123,15 @@ function handleTablature(url) {
         $("#newComment").hide();
     } else {
         $("#newComment").show();
+        $("#commentSection").find("#Comment").val("Comment");
     }
     
     breadcrumbs(url);
     console.log(url);
 	getTablature(url);
+    
+    $("#commentSection").find("#comments").html("");
+    getTablatureComments(url+"/comments");
     
     $("#Tablaturepage").find("#Artistname").hide();
     $("#Tablaturepage").find("#Songname").hide();
@@ -1101,6 +1145,7 @@ function handleTablature(url) {
     $("#comments").show();
     $("#commentSection").show();
     $("#tabinfo").show();
+    
     
     
 }
@@ -1223,6 +1268,10 @@ function handleNewTablature(event) {
     $("#Tablaturepage").find("#Artistname").show();
     $("#Tablaturepage").find("#Songname").show();
     $("#Tablaturepage").find("#Addtablature").show();
+
+    $("#Tablaturepage").find("#Artistname").val("Artist name");
+    $("#Tablaturepage").find("#Songname").val("Song name");
+    $("#Tablaturepage").find("#Tablature").val("");
     
     $("#Commentnew").hide();
     $("#Commentreply").hide();
@@ -1310,6 +1359,7 @@ function breadcrumbs(url) {
 function handleSearch(event) {
     $("#Table").show();
     $("#Userprofile").hide();
+    $("#Tablaturepage").hide();
     if (DEBUG) {
         console.log ("Triggered handleSearch");
     }
@@ -1416,7 +1466,100 @@ function handleComment(event) {
     if (DEBUG) {
         console.log("Triggered handleComment");
     }
-    var comment = parseInt($("#commentSection").find("#Comment").val());
+    var comment = $("#commentSection").find("#Comment").val();
     var url = "/tab_archive/tablatures/" + $("#Tablaturepage").find("#Tablatureid").html();
     commentTablature(url, JSON.stringify({"body":comment, "user_nickname":logged_user}));
+    $('#commentSection').find("#comments").html("");
+    handleTablature(url);
+}
+
+function handleBreadcrumb(event) {
+    if (DEBUG) {
+        console.log("Triggered breadCrumb");
+        
+    }
+    var url = $(this).attr("href");
+    
+    if (url == "/tab_archive/artists") {
+        handleArtists();
+    } else if (url == "/tab_archive/users") {
+        handleUsers();
+    } else if (url == "/tab_archive/tablatures") {
+        handleTablatures();
+    } else if (url == "/tab_archive/songs") {
+        handleSongs();
+    } else if (url.contains("/tab_archive/users/")) {
+        handleUser(url);
+    } else if (url.contains("/tab_archive/tablatures/")) {
+        handleTablature(url);
+    } else if (url.contains("/tab_archive/artists/")) {
+        var spliturl = url.split("/");
+        
+        if (spliturl.length == 4) {
+            handleArtist(url);
+        } else if (spliturl.length == 5) {
+            handleSong(url);
+        } else if (spliturl.length == 6) {
+            handleTablature(url);
+        }
+    }
+    
+    
+    console.log(url)
+    return false;
+}
+
+function handleTabArtist(event) {
+    if (DEBUG) {
+        console.log("Triggered handleTabArtist");
+    }
+    var url = $(this).attr("href");
+    handleArtist(url);
+    return false;
+}
+
+function handleTabSong(event) {
+    if (DEBUG) {
+        console.log("Triggered handleTabSong");
+    }
+    var url = $(this).attr("href");
+    handleSong(url);
+    return false;
+}
+
+function handleTabUploader(event) {
+    if (DEBUG) {
+        console.log("Triggered handleTabUploader");
+    }
+    var url = $(this).attr("href");
+    handleUser(url);
+    return false;
+}
+
+function handleCommenter(event) {
+    if (DEBUG) {
+        console.log("Triggered handleCommenter");
+    }
+    var url = $(this).find("a").attr("href");
+    handleUser(url);
+    return false;
+}
+
+function handleDeleteTablature(event) {
+    if (DEBUG) {
+        console.log("Triggered handleDeleteTablature");
+    }
+    var url = $("#breadcrumb").find("a").attr("href");
+    deleteTablature(url);
+    
+    return false; 
+}
+
+function handleDeleteComment(event) {
+    if (DEBUG) {
+        console.log("Triggered handleDeleteComment");
+    }
+    var url = $(this).attr("href");
+    deleteComment(url);
+    return false;
 }

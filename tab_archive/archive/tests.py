@@ -279,6 +279,9 @@ class TestArtist(unittest.TestCase):
         #Here we try to get artist
         response = self.client.get('/tab_archive/artists/paula koivuniemi', {"Accept":"application/json"}, content_type = "application/json")
         
+        
+        self.assertEqual(response.status_code, 200)
+        
         content = json.loads(response.content)
         expected = [{u'song_id': u'kuka pelkaa paulaa', u'link': 
         {u'href': u'http://testserver/tab_archive/artists/paula%20koivuniemi/kuka%20pelkaa%20paulaa', u'rel': u'self'}}, 
@@ -286,7 +289,7 @@ class TestArtist(unittest.TestCase):
         {u'href': u'http://testserver/tab_archive/artists/paula%20koivuniemi/kuuntelen%20tomppaa', u'rel': u'self'}}
         ]
         
-        self.assertEqual(response.status_code, 200)
+        
         self.assertEqual(content, expected)
         
     def tearDown(self):
@@ -397,15 +400,9 @@ class TestSongs(unittest.TestCase):
         response = self.client.get('/tab_archive/songs', {"Accept":"application/json"}, content_type = "application/json")
         self.assertEqual(response.status_code, 200)
         
-        expected = [{u'song_id': u'kuuntelen tomppaa', u'link': 
-        {u'href': u'http://testserver/tab_archive/artists/Metallica/kuuntelen%20tomppaa', u'rel': u'self'}, 
-        u'artist_id': u'Metallica'}, 
-        {u'song_id': u'kuka pelkaa paulaa', u'link': 
-        {u'href': u'http://testserver/tab_archive/artists/paula%20koivuniemi/kuka%20pelkaa%20paulaa', 
-        u'rel': u'self'}, u'artist_id': u'paula koivuniemi'}, 
-        {u'song_id': u'kuuntelen tomppaa', u'link': 
-        {u'href': u'http://testserver/tab_archive/artists/paula%20koivuniemi/kuuntelen%20tomppaa', 
-        u'rel': u'self'}, u'artist_id': u'paula koivuniemi'}]
+        expected = [{u'song': {u'song_id': u'kuuntelen tomppaa', u'link': {u'href': u'http://testserver/tab_archive/artists/Metallica/kuuntelen%20tomppaa', u'rel': u'self'}}, u'artist': {u'artist_id': u'Metallica', u'link': {u'href': u'http://testserver/tab_archive/artists/Metallica', u'rel': u'self'}}},
+        {u'song': {u'song_id': u'kuka pelkaa paulaa', u'link': {u'href': u'http://testserver/tab_archive/artists/paula%20koivuniemi/kuka%20pelkaa%20paulaa', u'rel': u'self'}}, u'artist': {u'artist_id': u'paula koivuniemi', u'link': {u'href': u'http://testserver/tab_archive/artists/paula%20koivuniemi', u'rel': u'self'}}},
+        {u'song': {u'song_id': u'kuuntelen tomppaa', u'link': {u'href': u'http://testserver/tab_archive/artists/paula%20koivuniemi/kuuntelen%20tomppaa', u'rel': u'self'}}, u'artist': {u'artist_id': u'paula koivuniemi', u'link':{u'href': u'http://testserver/tab_archive/artists/paula%20koivuniemi', u'rel': u'self'}}}]
         
         content = json.loads(response.content)
         self.assertEqual(content, expected)
@@ -665,7 +662,7 @@ class TestTablatures(unittest.TestCase):
         
         content = json.loads(response.content)
         
-        expected = [{u'artist_id': u'paula koivuniemi', u'song_id': u'kuka pelkaa paulaa', u'tablature': {u'tablature_id': 1, u'link': {u'href': u'http://testserver/tab_archive/tablatures/1', u'rel': u'self'}}}]
+        expected = [{u'tablature': {u'rating': 0, u'tablature_id': 1, u'rating_count': 0, u'link': {u'href': u'http://testserver/tab_archive/tablatures/1', u'rel': u'self'}, u'user': {u'link': {u'href':u'http://testserver/tab_archive/users/jonne', u'rel': u'self'}, u'user_nickname': u'jonne'}}, u'artist': {u'artist_id': u'paula koivuniemi', u'link': {u'href': u'http://testserver/tab_archive/artists/paula%20koivuniemi', u'rel': u'self'}}, u'song': {u'song_id': u'kuka pelkaa paulaa', u'link': {u'href': u'http://testserver/tab_archive/artists/paula%20koivuniemi/kuka%20pelkaa%20paulaa', u'rel': u'self'}}}]
         
         self.assertEqual(content, expected)
     
@@ -1130,7 +1127,7 @@ class TestDatabaseInterface(unittest.TestCase):
         tab4 = TablatureModel.create({'tablature_id':"Null", 'body':"1010010", "rating":0, "artist_id":"tuttiritari", "song_id":"tutti viimeinen", "user_nickname":"erkki", "rating_count":0})
         tab_id4 = self.handle.add_tablature(tab4)
         
-        songs = self.handle.get_songs("tuttiritari")
+        songs = self.handle.get_songs("tuttiritari", None)
         songs.sort()
         
         expected = [["tuttiritari", "tutti viimeinen"],["tuttiritari", "toinen tutti"]]
@@ -1138,7 +1135,7 @@ class TestDatabaseInterface(unittest.TestCase):
 
         self.assertEqual(expected,songs)
 
-        songs = self.handle.get_songs("")
+        songs = self.handle.get_songs("", None)
         songs.sort()
 
         expected = [["tuttiritari", "tutti viimeinen"], ["tuttiritari", "toinen tutti"], ["paula koivuniemi", "kuka pelkaa paulaa"]]
@@ -1167,7 +1164,7 @@ class TestDatabaseInterface(unittest.TestCase):
         
         
 
-        songs = self.handle.get_songs("")
+        songs = self.handle.get_songs("", None)
         songs.sort()
 
         expected = [["tuttiritari", "tutti viimeinen"], ["tuttiritari", "toinen tutti"], ["paula koivuniemi", "kuka pelkaa paulaa"]]
@@ -1179,7 +1176,7 @@ class TestDatabaseInterface(unittest.TestCase):
         '''
         Try to get songs whene there is none.
         '''
-        songs = self.handle.get_songs("paula koivuniemi")
+        songs = self.handle.get_songs("paula koivuniemi", None)
         self.assertIsNone(songs)
 
     def test_get_artists(self):
@@ -1201,7 +1198,7 @@ class TestDatabaseInterface(unittest.TestCase):
         tab4 = TablatureModel.create({'tablature_id':"Null", 'body':"1010010", "rating":0, "artist_id":"tuttiritari", "song_id":"tutti viimeinen", "user_nickname":"erkki", "rating_count":0})
         tab_id4 = self.handle.add_tablature(tab4)
         
-        artists = self.handle.get_artists()
+        artists = self.handle.get_artists(None)
         artists.sort()
     
         expected = ["tuttiritari","paula koivuniemi"]
@@ -1211,9 +1208,9 @@ class TestDatabaseInterface(unittest.TestCase):
 
     def test_get_artists_fail(self):
         '''
-        Try to get artists when now tablatures has been added.
+        Try to get artists when no tablatures has been added.
         '''
-        artists = self.handle.get_artists()
+        artists = self.handle.get_artists(None)
         self.assertIsNone(artists)
         
     def test_get_tablatures_all(self):

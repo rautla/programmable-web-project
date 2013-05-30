@@ -818,6 +818,36 @@ class ArchiveDatabase(ArchiveDatabaseInterface):
             cur.execute(stmnt,pvalue)
             lid = cur.lastrowid
             return lid if comment_id is not None else None    
+            
+    def get_tablaturecomments(self, tablature_id):
+        '''
+        Get comments to a tablature
+        '''
+        keys_on = 'PRAGMA foreign_keys = ON'
+        
+        query = 'SELECT * FROM comments WHERE tablature_id = ?'
+        pvalue = (tablature_id,)
+        
+        if not self.contains_tablature(tablature_id):
+            return None
+        
+        con = sqlite3.connect(self.database_name)
+        with con:
+            con.row_factory = sqlite3.Row
+            cur = con.cursor()
+            cur.execute(keys_on)
+
+            cur.execute(query,pvalue)
+            
+            rows = cur.fetchall()
+            if rows == []:
+                return None
+                
+            comments = []
+            for row in rows:
+                comments.append(CommentModel.create(row))
+            return comments
+            
     
     def contains_comment(self, comment_id):
         '''
